@@ -46,15 +46,41 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </nav>
 
         {/* Thông tin tài khoản người dùng đăng nhập ở góc dưới cùng Sidebar */}
-        <div className="p-4 border-t border-[#ebeef0]">
+        <div className="p-4 border-t border-[#ebeef0] space-y-3">
           <div className="flex items-center gap-3 px-2 py-1">
-            <div className="w-10 h-10 rounded-full bg-[#002045] text-white flex items-center justify-center font-bold">
-              MP
+            {/* Avatar mặc định cho khách (Guest Icon) */}
+            <div className="w-10 h-10 rounded-full bg-[#f1f4f6] text-[#43474e] flex items-center justify-center border border-[#c4c6cf]">
+              <span className="material-symbols-outlined text-xl">
+                account_circle
+              </span>
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#181c1e]">Minh Phúc</p>
-              <p className="text-xs text-[#43474e]">Researcher</p>
+              <p className="text-sm font-bold text-[#181c1e]">Guest</p>
+              <p className="text-xs text-[#74777f]">Chưa đăng nhập</p>
             </div>
+          </div>
+
+          {/* Các nút điều hướng Đăng nhập & Đăng ký sử dụng đúng hệ màu thương hiệu */}
+          <div className="flex flex-col gap-2 pt-1">
+            {/* Nút Đăng nhập: Đậm màu chủ đạo (Primary Filled Button) */}
+            <Link
+              to="/login"
+              className="w-full bg-[#002045] hover:opacity-90 text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+            >
+              <span className="material-symbols-outlined text-sm">login</span>
+              Đăng nhập
+            </Link>
+
+            {/* Nút Đăng ký: Đường viền mảnh (Secondary Outlined Button) */}
+            <Link
+              to="/register"
+              className="w-full border border-[#002045] text-[#002045] hover:bg-[#f1f4f6] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+            >
+              <span className="material-symbols-outlined text-sm">
+                person_add
+              </span>
+              Đăng ký tài khoản
+            </Link>
           </div>
         </div>
       </aside>
