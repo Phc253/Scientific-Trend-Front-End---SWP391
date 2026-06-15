@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+// 🌟 Import axiosClient trung tâm thay vì thư viện axios gốc
+import axiosClient from "../api/axiosClient";
 
 export const Register = () => {
   const [name, setName] = useState("");
@@ -26,15 +27,12 @@ export const Register = () => {
     setIsLoading(true);
 
     try {
-      // 2. Gọi API Register tới Back-end .NET (Thay lại cổng Port nếu cần)
-      const response = await axios.post(
-        "http://localhost:5225/api/account/register",
-        {
-          name: name,
-          email: email,
-          password: password,
-        },
-      );
+      // 2. Gọi API Register qua lõi trung tâm (URL ngắn gọn, tự động khớp cấu hình)
+      await axiosClient.post("/Account/register", {
+        name: name,
+        email: email,
+        password: password,
+      });
 
       // 3. Xử lý khi đăng ký thành công
       setSuccess(
@@ -46,6 +44,7 @@ export const Register = () => {
         navigate("/login");
       }, 2000);
     } catch (err: any) {
+      // Nhận diện lỗi trả về tập trung từ Backend qua Axios Interceptor
       if (err.response && err.response.data) {
         setError(
           err.response.data.message ||
@@ -267,7 +266,7 @@ export const Register = () => {
             style={{
               width: "100%",
               padding: "0.75rem",
-              backgroundColor: "#002855", // Đồng bộ màu xanh navy với nút Đăng ký ở Sidebar
+              backgroundColor: "#002855",
               color: "#ffffff",
               border: "none",
               borderRadius: "6px",

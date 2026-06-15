@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+// 🌟 Import axiosClient từ file cấu hình trung tâm thay vì thư viện axios gốc
+import axiosClient from "../api/axiosClient";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,29 +16,31 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      // Gọi API Login tới cổng Back-end .NET (.NET của bạn cổng nào thì đổi số lại nhé, ví dụ: 5225)
-      const response = await axios.post(
-        "http://localhost:5225/api/account/login",
-        {
-          email: email,
-          password: password,
-        },
-      );
+      // 🌟 URL NGẮN GỌN: Hệ thống tự động ghép với baseURL 'http://localhost:5225/api' ở file trung tâm
+      const response = await axiosClient.post("/Account/login", {
+        email: email,
+        password: password,
+      });
 
+      // Nếu đăng nhập thành công và nhận được token từ .NET Backend
       if (response.data && response.data.token) {
         // Lưu thông tin đăng nhập vào localStorage
         localStorage.setItem("token", response.data.token);
-        // Lưu tên user hoặc email để hiển thị dưới thanh Sidebar thay cho chữ Guest
+
+        // Lưu tên user hoặc email dựa theo cấu hình FullName từ database của nhóm bạn
         localStorage.setItem(
           "userName",
-          response.data.user?.fullName || email.split("@")[0],
+          response.data.user?.fullName ||
+            response.data.user?.fullName ||
+            email.split("@")[0],
         );
 
-        // Chuyển hướng về trang chủ và ép tải lại để Sidebar cập nhật trạng thái ngay
+        // Chuyển hướng về trang chủ và làm mới nhẹ để Layout lắng nghe trạng thái mới ngay lập tức
         navigate("/");
         window.location.reload();
       }
     } catch (err: any) {
+      // Nhận diện lỗi trả về tập trung từ Axios Interceptor
       if (err.response && err.response.data) {
         setError(
           err.response.data.message ||
@@ -181,7 +184,7 @@ export const Login = () => {
             style={{
               width: "100%",
               padding: "0.75rem",
-              backgroundColor: "#002855", // Màu xanh đậm ton-sur-ton với nút Đăng nhập ở Sidebar của bạn
+              backgroundColor: "#002855",
               color: "#ffffff",
               border: "none",
               borderRadius: "6px",
