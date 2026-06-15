@@ -4,8 +4,8 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
 
 const App: React.FC = () => {
   return (

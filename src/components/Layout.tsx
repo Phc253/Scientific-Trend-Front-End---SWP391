@@ -1,8 +1,28 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
+
+  // 1. Tạo state để lưu trữ tên người dùng đọc từ máy
+  const [userName, setUserName] = useState<string | null>(null);
+
+  // 2. Chạy useEffect quét thông tin ngay khi Layout được tải lên màn hình
+  useEffect(() => {
+    const storedName = localStorage.getItem("userName");
+    if (storedName) {
+      setUserName(storedName);
+    }
+  }, [location]); // Theo dõi sự thay đổi của URL để cập nhật lại trạng thái nếu cần
+
+  // 3. Hàm xử lý sự kiện Đăng xuất tài khoản
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userName");
+    setUserName(null);
+    // Chuyển hướng hoặc tải lại trang nhẹ để làm sạch trạng thái
+    window.location.href = "/login";
+  };
 
   // Định nghĩa danh sách các mục trên thanh Menu điều hướng trái
   const menuItems = [
@@ -26,7 +46,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => {
-            // Kiểm tra xem trang hiện tại có trùng với menu không để làm sáng nút lên
             const isActive = location.pathname === item.path;
             return (
               <Link
@@ -48,39 +67,66 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {/* Thông tin tài khoản người dùng đăng nhập ở góc dưới cùng Sidebar */}
         <div className="p-4 border-t border-[#ebeef0] space-y-3">
           <div className="flex items-center gap-3 px-2 py-1">
-            {/* Avatar mặc định cho khách (Guest Icon) */}
-            <div className="w-10 h-10 rounded-full bg-[#f1f4f6] text-[#43474e] flex items-center justify-center border border-[#c4c6cf]">
+            {/* Avatar thay đổi màu nền dựa trên trạng thái đăng nhập */}
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center border ${
+                userName
+                  ? "bg-[#a2eded] text-[#1a6d6e] border-[#1a6d6e]"
+                  : "bg-[#f1f4f6] text-[#43474e] border-[#c4c6cf]"
+              }`}
+            >
               <span className="material-symbols-outlined text-xl">
-                account_circle
+                {userName ? "face" : "account_circle"}
               </span>
             </div>
             <div>
-              <p className="text-sm font-bold text-[#181c1e]">Guest</p>
-              <p className="text-xs text-[#74777f]">Chưa đăng nhập</p>
+              {/* Hiển thị Tên người dùng động từ DB hoặc hiển thị chữ Guest mặc định */}
+              <p className="text-sm font-bold text-[#181c1e] truncate max-w-[140px]">
+                {userName ? userName : "Guest"}
+              </p>
+              <p className="text-xs text-[#74777f]">
+                {userName ? "Thành viên" : "Chưa đăng nhập"}
+              </p>
             </div>
           </div>
 
-          {/* Các nút điều hướng Đăng nhập & Đăng ký sử dụng đúng hệ màu thương hiệu */}
+          {/* Các nút tương tác thay đổi động theo trạng thái Đăng nhập */}
           <div className="flex flex-col gap-2 pt-1">
-            {/* Nút Đăng nhập: Đậm màu chủ đạo (Primary Filled Button) */}
-            <Link
-              to="/login"
-              className="w-full bg-[#002045] hover:opacity-90 text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-sm">login</span>
-              Đăng nhập
-            </Link>
+            {!userName ? (
+              <>
+                {/* CHƯA ĐĂNG NHẬP: Hiển thị bộ đôi nút Login/Register */}
+                <Link
+                  to="/login"
+                  className="w-full bg-[#002045] hover:opacity-90 text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    login
+                  </span>
+                  Đăng nhập
+                </Link>
 
-            {/* Nút Đăng ký: Đường viền mảnh (Secondary Outlined Button) */}
-            <Link
-              to="/register"
-              className="w-full border border-[#002045] text-[#002045] hover:bg-[#f1f4f6] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-sm">
-                person_add
-              </span>
-              Đăng ký tài khoản
-            </Link>
+                <Link
+                  to="/register"
+                  className="w-full border border-[#002045] text-[#002045] hover:bg-[#f1f4f6] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    person_add
+                  </span>
+                  Đăng ký tài khoản
+                </Link>
+              </>
+            ) : (
+              /* ĐÃ ĐĂNG NHẬP THÀNH CÔNG: Ẩn nút Login/Register, hiện nút Đăng xuất */
+              <button
+                onClick={handleLogout}
+                className="w-full border border-[#ef4444] text-[#ef4444] hover:bg-[#fef2f2] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  logout
+                </span>
+                Đăng xuất
+              </button>
+            )}
           </div>
         </div>
       </aside>
