@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
+type ApiErrorResponse = {
+  message?: string;
+};
 
 export const Register = () => {
   const [name, setName] = useState("");
@@ -26,15 +29,30 @@ export const Register = () => {
     setIsLoading(true);
 
     try {
-      // 2. Gọi API Register tới Back-end .NET (Thay lại cổng Port nếu cần)
-      const response = await axios.post(
-        "http://localhost:5225/api/account/register",
-        {
+      // 2. API backend được proxy tập trung trong vite.config.ts.
+      const response = await fetch("/api/account/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           name: name,
           email: email,
           password: password,
-        },
-      );
+        }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | ApiErrorResponse
+          | null;
+
+        setError(
+          data?.message ||
+            "Đăng ký thất bại. Email có thể đã tồn tại!",
+        );
+        return;
+      }
 
       // 3. Xử lý khi đăng ký thành công
       setSuccess(
@@ -45,17 +63,10 @@ export const Register = () => {
       setTimeout(() => {
         navigate("/login");
       }, 2000);
-    } catch (err: any) {
-      if (err.response && err.response.data) {
-        setError(
-          err.response.data.message ||
-            "Đăng ký thất bại. Email có thể đã tồn tại!",
-        );
-      } else {
-        setError(
-          "Không thể kết nối đến máy chủ Back-end. Hãy chắc chắn .NET đang chạy!",
-        );
-      }
+    } catch {
+      setError(
+        "Không thể kết nối đến máy chủ Back-end. Hãy chắc chắn .NET đang chạy!",
+      );
     } finally {
       setIsLoading(false);
     }

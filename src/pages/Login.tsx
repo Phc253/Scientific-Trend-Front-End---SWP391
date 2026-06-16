@@ -1,6 +1,16 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
+type LoginResponse = {
+  token?: string;
+  user?: {
+    fullName?: string;
+  };
+};
+
+type ApiErrorResponse = {
+  message?: string;
+};
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,39 +25,51 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      // Gọi API Login tới cổng Back-end .NET (.NET của bạn cổng nào thì đổi số lại nhé, ví dụ: 5225)
-      const response = await axios.post(
-        "http://localhost:5225/api/account/login",
-        {
+      // API backend được proxy tập trung trong vite.config.ts.
+      const response = await fetch("/api/account/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           email: email,
           password: password,
-        },
-      );
+        }),
+      });
 
-      if (response.data && response.data.token) {
+      const data = (await response.json().catch(() => null)) as
+        | LoginResponse
+        | ApiErrorResponse
+        | null;
+
+      if (!response.ok) {
+        const errorMessage =
+          data && "message" in data ? data.message : undefined;
+
+        setError(
+          errorMessage ||
+            "Tài khoản hoặc mật khẩu không chính xác!",
+        );
+        return;
+      }
+
+      if (data && "token" in data && data.token) {
         // Lưu thông tin đăng nhập vào localStorage
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("token", data.token);
         // Lưu tên user hoặc email để hiển thị dưới thanh Sidebar thay cho chữ Guest
         localStorage.setItem(
           "userName",
-          response.data.user?.fullName || email.split("@")[0],
+          data.user?.fullName || email.split("@")[0],
         );
 
         // Chuyển hướng về trang chủ và ép tải lại để Sidebar cập nhật trạng thái ngay
         navigate("/");
         window.location.reload();
       }
-    } catch (err: any) {
-      if (err.response && err.response.data) {
-        setError(
-          err.response.data.message ||
-            "Tài khoản hoặc mật khẩu không chính xác!",
-        );
-      } else {
-        setError(
-          "Không thể kết nối đến máy chủ Back-end. Bạn đã chạy lệnh dotnet run chưa?",
-        );
-      }
+    } catch {
+      setError(
+        "Không thể kết nối đến máy chủ Back-end. Bạn đã chạy lệnh dotnet run chưa?",
+      );
     } finally {
       setIsLoading(false);
     }

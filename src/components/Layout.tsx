@@ -1,19 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
 
   // 1. Tạo state để lưu trữ tên người dùng đọc từ máy
-  const [userName, setUserName] = useState<string | null>(null);
-
-  // 2. Chạy useEffect quét thông tin ngay khi Layout được tải lên màn hình
-  useEffect(() => {
-    const storedName = localStorage.getItem("userName");
-    if (storedName) {
-      setUserName(storedName);
-    }
-  }, [location]); // Theo dõi sự thay đổi của URL để cập nhật lại trạng thái nếu cần
+  const [userName, setUserName] = useState<string | null>(() =>
+    localStorage.getItem("userName"),
+  );
 
   // 3. Hàm xử lý sự kiện Đăng xuất tài khoản
   const handleLogout = () => {
