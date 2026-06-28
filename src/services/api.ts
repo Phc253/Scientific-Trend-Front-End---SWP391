@@ -1,0 +1,264 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5225/api";
+
+export interface Paper {
+  paperId: number;
+  title: string;
+  abstract?: string;
+  publicationYear?: number;
+  citationCount?: number;
+  journal?: string;
+  authors: string[];
+  keywords: string[];
+}
+
+export interface SearchResponse {
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  items: Paper[];
+}
+
+export interface BookmarkItem {
+  bookmarkId: number;
+  targetId: number;
+  targetType: string;
+  createdAt?: string;
+  title?: string;
+  abstract?: string;
+  publicationYear?: number;
+  citationCount?: number;
+  journalName?: string;
+  authors: string[];
+  keywordText?: string;
+}
+
+export interface FollowItem {
+  followId: number;
+  targetId: number;
+  targetType: string;
+  createdAt?: string;
+  authorName?: string;
+  paperCount?: number;
+  journalName?: string;
+  topicName?: string;
+}
+
+export interface PaperFacetItem {
+  id: string;
+  name: string;
+  paperCount: number;
+}
+
+export interface PaperFacetResponse {
+  totalCount: number;
+  items: PaperFacetItem[];
+}
+
+export interface UserProfile {
+  userId: string;
+  email: string;
+  fullName: string;
+  actorType: string;
+  roles: string[];
+}
+
+export interface LoginResponse {
+  token: string;
+  userId: number;
+  email: string;
+  fullName?: string;
+  actorType: string;
+  roles: string[];
+}
+
+export interface RegisterRequestData {
+  email: string;
+  password: string;
+  fullName?: string;
+  dateOfBirth?: string; // YYYY-MM-DD
+  phoneNumber?: string;
+  actorType?: string; // Researcher, Lecturer, Student
+}
+
+export interface RegisterResponseData {
+  userId: number;
+  email: string;
+  fullName?: string;
+  dateOfBirth?: string;
+  phoneNumber?: string;
+  actorType?: string;
+  createdAt?: string;
+  isActive: boolean;
+  message: string;
+}
+
+// Generic fetch wrapper
+async function request<T>(
+  url: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const fullUrl = `${API_BASE_URL}${url}`;
+  
+  const headers = new Headers();
+  
+  // Set content type if not FormData (multipart)
+  if (!(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+  
+  // Set JWT authorization token if available
+  const token = localStorage.getItem("token");
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  
+  // Merge custom headers from options
+  if (options.headers) {
+    const customHeaders = new Headers(options.headers);
+    customHeaders.forEach((value, key) => {
+      headers.set(key, value);
+    });
+  }
+
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    let errorMessage = "An error occurred";
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      // JSON parsing failed
+      errorMessage = response.statusText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+
+  // Handle empty responses
+  const text = await response.text();
+  return text ? JSON.parse(text) : ({} as T);
+}
+
+export const api = {
+  // Authentication
+  async login(email: string, password: string): Promise<LoginResponse> {
+    return request<LoginResponse>("/Account/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  async register(data: RegisterRequestData): Promise<RegisterResponseData> {
+    return request<RegisterResponseData>("/Account/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getProfile(): Promise<UserProfile> {
+    return request<UserProfile>("/Account/profile");
+  },
+
+  // Papers Search & Detail
+  async searchPapers(params: {
+    q?: string;
+    keyword?: string;
+    author?: string;
+    journal?: string;
+    publicationYear?: number;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ success: boolean; data: SearchResponse }> {
+    const searchParams = new URLSearchParams();
+    if (params.q) searchParams.append("q", params.q);
+    if (params.keyword) searchParams.append("keyword", params.keyword);
+    if (params.author) searchParams.append("author", params.author);
+    if (params.journal) searchParams.append("journal", params.journal);
+    if (params.publicationYear !== undefined) searchParams.append("publicationYear", params.publicationYear.toString());
+    if (params.page !== undefined) searchParams.append("page", params.page.toString());
+    if (params.pageSize !== undefined) searchParams.append("pageSize", params.pageSize.toString());
+
+    const queryString = searchParams.toString();
+    const url = `/Papers${queryString ? `?${queryString}` : ""}`;
+    return request<{ success: boolean; data: SearchResponse }>(url);
+  },
+
+  async getPaperDetails(id: number | string): Promise<{ success: boolean; data: Paper }> {
+    return request<{ success: boolean; data: Paper }>(`/Papers/${id}`);
+  },
+
+  async searchAuthors(name: string): Promise<{ success: boolean; data: { authorId: number; authorName: string }[] }> {
+    return request<{ success: boolean; data: { authorId: number; authorName: string }[] }>(`/Authors/search?name=${encodeURIComponent(name)}`);
+  },
+
+  async getAuthorFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+    const searchParams = new URLSearchParams();
+    if (q) searchParams.append("q", q);
+    searchParams.append("page", page.toString());
+    searchParams.append("pageSize", pageSize.toString());
+    return request<PaperFacetResponse>(`/Papers/facets/authors?${searchParams.toString()}`);
+  },
+
+  async getKeywordFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+    const searchParams = new URLSearchParams();
+    if (q) searchParams.append("q", q);
+    searchParams.append("page", page.toString());
+    searchParams.append("pageSize", pageSize.toString());
+    return request<PaperFacetResponse>(`/Papers/facets/keywords?${searchParams.toString()}`);
+  },
+
+  async getTopicFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+    const searchParams = new URLSearchParams();
+    if (q) searchParams.append("q", q);
+    searchParams.append("page", page.toString());
+    searchParams.append("pageSize", pageSize.toString());
+    return request<PaperFacetResponse>(`/Papers/facets/topics?${searchParams.toString()}`);
+  },
+
+  async getJournalFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+    const searchParams = new URLSearchParams();
+    if (q) searchParams.append("q", q);
+    searchParams.append("page", page.toString());
+    searchParams.append("pageSize", pageSize.toString());
+    return request<PaperFacetResponse>(`/Papers/facets/journals?${searchParams.toString()}`);
+  },
+
+  // Bookmarks
+  async toggleBookmark(
+    targetId: number | string,
+    targetType: "Paper" | "Keyword"
+  ): Promise<{ success: boolean; isBookmarked: boolean; message: string }> {
+    return request<{ success: boolean; isBookmarked: boolean; message: string }>(
+      "/Bookmarks/toggle",
+      {
+        method: "POST",
+        body: JSON.stringify({ targetId: Number(targetId), targetType }),
+      }
+    );
+  },
+
+  async getMyBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
+    return request<{ success: boolean; data: BookmarkItem[] }>("/Bookmarks/my-bookmarks");
+  },
+
+  // Follows
+  async toggleFollow(
+    targetId: number | string,
+    targetType: "Author" | "Journal" | "ResearchTopic"
+  ): Promise<{ success: boolean; isFollowed: boolean; message: string }> {
+    return request<{ success: boolean; isFollowed: boolean; message: string }>(
+      "/Follows/toggle",
+      {
+        method: "POST",
+        body: JSON.stringify({ targetId: Number(targetId), targetType }),
+      }
+    );
+  },
+
+  async getMyFollows(): Promise<{ success: boolean; data: FollowItem[] }> {
+    return request<{ success: boolean; data: FollowItem[] }>("/Follows/my-follows");
+  },
+};
