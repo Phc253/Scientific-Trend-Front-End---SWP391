@@ -1,23 +1,27 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const Login: React.FC = () => {
+export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Sử dụng AuthContext từ nhánh duc
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
+      // Chuyển việc gọi API và lưu localStorage cho hàm login trong AuthContext xử lý
       await login(email, password);
-      // Redirect to home/dashboard on success
+      
+      // Chuyển hướng về trang chủ khi thành công
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
@@ -27,86 +31,150 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn">
-      <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md space-y-6">
-        {/* Tiêu đề trang */}
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-[#002045]">
-            Đăng nhập hệ thống
-          </h2>
-          <p className="text-xs text-[#74777f]">
-            Sử dụng tài khoản học thuật của bạn để tiếp tục
-          </p>
-        </div>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "60vh",
+        backgroundColor: "#f8fafc",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "400px",
+          padding: "2.5rem",
+          backgroundColor: "#ffffff",
+          borderRadius: "12px",
+          boxShadow:
+            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          textAlign: "center",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "1.75rem",
+            fontWeight: "700",
+            color: "#0f172a",
+            marginBottom: "0.5rem",
+          }}
+        >
+          Đăng nhập
+        </h2>
+        <p
+          style={{
+            color: "#64748b",
+            marginBottom: "2rem",
+            fontSize: "0.875rem",
+          }}
+        >
+          Chào mừng quay trở lại với SciTrend
+        </p>
 
-        {/* Thông báo lỗi nếu có */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm relative flex items-center gap-2">
-            <span className="material-symbols-outlined text-base text-red-600">error</span>
-            <span>{error}</span>
-          </div>
-        )}
+        <form
+          onSubmit={handleLogin}
+          style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
+        >
+          {error && (
+            <div
+              style={{
+                padding: "0.75rem",
+                backgroundColor: "#fef2f2",
+                color: "#ef4444",
+                borderRadius: "6px",
+                fontSize: "0.875rem",
+                textAlign: "left",
+                border: "1px solid #fee2e2",
+              }}
+            >
+              ⚠️ {error}
+            </div>
+          )}
 
-        {/* Form nhập liệu */}
-        <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-          {/* Ô nhập Email */}
-          <div className="space-y-1.5">
-            <label className="block font-bold text-[#43474e]">
+          <div style={{ textAlign: "left" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+                color: "#334155",
+              }}
+            >
               Địa chỉ Email
             </label>
             <input
               type="email"
-              required
-              placeholder="name@fpt.edu.vn"
-              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
+              placeholder="name@university.edu.vn"
+              required
+              style={{
+                width: "100%",
+                padding: "0.75rem",
+                borderRadius: "6px",
+                border: "1px solid #cbd5e1",
+                fontSize: "0.95rem",
+                boxSizing: "border-box",
+                outline: "none",
+              }}
             />
           </div>
 
-          {/* Ô nhập Mật khẩu */}
-          <div className="space-y-1.5">
-            <label className="block font-bold text-[#43474e]">Mật khẩu</label>
+          <div style={{ textAlign: "left" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+                color: "#334155",
+              }}
+            >
+              Mật khẩu
+            </label>
             <input
               type="password"
-              required
-              placeholder="••••••••"
-              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
+              placeholder="••••••••"
+              required
+              style={{
+                width: "100%",
+                padding: "0.75rem",
+                borderRadius: "6px",
+                border: "1px solid #cbd5e1",
+                fontSize: "0.95rem",
+                boxSizing: "border-box",
+                outline: "none",
+              }}
             />
           </div>
 
-          {/* Nút bấm Đăng nhập */}
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-[#002045] hover:opacity-95 text-white font-semibold py-3 rounded transition-opacity mt-2 cursor-pointer flex items-center justify-center gap-2 ${
-              isLoading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+            style={{
+              width: "100%",
+              padding: "0.75rem",
+              backgroundColor: "#002855",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "1rem",
+              fontWeight: "600",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              transition: "background-color 0.2s",
+              marginTop: "0.5rem",
+            }}
           >
-            <span className="material-symbols-outlined text-sm">
-              {isLoading ? "sync" : "login"}
-            </span>
-            {isLoading ? "Đang xác nhận..." : "Xác nhận đăng nhập"}
+            {isLoading ? "Đang xử lý..." : "Xác nhận Đăng nhập"}
           </button>
         </form>
-
-        {/* Liên kết chuyển hướng nhanh */}
-        <div className="text-center text-xs text-[#43474e] pt-2 border-t border-[#ebeef0]">
-          Chưa có tài khoản nghiên cứu?{" "}
-          <Link
-            to="/register"
-            className="text-[#13696a] font-bold hover:underline"
-          >
-            Đăng ký ngay tại đây
-          </Link>
-        </div>
       </div>
     </div>
   );
 };
-
-export default Login;

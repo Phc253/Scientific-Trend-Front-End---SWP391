@@ -1,18 +1,20 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 
-const Register: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export const Register = () => {
   const [fullName, setFullName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [actorType, setActorType] = useState("Student");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +22,14 @@ const Register: React.FC = () => {
     setError(null);
     setSuccessMessage(null);
 
-    // Simple birth date check
+    // Kiểm tra mật khẩu nhập lại từ nhánh main
+    if (password !== confirmPassword) {
+      setError("Mật khẩu nhập lại không trùng khớp!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Kiểm tra ngày sinh từ nhánh duc
     if (!dateOfBirth) {
       setError("Vui lòng chọn ngày sinh.");
       setIsLoading(false);
@@ -28,6 +37,7 @@ const Register: React.FC = () => {
     }
 
     try {
+      // Gọi API từ thư mục services của nhánh duc
       const result = await api.register({
         email,
         password,
@@ -39,8 +49,13 @@ const Register: React.FC = () => {
 
       setSuccessMessage(
         result.message ||
-          "Đăng ký tài khoản thành công! Vui lòng kiểm tra email của bạn để kích hoạt tài khoản."
+          "Đăng ký tài khoản thành công! Đang chuyển hướng sang trang đăng nhập..."
       );
+
+      // Chờ 3 giây rồi tự động chuyển hướng sang Login (từ nhánh main)
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
     } catch (err: any) {
       setError(err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin đăng ký.");
     } finally {
@@ -48,11 +63,12 @@ const Register: React.FC = () => {
     }
   };
 
+  // Giao diện khi Đăng ký thành công (giữ nguyên thiết kế đẹp từ nhánh duc)
   if (successMessage) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn">
+      <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn py-6">
         <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md space-y-6 text-center">
-          <div className="w-16 h-16 bg-[#e1f5fe] text-[#13696a] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#b2ebf2]">
+          <div className="w-16 h-16 bg-[#e1f5fe] text-[#002855] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#b2ebf2]">
             <span className="material-symbols-outlined text-3xl">mail</span>
           </div>
           <h2 className="text-2xl font-bold text-[#002045]">Đăng ký thành công!</h2>
@@ -62,10 +78,10 @@ const Register: React.FC = () => {
           <div className="pt-4 border-t border-[#ebeef0]">
             <Link
               to="/login"
-              className="bg-[#002045] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center gap-2 text-sm"
+              className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center gap-2 text-sm"
             >
               <span className="material-symbols-outlined text-sm">login</span>
-              Đi đến trang Đăng nhập
+              Đi đến trang Đăng nhập ngay
             </Link>
           </div>
         </div>
@@ -73,16 +89,17 @@ const Register: React.FC = () => {
     );
   }
 
+  // Giao diện Form Đăng ký
   return (
-    <div className="min-h-[85vh] flex items-center justify-center animate-fadeIn py-6">
-      <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-xl space-y-6">
+    <div className="min-h-[85vh] flex items-center justify-center animate-fadeIn py-6 bg-[#f8fafc]">
+      <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-2xl space-y-6">
         {/* Tiêu đề trang */}
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-[#002045]">
             Đăng ký tài khoản mới
           </h2>
           <p className="text-xs text-[#74777f]">
-            Tạo tài khoản để theo dõi xu hướng, lưu trữ bài viết khoa học và theo dõi tác giả
+            Tham gia hệ thống nghiên cứu khoa học SciTrend
           </p>
         </div>
 
@@ -96,6 +113,7 @@ const Register: React.FC = () => {
 
         {/* Form nhập liệu */}
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Họ và Tên */}
             <div className="space-y-1.5">
@@ -104,32 +122,13 @@ const Register: React.FC = () => {
                 type="text"
                 required
                 placeholder="Nguyễn Văn A"
-                className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
 
-            {/* Đối tượng nghiên cứu (Actor Type) */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">
-                Đối tượng (Actor Type)
-              </label>
-              <select
-                className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
-                value={actorType}
-                onChange={(e) => setActorType(e.target.value)}
-                disabled={isLoading}
-              >
-                <option value="Student">Sinh viên (Student)</option>
-                <option value="Lecturer">Giảng viên (Lecturer)</option>
-                <option value="Researcher">Nhà nghiên cứu (Researcher)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Địa chỉ Email */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Địa chỉ Email</label>
@@ -137,13 +136,15 @@ const Register: React.FC = () => {
                 type="email"
                 required
                 placeholder="name@fpt.edu.vn"
-                className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Số điện thoại */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Số điện thoại</label>
@@ -151,28 +152,28 @@ const Register: React.FC = () => {
                 type="tel"
                 required
                 placeholder="0912345678"
-                className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 disabled={isLoading}
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Ngày sinh */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Ngày sinh</label>
               <input
                 type="date"
                 required
-                className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
                 disabled={isLoading}
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Mật khẩu */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Mật khẩu</label>
@@ -180,19 +181,48 @@ const Register: React.FC = () => {
                 type="password"
                 required
                 placeholder="Tối thiểu 6 ký tự"
-                className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
             </div>
+
+            {/* Xác nhận mật khẩu */}
+            <div className="space-y-1.5">
+              <label className="block font-bold text-[#43474e]">Xác nhận mật khẩu</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
-          {/* Nút bấm xác nhận Đăng ký */}
+          {/* Đối tượng nghiên cứu (Actor Type) */}
+          <div className="space-y-1.5">
+            <label className="block font-bold text-[#43474e]">Đối tượng (Actor Type)</label>
+            <select
+              className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+              value={actorType}
+              onChange={(e) => setActorType(e.target.value)}
+              disabled={isLoading}
+            >
+              <option value="Student">Sinh viên (Student)</option>
+              <option value="Lecturer">Giảng viên (Lecturer)</option>
+              <option value="Researcher">Nhà nghiên cứu (Researcher)</option>
+            </select>
+          </div>
+
+          {/* Nút bấm Đăng ký */}
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-[#13696a] hover:opacity-95 text-white font-semibold py-3 rounded transition-opacity mt-4 cursor-pointer flex items-center justify-center gap-2 ${
+            className={`w-full bg-[#002855] hover:opacity-95 text-white font-semibold py-3 rounded transition-opacity mt-4 cursor-pointer flex items-center justify-center gap-2 ${
               isLoading ? "opacity-75 cursor-not-allowed" : ""
             }`}
           >
@@ -202,20 +232,7 @@ const Register: React.FC = () => {
             {isLoading ? "Đang xử lý..." : "Xác nhận tạo tài khoản"}
           </button>
         </form>
-
-        {/* Liên kết chuyển đổi nhanh sang đăng nhập */}
-        <div className="text-center text-xs text-[#43474e] pt-2 border-t border-[#ebeef0]">
-          Đã có tài khoản hệ thống từ trước?{" "}
-          <Link
-            to="/login"
-            className="text-[#002045] font-bold hover:underline"
-          >
-            Đăng nhập ngay
-          </Link>
-        </div>
       </div>
     </div>
   );
 };
-
-export default Register;

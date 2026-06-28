@@ -33,7 +33,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => {
-            // Kiểm tra xem trang hiện tại có trùng với menu không để làm sáng nút lên
             const isActive = location.pathname === item.path;
             return (
               <Link
@@ -78,7 +77,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 {/* Nút Đăng xuất */}
                 <button
                   onClick={logout}
-                  className="w-full bg-[#ebeef0] hover:bg-red-50 hover:text-red-700 text-[#43474e] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
+                  className="w-full border border-[#ef4444] text-[#ef4444] hover:bg-[#fef2f2] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">logout</span>
                   Đăng xuất
@@ -102,7 +101,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
               {/* Các nút điều hướng Đăng nhập & Đăng ký sử dụng đúng hệ màu thương hiệu */}
               <div className="flex flex-col gap-2 pt-1">
-                {/* Nút Đăng nhập: Đậm màu chủ đạo (Primary Filled Button) */}
                 <Link
                   to="/login"
                   className="w-full bg-[#002045] hover:opacity-90 text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
@@ -111,7 +109,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   Đăng nhập
                 </Link>
 
-                {/* Nút Đăng ký: Đường viền mảnh (Secondary Outlined Button) */}
                 <Link
                   to="/register"
                   className="w-full border border-[#002045] text-[#002045] hover:bg-[#f1f4f6] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
