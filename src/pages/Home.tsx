@@ -1,13 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, type DashboardSummaryResponse } from "../services/api";
 
 const Home: React.FC = () => {
-  // Quản lý trạng thái dữ liệu và quá trình tải (loading)
+  const navigate = useNavigate();
+
+  // Quản lý trạng thái dữ liệu và quá trình tải (loading) của bạn
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Kích hoạt gọi API khi trang vừa render xong
+  // Logic kiểm tra quyền Admin của đồng đội
+  useEffect(() => {
+    const rolesStr = localStorage.getItem("userRoles");
+    if (rolesStr) {
+      try {
+        const roles = JSON.parse(rolesStr);
+        const isAdmin = Array.isArray(roles)
+          ? roles.includes("Administrator")
+          : roles === "Administrator";
+        if (isAdmin) {
+          navigate("/admin");
+        }
+      } catch (e) {
+        console.error("Lỗi đọc roles từ localStorage:", e);
+      }
+    }
+  }, [navigate]);
+
+  // Kích hoạt gọi API khi trang vừa render xong của bạn
   useEffect(() => {
     const fetchSummary = async () => {
       try {

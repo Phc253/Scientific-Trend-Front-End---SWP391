@@ -143,6 +143,7 @@ export const Register = () => {
               />
             </div>
           </div>
+          
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Số điện thoại */}
@@ -202,6 +203,16 @@ export const Register = () => {
               />
             </div>
           </div>
+          <div>
+             <label className="block font-bold text-[#43474e]">Số điện thoại</label>
+            <input
+              type="tel"
+              required
+              placeholder="09xxxxxxxx"
+              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+            />
 
           {/* Đối tượng nghiên cứu (Actor Type) */}
           <div className="space-y-1.5">
@@ -217,6 +228,20 @@ export const Register = () => {
               <option value="Researcher">Nhà nghiên cứu (Researcher)</option>
             </select>
           </div>
+           <div>
+             <label className="block font-bold text-[#43474e]">Vai trò</label>
+            <select  
+              required
+              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+              value={actorType}
+              onChange={(e) => setActorType(e.target.value)}
+            >
+              <option value="">Chọn vai trò</option>
+              <option value="Student">Sinh viên</option>
+              <option value="Researcher">Nhà Nghiên Cứu</option>
+              <option value="Lecturer">Giảng viên</option>
+
+            </select>
 
           {/* Nút bấm Đăng ký */}
           <button
@@ -232,6 +257,17 @@ export const Register = () => {
             {isLoading ? "Đang xử lý..." : "Xác nhận tạo tài khoản"}
           </button>
         </form>
+
+        {/* Liên kết chuyển đổi nhanh sang đăng nhập */}
+        <div className="text-center text-xs text-[#43474e] pt-2 border-t border-[#ebeef0]">
+          Đã có tài khoản hệ thống từ trước?{" "}
+          <Link
+            to="/login"
+            className="text-[#002045] font-bold hover:underline"
+          >
+            Đăng nhập ngay
+          </Link>
+        </div>
       </div>
     </div>
   );

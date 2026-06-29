@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+// Thay đổi đường dẫn "../context/AuthContext" cho khớp với cấu trúc thư mục thực tế của nhóm bạn
 import { useAuth } from "../context/AuthContext";
 
 export const Login = () => {
@@ -7,8 +9,8 @@ export const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Sử dụng AuthContext từ nhánh duc
+
+  // Sử dụng AuthContext từ nhánh duc đã được import
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -18,13 +20,56 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      // Chuyển việc gọi API và lưu localStorage cho hàm login trong AuthContext xử lý
-      await login(email, password);
-      
-      // Chuyển hướng về trang chủ khi thành công
-      navigate("/");
+      const response = await axios.post(
+        "http://localhost:5225/api/account/login",
+        {
+          email: email,
+          password: password,
+        },
+      );
+
+      if (response.data && response.data.token) {
+        // Lưu thông tin đăng nhập vào localStorage
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem(
+          "userName",
+          response.data.user?.fullName || email.split("@")[0],
+        );
+
+        const userRoles =
+          response.data.user?.roles || response.data.roles || [];
+        localStorage.setItem("userRoles", JSON.stringify(userRoles));
+
+        // Gọi hàm login từ AuthContext để cập nhật trạng thái toàn cục (Global State)
+        // Lưu ý: Tham số truyền vào tùy thuộc vào cách bạn "duc" định nghĩa hàm login
+        if (login) {
+          login(response.data.token, response.data.user);
+        }
+
+        const isAdmin = Array.isArray(userRoles)
+          ? userRoles.includes("Administrator")
+          : userRoles === "Administrator";
+
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+
+        // Mẹo: Khi đã dùng AuthContext và useNavigate, bạn không nên dùng window.location.reload()
+        // vì nó làm mất đi ưu điểm chuyển trang mượt mà (Single Page Application) của React.
+      }
     } catch (err: any) {
-      setError(err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      if (err.response && err.response.data) {
+        setError(
+          err.response.data.message ||
+            "Tài khoản hoặc mật khẩu không chính xác!",
+        );
+      } else {
+        setError(
+          "Không thể kết nối đến máy chủ Back-end. Bạn đã chạy lệnh dotnet run chưa?",
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +219,26 @@ export const Login = () => {
             {isLoading ? "Đang xử lý..." : "Xác nhận Đăng nhập"}
           </button>
         </form>
+
+        <p
+          style={{
+            marginTop: "1.5rem",
+            fontSize: "0.875rem",
+            color: "#64748b",
+          }}
+        >
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            style={{
+              color: "#002855",
+              fontWeight: "600",
+              textDecoration: "underline",
+            }}
+          >
+            Đăng ký ngay
+          </Link>
+        </p>
       </div>
     </div>
   );
