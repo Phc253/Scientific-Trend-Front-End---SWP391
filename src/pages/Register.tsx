@@ -7,7 +7,7 @@ export const Register = () => {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
-  const [actorType, setActorType] = useState("Student");
+  const [actorType, setActorType] = useState(""); // Để trống để bắt buộc chọn
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -18,256 +18,165 @@ export const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
 
-    // Kiểm tra mật khẩu nhập lại từ nhánh main
     if (password !== confirmPassword) {
       setError("Mật khẩu nhập lại không trùng khớp!");
-      setIsLoading(false);
       return;
     }
 
-    // Kiểm tra ngày sinh từ nhánh duc
-    if (!dateOfBirth) {
-      setError("Vui lòng chọn ngày sinh.");
-      setIsLoading(false);
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      // Gọi API từ thư mục services của nhánh duc
       const result = await api.register({
         email,
         password,
-        fullName: fullName.trim() || undefined,
+        fullName: fullName.trim(),
         dateOfBirth,
         phoneNumber,
         actorType,
       });
 
       setSuccessMessage(
-        result.message ||
-          "Đăng ký tài khoản thành công! Đang chuyển hướng sang trang đăng nhập..."
+        result.message || "Đăng ký thành công! Đang chuyển hướng...",
       );
-
-      // Chờ 3 giây rồi tự động chuyển hướng sang Login (từ nhánh main)
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
+      setTimeout(() => navigate("/login"), 3000);
     } catch (err: any) {
-      setError(err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin đăng ký.");
+      setError(
+        err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Giao diện khi Đăng ký thành công (giữ nguyên thiết kế đẹp từ nhánh duc)
   if (successMessage) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn py-6">
-        <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md space-y-6 text-center">
-          <div className="w-16 h-16 bg-[#e1f5fe] text-[#002855] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#b2ebf2]">
-            <span className="material-symbols-outlined text-3xl">mail</span>
-          </div>
-          <h2 className="text-2xl font-bold text-[#002045]">Đăng ký thành công!</h2>
-          <p className="text-sm text-[#43474e] leading-relaxed">
-            {successMessage}
-          </p>
-          <div className="pt-4 border-t border-[#ebeef0]">
-            <Link
-              to="/login"
-              className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center gap-2 text-sm"
-            >
-              <span className="material-symbols-outlined text-sm">login</span>
-              Đi đến trang Đăng nhập ngay
-            </Link>
-          </div>
+        <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold text-[#002045] mb-4">
+            Đăng ký thành công!
+          </h2>
+          <p className="text-sm text-[#43474e] mb-6">{successMessage}</p>
+          <Link
+            to="/login"
+            className="bg-[#002855] text-white py-2.5 px-6 rounded text-sm font-semibold"
+          >
+            Đăng nhập ngay
+          </Link>
         </div>
       </div>
     );
   }
 
-  // Giao diện Form Đăng ký
   return (
     <div className="min-h-[85vh] flex items-center justify-center animate-fadeIn py-6 bg-[#f8fafc]">
       <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-2xl space-y-6">
-        {/* Tiêu đề trang */}
-        <div className="text-center space-y-2">
+        <div className="text-center">
           <h2 className="text-2xl font-bold text-[#002045]">
-            Đăng ký tài khoản mới
+            Đăng ký tài khoản
           </h2>
-          <p className="text-xs text-[#74777f]">
-            Tham gia hệ thống nghiên cứu khoa học SciTrend
-          </p>
         </div>
 
-        {/* Thông báo lỗi nếu có */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm flex items-center gap-2">
-            <span className="material-symbols-outlined text-base text-red-600">error</span>
-            <span>{error}</span>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+            {error}
           </div>
         )}
 
-        {/* Form nhập liệu */}
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Họ và Tên */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Họ và Tên</label>
+            <div className="space-y-1">
+              <label className="font-bold">Họ và Tên</label>
               <input
                 type="text"
                 required
-                placeholder="Nguyễn Văn A"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                disabled={isLoading}
               />
             </div>
-
-            {/* Địa chỉ Email */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Địa chỉ Email</label>
+            <div className="space-y-1">
+              <label className="font-bold">Địa chỉ Email</label>
               <input
                 type="email"
                 required
-                placeholder="name@fpt.edu.vn"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
               />
             </div>
           </div>
-          
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Số điện thoại */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Số điện thoại</label>
+            <div className="space-y-1">
+              <label className="font-bold">Số điện thoại</label>
               <input
                 type="tel"
                 required
-                placeholder="0912345678"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                disabled={isLoading}
               />
             </div>
-
-            {/* Ngày sinh */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Ngày sinh</label>
+            <div className="space-y-1">
+              <label className="font-bold">Ngày sinh</label>
               <input
                 type="date"
                 required
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                disabled={isLoading}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Mật khẩu */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Mật khẩu</label>
+            <div className="space-y-1">
+              <label className="font-bold">Mật khẩu</label>
               <input
                 type="password"
                 required
-                placeholder="Tối thiểu 6 ký tự"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
               />
             </div>
-
-            {/* Xác nhận mật khẩu */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Xác nhận mật khẩu</label>
+            <div className="space-y-1">
+              <label className="font-bold">Xác nhận mật khẩu</label>
               <input
                 type="password"
                 required
-                placeholder="••••••••"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
               />
             </div>
           </div>
-          <div>
-             <label className="block font-bold text-[#43474e]">Số điện thoại</label>
-            <input
-              type="tel"
-              required
-              placeholder="09xxxxxxxx"
-              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-            />
 
-          {/* Đối tượng nghiên cứu (Actor Type) */}
-          <div className="space-y-1.5">
-            <label className="block font-bold text-[#43474e]">Đối tượng (Actor Type)</label>
+          <div className="space-y-1">
+            <label className="font-bold">Vai trò</label>
             <select
-              className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
-              value={actorType}
-              onChange={(e) => setActorType(e.target.value)}
-              disabled={isLoading}
-            >
-              <option value="Student">Sinh viên (Student)</option>
-              <option value="Lecturer">Giảng viên (Lecturer)</option>
-              <option value="Researcher">Nhà nghiên cứu (Researcher)</option>
-            </select>
-          </div>
-           <div>
-             <label className="block font-bold text-[#43474e]">Vai trò</label>
-            <select  
               required
-              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
+              className="w-full p-3 border rounded"
               value={actorType}
               onChange={(e) => setActorType(e.target.value)}
             >
               <option value="">Chọn vai trò</option>
               <option value="Student">Sinh viên</option>
-              <option value="Researcher">Nhà Nghiên Cứu</option>
+              <option value="Researcher">Nhà nghiên cứu</option>
               <option value="Lecturer">Giảng viên</option>
-
             </select>
+          </div>
 
-          {/* Nút bấm Đăng ký */}
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-[#002855] hover:opacity-95 text-white font-semibold py-3 rounded transition-opacity mt-4 cursor-pointer flex items-center justify-center gap-2 ${
-              isLoading ? "opacity-75 cursor-not-allowed" : ""
-            }`}
+            className="w-full bg-[#002855] text-white py-3 rounded font-bold mt-4"
           >
-            <span className="material-symbols-outlined text-sm">
-              {isLoading ? "sync" : "person_add"}
-            </span>
             {isLoading ? "Đang xử lý..." : "Xác nhận tạo tài khoản"}
           </button>
         </form>
-
-        {/* Liên kết chuyển đổi nhanh sang đăng nhập */}
-        <div className="text-center text-xs text-[#43474e] pt-2 border-t border-[#ebeef0]">
-          Đã có tài khoản hệ thống từ trước?{" "}
-          <Link
-            to="/login"
-            className="text-[#002045] font-bold hover:underline"
-          >
-            Đăng nhập ngay
-          </Link>
-        </div>
       </div>
     </div>
   );

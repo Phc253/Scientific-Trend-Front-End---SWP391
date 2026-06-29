@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -25,7 +25,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {},
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
+        },
       );
     } catch (error) {
       console.error("Logout API error:", error);
@@ -40,28 +40,29 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   // Định nghĩa danh sách các mục trên thanh Menu điều hướng trái
-const role = localStorage.getItem("userRoles") || "";
-const isAdmin = role.includes("Administrator");
+  const role = localStorage.getItem("userRoles") || "";
+  const isAdmin = role.includes("Administrator");
 
-const menuItems = [
-  ...(!isAdmin
-    ? [
-        { path: "/", label: "Trang chủ", icon: "home" },
-        { path: "/search", label: "Khám phá", icon: "explore" },
-        { path: "/dashboard", label: "Xu hướng", icon: "trending_up" },
-      ]
-    : []),
+  const menuItems = [
+    ...(!isAdmin
+      ? [
+          { path: "/", label: "Trang chủ", icon: "home" },
+          { path: "/search", label: "Khám phá", icon: "explore" },
+          { path: "/dashboard", label: "Xu hướng", icon: "trending_up" },
+        ]
+      : []),
 
-  ...(isAdmin
-    ? [
-        {
-          path: "/admin",
-          label: "Quản trị hệ thống",
-          icon: "admin_panel_settings",
-        },
-      ]
-    : []),
-];
+    ...(isAdmin
+      ? [
+          {
+            path: "/admin",
+            label: "Quản trị hệ thống",
+            icon: "admin_panel_settings",
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="flex min-h-screen bg-[#f7fafc]">
       {/* Sidebar - Thanh điều hướng cố định bên trái */}
@@ -82,10 +83,11 @@ const menuItems = [
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${isActive
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  isActive
                     ? "bg-[#a2eded] text-[#1a6d6e] shadow-sm"
                     : "text-[#43474e] hover:bg-[#f1f4f6]"
-                  }`}
+                }`}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 {item.label}
@@ -99,10 +101,11 @@ const menuItems = [
           <div className="flex items-center gap-3 px-2 py-1">
             {/* Avatar thay đổi màu nền dựa trên trạng thái đăng nhập */}
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center border ${userName
+              className={`w-10 h-10 rounded-full flex items-center justify-center border ${
+                userName
                   ? "bg-[#a2eded] text-[#1a6d6e] border-[#1a6d6e]"
                   : "bg-[#f1f4f6] text-[#43474e] border-[#c4c6cf]"
-                }`}
+              }`}
             >
               <span className="material-symbols-outlined text-xl">
                 {userName ? "face" : "account_circle"}
@@ -119,27 +122,39 @@ const menuItems = [
             </div>
           </div>
 
-              {/* Các nút điều hướng Đăng nhập & Đăng ký sử dụng đúng hệ màu thương hiệu */}
-              <div className="flex flex-col gap-2 pt-1">
-                <Link
-                  to="/login"
-                  className="w-full bg-[#002045] hover:opacity-90 text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
-                >
-                  <span className="material-symbols-outlined text-sm">login</span>
-                  Đăng nhập
-                </Link>
+          {/* Logic ẩn hiện nút Đăng nhập / Đăng xuất */}
+          {userName ? (
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                onClick={handleLogout}
+                className="w-full bg-[#ef4444] hover:bg-[#dc2626] text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  logout
+                </span>
+                Đăng xuất
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 pt-1">
+              <Link
+                to="/login"
+                className="w-full bg-[#002045] hover:opacity-90 text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+              >
+                <span className="material-symbols-outlined text-sm">login</span>
+                Đăng nhập
+              </Link>
 
-                <Link
-                  to="/register"
-                  className="w-full border border-[#002045] text-[#002045] hover:bg-[#f1f4f6] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
-                >
-                  <span className="material-symbols-outlined text-sm">
-                    person_add
-                  </span>
-                  Đăng ký tài khoản
-                </Link>
-              </div>
-            </>
+              <Link
+                to="/register"
+                className="w-full border border-[#002045] text-[#002045] hover:bg-[#f1f4f6] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  person_add
+                </span>
+                Đăng ký tài khoản
+              </Link>
+            </div>
           )}
         </div>
       </aside>

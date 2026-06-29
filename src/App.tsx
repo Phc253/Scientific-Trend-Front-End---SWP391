@@ -5,7 +5,7 @@ import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
-import  Register  from "./pages/Register";
+import { Register } from "./pages/Register";
 import Admin from "./pages/Admin";
 
 const App: React.FC = () => {
@@ -13,8 +13,6 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         {/* Các trang KHÔNG dùng Layout */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
 
         {/* Các trang DÙNG Layout */}
         <Route
@@ -26,6 +24,8 @@ const App: React.FC = () => {
                 <Route path="/search" element={<Search />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
               </Routes>
             </Layout>
           }
