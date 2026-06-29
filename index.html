@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>scitrend-frontend</title>
+    <script>
+      window.addEventListener('error', function(e) {
+        const div = document.createElement('div');
+        div.style.color = 'red';
+        div.style.padding = '20px';
+        div.style.background = '#fee2e2';
+        div.style.border = '1px solid #fecaca';
+        div.style.margin = '20px';
+        div.style.fontFamily = 'monospace';
+        div.style.whiteSpace = 'pre-wrap';
+        div.style.position = 'fixed';
+        div.style.inset = '20px';
+        div.style.zIndex = '99999';
+        div.innerHTML = '<h3>Runtime Error:</h3>' + e.message + '<br/><br/><b>File:</b> ' + e.filename + ':' + e.lineno + ':' + e.colno + '<br/><br/><b>Stack:</b><br/>' + (e.error ? e.error.stack : 'No stack');
+        document.body.appendChild(div);
+      });
+    </script>
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
       rel="stylesheet"

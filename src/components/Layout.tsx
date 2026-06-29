@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -119,18 +119,13 @@ const menuItems = [
             </div>
           </div>
 
-          {/* Các nút tương tác thay đổi động theo trạng thái Đăng nhập */}
-          <div className="flex flex-col gap-2 pt-1">
-            {!userName ? (
-              <>
-                {/* CHƯA ĐĂNG NHẬP: Hiển thị bộ đôi nút Login/Register */}
+              {/* Các nút điều hướng Đăng nhập & Đăng ký sử dụng đúng hệ màu thương hiệu */}
+              <div className="flex flex-col gap-2 pt-1">
                 <Link
                   to="/login"
                   className="w-full bg-[#002045] hover:opacity-90 text-white text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
                 >
-                  <span className="material-symbols-outlined text-sm">
-                    login
-                  </span>
+                  <span className="material-symbols-outlined text-sm">login</span>
                   Đăng nhập
                 </Link>
 
@@ -143,20 +138,9 @@ const menuItems = [
                   </span>
                   Đăng ký tài khoản
                 </Link>
-              </>
-            ) : (
-              /* ĐÃ ĐĂNG NHẬP THÀNH CÔNG: Ẩn nút Login/Register, hiện nút Đăng xuất */
-              <button
-                onClick={handleLogout}
-                className="w-full border border-[#ef4444] text-[#ef4444] hover:bg-[#fef2f2] text-xs font-semibold py-2.5 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-sm">
-                  logout
-                </span>
-                Đăng xuất
-              </button>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </aside>
 

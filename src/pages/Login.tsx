@@ -5,13 +5,16 @@ import { useNavigate, Link } from "react-router-dom";
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Sử dụng AuthContext từ nhánh duc
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError(null);
     setIsLoading(true);
 
     try {
@@ -144,6 +147,7 @@ export const Login = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
               placeholder="name@university.edu.vn"
               required
               style={{
@@ -174,6 +178,7 @@ export const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
               placeholder="••••••••"
               required
               style={{
@@ -194,7 +199,7 @@ export const Login = () => {
             style={{
               width: "100%",
               padding: "0.75rem",
-              backgroundColor: "#002855", // Màu xanh đậm ton-sur-ton với nút Đăng nhập ở Sidebar của bạn
+              backgroundColor: "#002855",
               color: "#ffffff",
               border: "none",
               borderRadius: "6px",
