@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -33,15 +33,28 @@ export const Login = () => {
           response.data.user?.fullName || email.split("@")[0],
         );
 
-        // Chuyển hướng về trang chủ và ép tải lại để Sidebar cập nhật trạng thái ngay
-        navigate("/");
+        // Lấy danh sách roles từ phản hồi (user.roles hoặc roles trực tiếp)
+        const userRoles = response.data.user?.roles || response.data.roles || [];
+        localStorage.setItem("userRoles", JSON.stringify(userRoles));
+
+        // Kiểm tra nếu roles chứa "Administrator"
+        const isAdmin = Array.isArray(userRoles)
+          ? userRoles.includes("Administrator")
+          : userRoles === "Administrator";
+
+        // Chuyển hướng về trang quản trị nếu là Administrator, ngược lại về trang chủ
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
         window.location.reload();
       }
     } catch (err: any) {
       if (err.response && err.response.data) {
         setError(
           err.response.data.message ||
-            "Tài khoản hoặc mật khẩu không chính xác!",
+          "Tài khoản hoặc mật khẩu không chính xác!",
         );
       } else {
         setError(
@@ -195,6 +208,16 @@ export const Login = () => {
             {isLoading ? "Đang xử lý..." : "Xác nhận Đăng nhập"}
           </button>
         </form>
+
+        <p style={{ marginTop: "1.5rem", fontSize: "0.875rem", color: "#64748b" }}>
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            style={{ color: "#002855", fontWeight: "600", textDecoration: "underline" }}
+          >
+            Đăng ký ngay
+          </Link>
+        </p>
       </div>
     </div>
   );
