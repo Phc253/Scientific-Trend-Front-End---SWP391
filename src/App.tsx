@@ -5,31 +5,33 @@ import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
-import PaperDetail from "./pages/PaperDetail";
-import MyLibrary from "./pages/MyLibrary";
-import { AuthProvider } from "./context/AuthContext";
+import  Register  from "./pages/Register";
+import Admin from "./pages/Admin";
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
-        {/* Bao bọc toàn bộ các tuyến đường bằng khung sườn Layout chung */}
-        <Layout>
-          <Routes>
-            {/* Định nghĩa đường dẫn cho từng trang cụ thể */}
-            <Route path="/" element={<Home />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/paper/:id" element={<PaperDetail />} />
-            <Route path="/library" element={<MyLibrary />} />
-          </Routes>
-        </Layout>
-      </Router>
-    </AuthProvider>
+    <Router>
+      <Routes>
+        {/* Các trang KHÔNG dùng Layout */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Các trang DÙNG Layout */}
+        <Route
+          path="*"
+          element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<Admin />} />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
+    </Router>
   );
 };
-
 export default App;

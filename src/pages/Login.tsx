@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,13 +18,52 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      // Chuyển việc gọi API và lưu localStorage cho hàm login trong AuthContext xử lý
-      await login(email, password);
-      
-      // Chuyển hướng về trang chủ khi thành công
-      navigate("/");
+      // Gọi API Login tới cổng Back-end .NET (.NET của bạn cổng nào thì đổi số lại nhé, ví dụ: 5225)
+      const response = await axios.post(
+        "http://localhost:5225/api/account/login",
+        {
+          email: email,
+          password: password,
+        },
+      );
+
+      if (response.data && response.data.token) {
+        // Lưu thông tin đăng nhập vào localStorage
+        localStorage.setItem("token", response.data.token);
+        // Lưu tên user hoặc email để hiển thị dưới thanh Sidebar thay cho chữ Guest
+        localStorage.setItem(
+          "userName",
+          response.data.user?.fullName || email.split("@")[0],
+        );
+
+        // Lấy danh sách roles từ phản hồi (user.roles hoặc roles trực tiếp)
+        const userRoles = response.data.user?.roles || response.data.roles || [];
+        localStorage.setItem("userRoles", JSON.stringify(userRoles));
+
+        // Kiểm tra nếu roles chứa "Administrator"
+        const isAdmin = Array.isArray(userRoles)
+          ? userRoles.includes("Administrator")
+          : userRoles === "Administrator";
+
+        // Chuyển hướng về trang quản trị nếu là Administrator, ngược lại về trang chủ
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+        window.location.reload();
+      }
     } catch (err: any) {
-      setError(err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      if (err.response && err.response.data) {
+        setError(
+          err.response.data.message ||
+          "Tài khoản hoặc mật khẩu không chính xác!",
+        );
+      } else {
+        setError(
+          "Không thể kết nối đến máy chủ Back-end. Bạn đã chạy lệnh dotnet run chưa?",
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +213,16 @@ export const Login = () => {
             {isLoading ? "Đang xử lý..." : "Xác nhận Đăng nhập"}
           </button>
         </form>
+
+        <p style={{ marginTop: "1.5rem", fontSize: "0.875rem", color: "#64748b" }}>
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            style={{ color: "#002855", fontWeight: "600", textDecoration: "underline" }}
+          >
+            Đăng ký ngay
+          </Link>
+        </p>
       </div>
     </div>
   );

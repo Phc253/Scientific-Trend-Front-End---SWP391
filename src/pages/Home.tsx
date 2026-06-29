@@ -1,7 +1,25 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const rolesStr = localStorage.getItem("userRoles");
+    if (rolesStr) {
+      try {
+        const roles = JSON.parse(rolesStr);
+        const isAdmin = Array.isArray(roles)
+          ? roles.includes("Administrator")
+          : roles === "Administrator";
+        if (isAdmin) {
+          navigate("/admin");
+        }
+      } catch (e) {
+        console.error("Lỗi đọc roles từ localStorage:", e);
+      }
+    }
+  }, [navigate]);
   // Thống kê số liệu hệ thống mô phỏng theo đặc tả yêu cầu
   const stats = [
     {
