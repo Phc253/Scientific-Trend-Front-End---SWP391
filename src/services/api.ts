@@ -1,4 +1,26 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5225/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://localhost:7174/api";
+import axios from "axios";
+
+export interface TrendingItem {
+  name: string;
+  type: string;
+  trendScore: number;
+  growthRate: number;
+  recentPaperCount: number;
+  snapshotDate: string;
+}
+
+export interface DashboardSummaryResponse {
+  totalPapers: number;
+  totalKeywords: number;
+  totalAuthors: number;
+  totalJournals: number;
+  totalUsers: number;
+  totalTopics: number;
+  trendingKeywords: TrendingItem[];
+  lastSyncTime?: string;
+}
 
 export interface Paper {
   paperId: number;
@@ -93,25 +115,22 @@ export interface RegisterResponseData {
 }
 
 // Generic fetch wrapper
-async function request<T>(
-  url: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   const fullUrl = `${API_BASE_URL}${url}`;
-  
+
   const headers = new Headers();
-  
+
   // Set content type if not FormData (multipart)
   if (!(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
-  
+
   // Set JWT authorization token if available
   const token = localStorage.getItem("token");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
-  
+
   // Merge custom headers from options
   if (options.headers) {
     const customHeaders = new Headers(options.headers);
@@ -177,88 +196,136 @@ export const api = {
     if (params.keyword) searchParams.append("keyword", params.keyword);
     if (params.author) searchParams.append("author", params.author);
     if (params.journal) searchParams.append("journal", params.journal);
-    if (params.publicationYear !== undefined) searchParams.append("publicationYear", params.publicationYear.toString());
-    if (params.page !== undefined) searchParams.append("page", params.page.toString());
-    if (params.pageSize !== undefined) searchParams.append("pageSize", params.pageSize.toString());
+    if (params.publicationYear !== undefined)
+      searchParams.append("publicationYear", params.publicationYear.toString());
+    if (params.page !== undefined)
+      searchParams.append("page", params.page.toString());
+    if (params.pageSize !== undefined)
+      searchParams.append("pageSize", params.pageSize.toString());
 
     const queryString = searchParams.toString();
     const url = `/Papers${queryString ? `?${queryString}` : ""}`;
     return request<{ success: boolean; data: SearchResponse }>(url);
   },
 
-  async getPaperDetails(id: number | string): Promise<{ success: boolean; data: Paper }> {
+  async getPaperDetails(
+    id: number | string,
+  ): Promise<{ success: boolean; data: Paper }> {
     return request<{ success: boolean; data: Paper }>(`/Papers/${id}`);
   },
 
-  async searchAuthors(name: string): Promise<{ success: boolean; data: { authorId: number; authorName: string }[] }> {
-    return request<{ success: boolean; data: { authorId: number; authorName: string }[] }>(`/Authors/search?name=${encodeURIComponent(name)}`);
+  async searchAuthors(name: string): Promise<{
+    success: boolean;
+    data: { authorId: number; authorName: string }[];
+  }> {
+    return request<{
+      success: boolean;
+      data: { authorId: number; authorName: string }[];
+    }>(`/Authors/search?name=${encodeURIComponent(name)}`);
   },
 
-  async getAuthorFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+  async getAuthorFacets(
+    q?: string,
+    page = 1,
+    pageSize = 10,
+  ): Promise<PaperFacetResponse> {
     const searchParams = new URLSearchParams();
     if (q) searchParams.append("q", q);
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
-    return request<PaperFacetResponse>(`/Papers/facets/authors?${searchParams.toString()}`);
+    return request<PaperFacetResponse>(
+      `/Papers/facets/authors?${searchParams.toString()}`,
+    );
   },
 
-  async getKeywordFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+  async getKeywordFacets(
+    q?: string,
+    page = 1,
+    pageSize = 10,
+  ): Promise<PaperFacetResponse> {
     const searchParams = new URLSearchParams();
     if (q) searchParams.append("q", q);
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
-    return request<PaperFacetResponse>(`/Papers/facets/keywords?${searchParams.toString()}`);
+    return request<PaperFacetResponse>(
+      `/Papers/facets/keywords?${searchParams.toString()}`,
+    );
   },
 
-  async getTopicFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+  async getTopicFacets(
+    q?: string,
+    page = 1,
+    pageSize = 10,
+  ): Promise<PaperFacetResponse> {
     const searchParams = new URLSearchParams();
     if (q) searchParams.append("q", q);
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
-    return request<PaperFacetResponse>(`/Papers/facets/topics?${searchParams.toString()}`);
+    return request<PaperFacetResponse>(
+      `/Papers/facets/topics?${searchParams.toString()}`,
+    );
   },
 
-  async getJournalFacets(q?: string, page = 1, pageSize = 10): Promise<PaperFacetResponse> {
+  async getJournalFacets(
+    q?: string,
+    page = 1,
+    pageSize = 10,
+  ): Promise<PaperFacetResponse> {
     const searchParams = new URLSearchParams();
     if (q) searchParams.append("q", q);
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
-    return request<PaperFacetResponse>(`/Papers/facets/journals?${searchParams.toString()}`);
+    return request<PaperFacetResponse>(
+      `/Papers/facets/journals?${searchParams.toString()}`,
+    );
   },
 
   // Bookmarks
   async toggleBookmark(
     targetId: number | string,
-    targetType: "Paper" | "Keyword"
+    targetType: "Paper" | "Keyword",
   ): Promise<{ success: boolean; isBookmarked: boolean; message: string }> {
-    return request<{ success: boolean; isBookmarked: boolean; message: string }>(
-      "/Bookmarks/toggle",
-      {
-        method: "POST",
-        body: JSON.stringify({ targetId: Number(targetId), targetType }),
-      }
-    );
+    return request<{
+      success: boolean;
+      isBookmarked: boolean;
+      message: string;
+    }>("/Bookmarks/toggle", {
+      method: "POST",
+      body: JSON.stringify({ targetId: Number(targetId), targetType }),
+    });
   },
 
   async getMyBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
-    return request<{ success: boolean; data: BookmarkItem[] }>("/Bookmarks/my-bookmarks");
+    return request<{ success: boolean; data: BookmarkItem[] }>(
+      "/Bookmarks/my-bookmarks",
+    );
   },
 
   // Follows
   async toggleFollow(
     targetId: number | string,
-    targetType: "Author" | "Journal" | "ResearchTopic"
+    targetType: "Author" | "Journal" | "ResearchTopic",
   ): Promise<{ success: boolean; isFollowed: boolean; message: string }> {
     return request<{ success: boolean; isFollowed: boolean; message: string }>(
       "/Follows/toggle",
       {
         method: "POST",
         body: JSON.stringify({ targetId: Number(targetId), targetType }),
-      }
+      },
     );
   },
 
   async getMyFollows(): Promise<{ success: boolean; data: FollowItem[] }> {
-    return request<{ success: boolean; data: FollowItem[] }>("/Follows/my-follows");
+    return request<{ success: boolean; data: FollowItem[] }>(
+      "/Follows/my-follows",
+    );
+  },
+
+  getDashboardSummary: async (): Promise<DashboardSummaryResponse> => {
+    // Đảm bảo URL gọi đúng cổng Backend của bạn (ví dụ 5225 hoặc 7174)
+    const response = await axios.get(
+      "http://localhost:5225/api/dashboard/summary",
+    );
+    return response.data;
   },
 };
