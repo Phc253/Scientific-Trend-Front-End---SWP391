@@ -117,7 +117,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 {userName ? userName : "Guest"}
               </p>
               <p className="text-xs text-[#74777f]">
-                {userName ? "Thành viên" : "Chưa đăng nhập"}
+                {userName
+                  ? role.includes("Student")
+                    ? "Sinh viên"
+                    : role.includes("Lecturer")
+                      ? "Giảng viên"
+                      : role.includes("Researcher")
+                        ? "Nhà nghiên cứu"
+                        : "Thành viên"
+                  : "Chưa đăng nhập"}
               </p>
             </div>
           </div>

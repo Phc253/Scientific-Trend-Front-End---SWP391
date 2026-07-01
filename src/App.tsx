@@ -7,14 +7,41 @@ import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import Admin from "./pages/Admin";
+import StudentLayout from "./components/student/StudentLayout";
+import StudentDashboard from "./components/student/StudentDashboard";
+import StudentExplore from "./components/student/StudentExplore";
+import StudentLibrary from "./components/student/StudentLibrary";
+import StudentTrending from "./components/student/StudentTrending";
 
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        {/* Các trang KHÔNG dùng Layout */}
+        {/* ==========================================
+            KHU VỰC DÀNH CHO SINH VIÊN
+            (Sử dụng StudentLayout)
+        ========================================== */}
+        <Route
+          path="/student/*"
+          element={
+            <StudentLayout>
+              <Routes>
+                {/* Đường dẫn mặc định khi vào /student sẽ load StudentDashboard */}
+                <Route path="/" element={<StudentDashboard />} />
+                <Route path="/explore" element={<StudentExplore />} />
+                <Route path="/library" element={<StudentLibrary />} />
+                <Route path="/trending" element={<StudentTrending />} />
+                {/* Mẹo: Sau này bạn tạo thêm trang Khám phá, hãy bỏ comment dòng dưới */}
+                {/* <Route path="/explore" element={<StudentExplore />} /> */}
+              </Routes>
+            </StudentLayout>
+          }
+        />
 
-        {/* Các trang DÙNG Layout */}
+        {/* ==========================================
+            KHU VỰC CHUNG & ADMIN
+            (Sử dụng Layout gốc)
+        ========================================== */}
         <Route
           path="*"
           element={
@@ -34,4 +61,5 @@ const App: React.FC = () => {
     </Router>
   );
 };
+
 export default App;

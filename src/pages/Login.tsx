@@ -29,35 +29,41 @@ export const Login = () => {
       );
 
       if (response.data && response.data.token) {
-        // Lưu thông tin đăng nhập vào localStorage
+        // 1. Lưu token và tên người dùng vào localStorage
         localStorage.setItem("token", response.data.token);
         localStorage.setItem(
           "userName",
           response.data.user?.fullName || email.split("@")[0],
         );
 
+        // 2. XỬ LÝ LẤY QUYỀN (Đồng bộ cả trường roles và trường actorType từ DB)
         const userRoles =
           response.data.user?.roles || response.data.roles || [];
-        localStorage.setItem("userRoles", JSON.stringify(userRoles));
+        const actorType =
+          response.data.user?.actorType || response.data.actorType || "";
+
+        // Chuẩn hóa chuỗi lưu vào localStorage để hàm .includes() ở các Layout hoạt động chính xác
+        const finalRole = actorType
+          ? actorType
+          : Array.isArray(userRoles)
+            ? userRoles.join(",")
+            : userRoles;
+
+        localStorage.setItem("userRoles", finalRole);
 
         // Gọi hàm login từ AuthContext để cập nhật trạng thái toàn cục (Global State)
-        // Lưu ý: Tham số truyền vào tùy thuộc vào cách bạn "duc" định nghĩa hàm login
         if (login) {
           login(response.data.token, response.data.user);
         }
 
-        const isAdmin = Array.isArray(userRoles)
-          ? userRoles.includes("Administrator")
-          : userRoles === "Administrator";
-
-        if (isAdmin) {
+        // 3. LOGIC ĐIỀU HƯỚNG ROUTE THEO TỪNG ROLE CỤ THỂ
+        if (finalRole.includes("Administrator")) {
           navigate("/admin");
+        } else if (finalRole.includes("Student")) {
+          navigate("/student"); // Đẩy thẳng Sinh viên vào khu vực giao diện riêng (/student)
         } else {
-          navigate("/");
+          navigate("/"); // Khách hoặc các role khác về trang chủ công cộng
         }
-
-        // Mẹo: Khi đã dùng AuthContext và useNavigate, bạn không nên dùng window.location.reload()
-        // vì nó làm mất đi ưu điểm chuyển trang mượt mà (Single Page Application) của React.
       }
     } catch (err: any) {
       if (err.response && err.response.data) {
