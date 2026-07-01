@@ -12,6 +12,14 @@ import StudentDashboard from "./components/student/StudentDashboard";
 import StudentExplore from "./components/student/StudentExplore";
 import StudentLibrary from "./components/student/StudentLibrary";
 import StudentTrending from "./components/student/StudentTrending";
+import ResearcherLayout from "./components/researcher/ResearcherLayout";
+import ResearcherDashboard from "./components/researcher/ResearcherDashboard";
+import ResearcherAnalytics from "./components/researcher/ResearcherAnalytic";
+import LecturerLayout from "./components/lecturer/LecturerLayout";
+import LecturerDashboard from "./components/lecturer/LecturerDashboard";
+import LecturerGroups from "./components/lecturer/LecturerGroups";
+import LecturerLibrary from "./components/lecturer/LecturerLibrary";
+import LecturerTrends from "./components/lecturer/LecturerTrends";
 
 const App: React.FC = () => {
   return (
@@ -55,6 +63,39 @@ const App: React.FC = () => {
                 <Route path="/register" element={<Register />} />
               </Routes>
             </Layout>
+          }
+        />
+
+        {/* ==========================================
+            KHU VỰC DÀNH CHO NHÀ NGHIÊN CỨU
+        ========================================== */}
+        <Route
+          path="/researcher/*"
+          element={
+            <ResearcherLayout>
+              <Routes>
+                <Route path="/" element={<ResearcherDashboard />} />
+                <Route path="/analytics" element={<ResearcherAnalytics />} />
+                {/* Bạn có thể tạo thêm các trang Network, Alerts sau này */}
+              </Routes>
+            </ResearcherLayout>
+          }
+        />
+
+        {/* ==========================================
+            KHU VỰC DÀNH CHO GIẢNG VIÊN
+        ========================================== */}
+        <Route
+          path="/lecturer/*"
+          element={
+            <LecturerLayout>
+              <Routes>
+                <Route path="/" element={<LecturerDashboard />} />
+                <Route path="/groups" element={<LecturerGroups />} />
+                <Route path="/library" element={<LecturerLibrary />} />
+                <Route path="/trends" element={<LecturerTrends />} />
+              </Routes>
+            </LecturerLayout>
           }
         />
       </Routes>

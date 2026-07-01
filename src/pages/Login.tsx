@@ -61,6 +61,10 @@ export const Login = () => {
           navigate("/admin");
         } else if (finalRole.includes("Student")) {
           navigate("/student"); // Đẩy thẳng Sinh viên vào khu vực giao diện riêng (/student)
+        } else if (finalRole.includes("Researcher")) {
+          navigate("/researcher"); // Đẩy Nhà nghiên cứu vào workspace riêng
+        } else if (finalRole.includes("Lecturer")) {
+          navigate("/lecturer"); // Đẩy Giảng viên vào không gian riêng
         } else {
           navigate("/"); // Khách hoặc các role khác về trang chủ công cộng
         }
