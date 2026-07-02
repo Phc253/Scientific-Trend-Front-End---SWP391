@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { AdminOverview } from "../components/admin/AdminOverview";
 import { AdminUsers } from "../components/admin/AdminUsers";
 import { AdminOpenAlex } from "../components/admin/AdminOpenAlex";
@@ -6,8 +7,17 @@ import { AdminOpenAlexConfig } from "../components/admin/AdminOpenAlexConfig";
 import type { SystemLog } from "../types/admin";
 
 const Admin: React.FC = () => {
-  // 1. Quản lý Tabs
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "api" | "templates" | "scheduler">("overview");
+  const location = useLocation();
+
+  // Determine active tab based on route path
+  let activeTab: "overview" | "users" | "api" | "templates" | "scheduler" = "overview";
+  if (location.pathname.includes("/users")) {
+    activeTab = "users";
+  } else if (location.pathname.includes("/api")) {
+    activeTab = "api";
+  } else if (location.pathname.includes("/scheduler")) {
+    activeTab = "scheduler";
+  }
 
   // 2. Hệ thống logs giả lập
   const [logs, setLogs] = useState<SystemLog[]>([
@@ -43,55 +53,7 @@ const Admin: React.FC = () => {
         
         </div>
       </div>
-
-      {/* Bộ Điều Hướng Tabs */}
-      <div className="flex border-b border-[#ebeef0] gap-1 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("overview")}
-          className={`flex items-center gap-2 py-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer ${
-            activeTab === "overview"
-              ? "border-[#13696a] text-[#13696a]"
-              : "border-transparent text-[#43474e] hover:text-[#002045] hover:border-[#ebeef0]"
-          }`}
-        >
-          <span className="material-symbols-outlined text-lg">dashboard</span>
-          Tổng quan hệ thống
-        </button>
-        <button
-          onClick={() => setActiveTab("users")}
-          className={`flex items-center gap-2 py-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer ${
-            activeTab === "users"
-              ? "border-[#13696a] text-[#13696a]"
-              : "border-transparent text-[#43474e] hover:text-[#002045] hover:border-[#ebeef0]"
-          }`}
-        >
-          <span className="material-symbols-outlined text-lg">group</span>
-          Quản lý người dùng
-        </button>
-        <button
-          onClick={() => setActiveTab("api")}
-          className={`flex items-center gap-2 py-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer ${
-            activeTab === "api"
-              ? "border-[#13696a] text-[#13696a]"
-              : "border-transparent text-[#43474e] hover:text-[#002045] hover:border-[#ebeef0]"
-          }`}
-        >
-          <span className="material-symbols-outlined text-lg">api</span>
-          Đồng bộ OpenAlex
-        </button>
-        <button
-          onClick={() => setActiveTab("scheduler")}
-          className={`flex items-center gap-2 py-3 px-4 text-sm font-semibold transition-all border-b-2 cursor-pointer ${
-            activeTab === "scheduler"
-              ? "border-[#13696a] text-[#13696a]"
-              : "border-transparent text-[#43474e] hover:text-[#002045] hover:border-[#ebeef0]"
-          }`}
-        >
-          <span className="material-symbols-outlined text-lg">settings</span>
-          Cấu hình Scheduler
-        </button>
-     
-      </div>
+      {/* Left bar layout handles navigation */}
 
       {/* NỘI DUNG TỪNG TABS */}
       {activeTab === "overview" && <AdminOverview logs={logs} />}
