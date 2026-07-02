@@ -75,7 +75,7 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post("/api/Admin/scheduler-config", payload, {
+      await axios.put("/api/Admin/scheduler-config", payload, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
@@ -158,23 +158,28 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
 
             {/* Từ khóa quét tự động */}
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#43474e] uppercase">
+              <label className={`block text-xs font-bold uppercase ${!enabled ? "text-[#9fa2a8]" : "text-[#43474e]"}`}>
                 Từ khóa tự động (Keyword)
               </label>
               <input
                 type="text"
                 required
+                disabled={!enabled}
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="Ví dụ: AI, Machine Learning..."
-                className="w-full p-2.5 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] text-xs font-semibold text-[#181c1e]"
+                className={`w-full p-2.5 border rounded focus:outline-none focus:border-[#13696a] text-xs font-semibold text-[#181c1e] ${
+                  !enabled 
+                    ? "bg-[#e1e4e6] border-[#dbdde0] text-[#74777f] cursor-not-allowed opacity-60" 
+                    : "bg-[#f1f4f6] border-[#c4c6cf]"
+                }`}
               />
               <p className="text-[10px] text-[#74777f] italic">Từ khóa sẽ được gửi đến OpenAlex API.</p>
             </div>
 
             {/* Số lượng kết quả tối đa */}
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#43474e] uppercase">
+              <label className={`block text-xs font-bold uppercase ${!enabled ? "text-[#9fa2a8]" : "text-[#43474e]"}`}>
                 Số kết quả tối đa (maxResults)
               </label>
               <input
@@ -182,9 +187,14 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
                 required
                 min={1}
                 max={100}
+                disabled={!enabled}
                 value={maxResults}
                 onChange={(e) => setMaxResults(Number(e.target.value))}
-                className="w-full p-2.5 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] text-xs font-semibold text-[#181c1e]"
+                className={`w-full p-2.5 border rounded focus:outline-none focus:border-[#13696a] text-xs font-semibold text-[#181c1e] ${
+                  !enabled 
+                    ? "bg-[#e1e4e6] border-[#dbdde0] text-[#74777f] cursor-not-allowed opacity-60" 
+                    : "bg-[#f1f4f6] border-[#c4c6cf]"
+                }`}
               />
               <p className="text-[10px] text-[#74777f] italic">Số lượng bài báo tối đa lấy về trong mỗi lượt quét.</p>
             </div>
