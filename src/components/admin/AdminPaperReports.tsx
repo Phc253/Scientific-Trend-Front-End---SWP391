@@ -24,6 +24,8 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
     topPaperCitations: 0,
   });
 
+  const mountLogged = React.useRef(false);
+
   // 1. Tải số liệu thống kê tổng hợp (tải tối đa 1000 bản ghi trên mount để tính aggregate)
   React.useEffect(() => {
     const fetchStats = async () => {
@@ -56,7 +58,10 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
       }
     };
     fetchStats();
-    addLog("INFO", "Quản trị viên đã truy cập Thống kê Báo cáo bài báo khoa học.");
+    if (!mountLogged.current) {
+      addLog("INFO", "Quản trị viên đã truy cập Thống kê Báo cáo bài báo khoa học.");
+      mountLogged.current = true;
+    }
   }, []);
 
   // 2. Tải dữ liệu phân trang & tìm kiếm theo thời gian thực (có debounce)

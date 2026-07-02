@@ -14,6 +14,8 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const mountLogged = React.useRef(false);
+
   // Tải dữ liệu từ khóa từ API
   React.useEffect(() => {
     const fetchKeywords = async () => {
@@ -35,7 +37,10 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
       }
     };
     fetchKeywords();
-    addLog("INFO", "Quản trị viên đã truy cập Thống kê từ khóa khoa học.");
+    if (!mountLogged.current) {
+      addLog("INFO", "Quản trị viên đã truy cập Thống kê từ khóa khoa học.");
+      mountLogged.current = true;
+    }
   }, []);
 
   // Tính toán chỉ số tổng quan
