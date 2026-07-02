@@ -4,19 +4,25 @@ import { AdminOverview } from "../components/admin/AdminOverview";
 import { AdminUsers } from "../components/admin/AdminUsers";
 import { AdminOpenAlex } from "../components/admin/AdminOpenAlex";
 import { AdminOpenAlexConfig } from "../components/admin/AdminOpenAlexConfig";
+import { AdminPaperReports } from "../components/admin/AdminPaperReports";
+import { AdminKeywordStats } from "../components/admin/AdminKeywordStats";
 import type { SystemLog } from "../types/admin";
 
 const Admin: React.FC = () => {
   const location = useLocation();
 
   // Determine active tab based on route path
-  let activeTab: "overview" | "users" | "api" | "templates" | "scheduler" = "overview";
+  let activeTab: "overview" | "users" | "api" | "templates" | "scheduler" | "paper-reports" | "keyword-stats" = "overview";
   if (location.pathname.includes("/users")) {
     activeTab = "users";
   } else if (location.pathname.includes("/api")) {
     activeTab = "api";
   } else if (location.pathname.includes("/scheduler")) {
     activeTab = "scheduler";
+  } else if (location.pathname.includes("/paper-reports")) {
+    activeTab = "paper-reports";
+  } else if (location.pathname.includes("/keyword-stats")) {
+    activeTab = "keyword-stats";
   }
 
   // 2. Hệ thống logs giả lập
@@ -60,6 +66,8 @@ const Admin: React.FC = () => {
       {activeTab === "users" && <AdminUsers addLog={addLog} />}
       {activeTab === "api" && <AdminOpenAlex addLog={addLog} />}
       {activeTab === "scheduler" && <AdminOpenAlexConfig addLog={addLog} />}
+      {activeTab === "paper-reports" && <AdminPaperReports addLog={addLog} />}
+      {activeTab === "keyword-stats" && <AdminKeywordStats addLog={addLog} />}
     </div>
   );
 };

@@ -11,6 +11,8 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
   const [keyword, setKeyword] = useState<string>("Computer Science");
   const [maxResults, setMaxResults] = useState<number>(20);
   const [intervalHours, setIntervalHours] = useState<number>(24);
+  const [fetchNewWorksEnabled, setFetchNewWorksEnabled] = useState<boolean>(true);
+  const [refreshExistingWorksEnabled, setRefreshExistingWorksEnabled] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
@@ -32,6 +34,8 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
           setKeyword(response.data.keyword || "Computer Science");
           setMaxResults(response.data.maxResults || 20);
           setIntervalHours(response.data.intervalHours || 24);
+          setFetchNewWorksEnabled(response.data.fetchNewWorksEnabled !== false);
+          setRefreshExistingWorksEnabled(response.data.refreshExistingWorksEnabled !== false);
           addLog("INFO", "Tải cấu hình scheduler OpenAlex thành công.");
         }
       } catch (err: any) {
@@ -63,6 +67,8 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
       keyword: keyword.trim(),
       maxResults,
       intervalHours,
+      fetchNewWorksEnabled,
+      refreshExistingWorksEnabled,
     };
 
     addLog("INFO", `Đang lưu cấu hình scheduler OpenAlex: Chế độ ${enabled ? "Auto" : "Manual"}, Từ khóa: "${payload.keyword}"`);
@@ -207,6 +213,43 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
                   : `Hệ thống quét dữ liệu mỗi ${intervalHours} giờ.`
                 }
               </p>
+            </div>
+          </div>
+
+          {/* Tùy chọn đồng bộ bổ sung */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#ebeef0] pt-4 mt-2">
+            {/* Tải bài viết mới */}
+            <div className="flex items-center space-x-3 p-3.5 bg-[#f8fafc] rounded-lg border border-[#ebeef0] hover:border-slate-300 transition-colors">
+              <input
+                id="fetchNewWorksEnabled"
+                type="checkbox"
+                checked={fetchNewWorksEnabled}
+                onChange={(e) => setFetchNewWorksEnabled(e.target.checked)}
+                className="h-4.5 w-4.5 rounded border-gray-300 text-[#13696a] focus:ring-[#13696a] cursor-pointer"
+              />
+              <div className="text-xs">
+                <label htmlFor="fetchNewWorksEnabled" className="font-bold text-[#002045] block cursor-pointer select-none">
+                  Tải bài viết mới (Fetch New)
+                </label>
+                <p className="text-[10px] text-[#74777f] mt-0.5">Tìm kiếm và lưu trữ các ấn phẩm khoa học mới phát hành.</p>
+              </div>
+            </div>
+
+            {/* Làm mới bài viết cũ */}
+            <div className="flex items-center space-x-3 p-3.5 bg-[#f8fafc] rounded-lg border border-[#ebeef0] hover:border-slate-300 transition-colors">
+              <input
+                id="refreshExistingWorksEnabled"
+                type="checkbox"
+                checked={refreshExistingWorksEnabled}
+                onChange={(e) => setRefreshExistingWorksEnabled(e.target.checked)}
+                className="h-4.5 w-4.5 rounded border-gray-300 text-[#13696a] focus:ring-[#13696a] cursor-pointer"
+              />
+              <div className="text-xs">
+                <label htmlFor="refreshExistingWorksEnabled" className="font-bold text-[#002045] block cursor-pointer select-none">
+                  Cập nhật bài viết cũ (Refresh Existing)
+                </label>
+                <p className="text-[10px] text-[#74777f] mt-0.5">Làm mới số trích dẫn và thông tin của các bài viết hiện tại.</p>
+              </div>
             </div>
           </div>
 

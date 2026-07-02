@@ -5,6 +5,16 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const isReportsPath = location.pathname.startsWith("/admin/paper-reports") || location.pathname.startsWith("/admin/keyword-stats");
+  const [isReportsOpen, setIsReportsOpen] = React.useState(isReportsPath);
+
+  // Sync state if route changes externally
+  React.useEffect(() => {
+    if (isReportsPath) {
+      setIsReportsOpen(true);
+    }
+  }, [location.pathname, isReportsPath]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
@@ -17,6 +27,8 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: "/admin/users", icon: "group", label: "Quản lý người dùng" },
     { path: "/admin/api", icon: "api", label: "Đồng bộ OpenAlex" },
     { path: "/admin/scheduler", icon: "settings", label: "Cấu hình Scheduler" },
+    { path: "/admin/paper-reports", icon: "description", label: "Báo cáo bài báo" },
+    { path: "/admin/keyword-stats", icon: "bar_chart", label: "Thống kê từ khóa" },
   ];
 
   // Helper to determine if a path is active
@@ -49,7 +61,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         {/* Danh sách Menu */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => {
+          {navItems.slice(0, 4).map((item) => {
             const isActive = isTabActive(item.path);
             return (
               <Link
@@ -70,6 +82,57 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </Link>
             );
           })}
+
+          {/* Group Báo cáo & Thống kê dưới dạng Dropdown */}
+          <div className="space-y-1">
+            <button
+              onClick={() => setIsReportsOpen(!isReportsOpen)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-300 cursor-pointer ${
+                isReportsPath
+                  ? "bg-slate-800/60 text-slate-100"
+                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`material-symbols-outlined text-[20px] ${isReportsPath ? "text-cyan-300" : ""}`}>
+                  monitoring
+                </span>
+                <span>Báo cáo & Thống kê</span>
+              </div>
+              <span className={`material-symbols-outlined text-sm transition-transform duration-300 ${
+                isReportsOpen ? "rotate-180" : ""
+              }`}>
+                keyboard_arrow_down
+              </span>
+            </button>
+
+            {isReportsOpen && (
+              <div className="pl-4 mt-1 space-y-1 border-l-2 border-slate-800 ml-6 animate-fadeIn">
+                <Link
+                  to="/admin/paper-reports"
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                    location.pathname.startsWith("/admin/paper-reports")
+                      ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-500/10"
+                      : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-100"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">description</span>
+                  <span>Báo cáo bài báo</span>
+                </Link>
+                <Link
+                  to="/admin/keyword-stats"
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                    location.pathname.startsWith("/admin/keyword-stats")
+                      ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-500/10"
+                      : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-100"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">bar_chart</span>
+                  <span>Thống kê từ khóa</span>
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Thông tin Quản trị viên (Góc dưới bên trái) */}
