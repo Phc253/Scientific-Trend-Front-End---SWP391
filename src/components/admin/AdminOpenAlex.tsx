@@ -21,6 +21,7 @@ interface SyncJobResult {
 export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
   const [keyword, setKeyword] = useState("Computer Science");
   const [maxResults, setMaxResults] = useState(20);
+  const [useCheckpoint, setUseCheckpoint] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [syncResult, setSyncResult] = useState<SyncJobResult | null>(null);
@@ -33,18 +34,19 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
     setIsLoading(true);
     setErrorMsg("");
     setSyncResult(null);
-    addLog("INFO", `Bắt đầu đồng bộ OpenAlex cho từ khóa "${keyword}" (maxResults: ${maxResults})`);
+    addLog("INFO", `Bắt đầu đồng bộ OpenAlex cho từ khóa "${keyword}" (maxResults: ${maxResults}, useCheckpoint: ${useCheckpoint})`);
 
     try {
       const token = localStorage.getItem("token");
-      // Thực hiện gọi API POST /api/DataSync/sync-openalex với params
+      // Thực hiện gọi API POST /api/fetchdata/openalex với params
       const response = await axios.post<SyncJobResult>(
-        "/api/DataSync/sync-openalex",
+        "/api/fetchdata/openalex",
         null,
         {
           params: {
             keyword: keyword,
             maxResults: maxResults,
+            useCheckpoint: useCheckpoint,
           },
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
@@ -138,7 +140,24 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
               value={maxResults}
               onChange={(e) => setMaxResults(Number(e.target.value))}
             />
+          </div>
 
+          {/* Checkpoint checkpoint on/off toggle */}
+          <div className="flex items-center space-x-3 p-3 bg-[#f8fafc] rounded-lg border border-[#ebeef0] hover:border-slate-300 transition-colors my-2">
+            <input
+              id="useCheckpoint"
+              type="checkbox"
+              disabled={isLoading}
+              checked={useCheckpoint}
+              onChange={(e) => setUseCheckpoint(e.target.checked)}
+              className="h-4.5 w-4.5 rounded border-gray-300 text-[#13696a] focus:ring-[#13696a] cursor-pointer disabled:opacity-50"
+            />
+            <div className="text-xs">
+              <label htmlFor="useCheckpoint" className="font-bold text-[#002045] block cursor-pointer select-none">
+                Checkpoint
+              </label>
+              <p className="text-[10px] text-[#74777f] mt-0.5">Kích hoạt để lưu trữ và tải tiếp dữ liệu từ điểm quét trước đó.</p>
+            </div>
           </div>
 
           <div className="pt-4">

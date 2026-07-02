@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import Admin from "./pages/Admin";
+import AdminLayout from "./components/admin/AdminLayout";
 import StudentLayout from "./components/student/StudentLayout";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudentExplore from "./components/student/StudentExplore";
@@ -47,7 +48,7 @@ const App: React.FC = () => {
         />
 
         {/* ==========================================
-            KHU VỰC CHUNG & ADMIN
+            KHU VỰC CHUNG
             (Sử dụng Layout gốc)
         ========================================== */}
         <Route
@@ -58,11 +59,22 @@ const App: React.FC = () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/admin" element={<Admin />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
               </Routes>
             </Layout>
+          }
+        />
+
+        {/* ==========================================
+            KHU VỰC DÀNH CHO ADMIN
+        ========================================== */}
+        <Route
+          path="/admin/*"
+          element={
+            <AdminLayout>
+              <Admin />
+            </AdminLayout>
           }
         />
 
