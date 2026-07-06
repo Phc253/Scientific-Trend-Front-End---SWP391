@@ -15,89 +15,53 @@ import StudentTrending from "./components/student/StudentTrending";
 import ResearcherLayout from "./components/researcher/ResearcherLayout";
 import ResearcherDashboard from "./components/researcher/ResearcherDashboard";
 import ResearcherAnalytics from "./components/researcher/ResearcherAnalytic";
+import ResearcherNetwork from "./components/researcher/ResearcherNetwork";
+import ResearcherAlerts from "./components/researcher/ResearcherAlerts";
 import LecturerLayout from "./components/lecturer/LecturerLayout";
 import LecturerDashboard from "./components/lecturer/LecturerDashboard";
 import LecturerGroups from "./components/lecturer/LecturerGroups";
 import LecturerLibrary from "./components/lecturer/LecturerLibrary";
 import LecturerTrends from "./components/lecturer/LecturerTrends";
+import PaperDetails from "./components/common/PaperDetails";
 
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        {/* ==========================================
-            KHU VỰC DÀNH CHO SINH VIÊN
-            (Sử dụng StudentLayout)
-        ========================================== */}
-        <Route
-          path="/student/*"
-          element={
-            <StudentLayout>
-              <Routes>
-                {/* Đường dẫn mặc định khi vào /student sẽ load StudentDashboard */}
-                <Route path="/" element={<StudentDashboard />} />
-                <Route path="/explore" element={<StudentExplore />} />
-                <Route path="/library" element={<StudentLibrary />} />
-                <Route path="/trending" element={<StudentTrending />} />
-                {/* Mẹo: Sau này bạn tạo thêm trang Khám phá, hãy bỏ comment dòng dưới */}
-                {/* <Route path="/explore" element={<StudentExplore />} /> */}
-              </Routes>
-            </StudentLayout>
-          }
-        />
+        {/* Khu vực chung */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="search" element={<Search />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="admin" element={<Admin />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+        </Route>
 
-        {/* ==========================================
-            KHU VỰC CHUNG & ADMIN
-            (Sử dụng Layout gốc)
-        ========================================== */}
-        <Route
-          path="*"
-          element={
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-              </Routes>
-            </Layout>
-          }
-        />
+        {/* Khu vực Sinh viên */}
+        <Route path="/student" element={<StudentLayout />}>
+          <Route index element={<StudentDashboard />} />
+          <Route path="explore" element={<StudentExplore />} />
+          <Route path="library" element={<StudentLibrary />} />
+          <Route path="trending" element={<StudentTrending />} />
+          <Route path="paper/:id" element={<PaperDetails />} />
+        </Route>
 
-        {/* ==========================================
-            KHU VỰC DÀNH CHO NHÀ NGHIÊN CỨU
-        ========================================== */}
-        <Route
-          path="/researcher/*"
-          element={
-            <ResearcherLayout>
-              <Routes>
-                <Route path="/" element={<ResearcherDashboard />} />
-                <Route path="/analytics" element={<ResearcherAnalytics />} />
-                {/* Bạn có thể tạo thêm các trang Network, Alerts sau này */}
-              </Routes>
-            </ResearcherLayout>
-          }
-        />
+        {/* Khu vực Researcher */}
+        <Route path="/researcher" element={<ResearcherLayout />}>
+          <Route index element={<ResearcherDashboard />} />
+          <Route path="analytics" element={<ResearcherAnalytics />} />
+          <Route path="network" element={<ResearcherNetwork />} />
+          <Route path="alerts" element={<ResearcherAlerts />} />
+        </Route>
 
-        {/* ==========================================
-            KHU VỰC DÀNH CHO GIẢNG VIÊN
-        ========================================== */}
-        <Route
-          path="/lecturer/*"
-          element={
-            <LecturerLayout>
-              <Routes>
-                <Route path="/" element={<LecturerDashboard />} />
-                <Route path="/groups" element={<LecturerGroups />} />
-                <Route path="/library" element={<LecturerLibrary />} />
-                <Route path="/trends" element={<LecturerTrends />} />
-              </Routes>
-            </LecturerLayout>
-          }
-        />
+        {/* Khu vực Giảng viên */}
+        <Route path="/lecturer" element={<LecturerLayout />}>
+          <Route index element={<LecturerDashboard />} />
+          <Route path="groups" element={<LecturerGroups />} />
+          <Route path="library" element={<LecturerLibrary />} />
+          <Route path="trends" element={<LecturerTrends />} />
+        </Route>
       </Routes>
     </Router>
   );

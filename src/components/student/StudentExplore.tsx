@@ -1,173 +1,158 @@
 import React, { useState } from "react";
+import { api, type Paper } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const StudentExplore: React.FC = () => {
-  const [search, setSearch] = useState("");
-  const [selectedYear, setSelectedYear] = useState("All");
-  const [selectedTag, setSelectedTag] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<Paper[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const navigate = useNavigate();
 
-  // Mock data kết quả tìm kiếm
-  const papers = [
-    {
-      id: 1,
-      title:
-        "Xây dựng kiến trúc Microservices hiệu năng cao với Java Spring Boot",
-      author: "Nguyen Van A",
-      year: 2025,
-      citations: 142,
-      tag: "Software Engineering",
-    },
-    {
-      id: 2,
-      title:
-        "Ứng dụng Machine Learning trong dự đoán thị trường tài chính ngắn hạn",
-      author: "Tran Minh B",
-      year: 2024,
-      citations: 89,
-      tag: "Artificial Intelligence",
-    },
-    {
-      id: 3,
-      title:
-        "Phân tích và tối ưu hóa truy vấn dữ liệu lớn với JDBC và Hibernate",
-      author: "Le Thi C",
-      year: 2025,
-      citations: 34,
-      tag: "Database",
-    },
-    {
-      id: 4,
-      title:
-        "So sánh hiệu năng giữa kiến trúc MVC truyền thống và kiến trúc Clean Architecture",
-      author: "Pham Hoang D",
-      year: 2023,
-      citations: 210,
-      tag: "Software Engineering",
-    },
-  ];
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
 
-  const filteredPapers = papers.filter((paper) => {
-    const matchSearch = paper.title
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchYear =
-      selectedYear === "All" || paper.year.toString() === selectedYear;
-    const matchTag = selectedTag === "All" || paper.tag === selectedTag;
-    return matchSearch && matchYear && matchTag;
-  });
+    try {
+      setLoading(true);
+      setSearched(true);
+      const res = await api.searchPapers({
+        q: searchTerm,
+        page: 1,
+        pageSize: 10,
+      });
+      if (res.success) {
+        setSearchResults(res.data.items);
+      }
+    } catch (err) {
+      console.error("Lỗi tìm kiếm:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSavePaper = async (paperId: number) => {
+    try {
+      const res = await api.toggleBookmark(paperId, "Paper");
+      if (res.success) {
+        alert(res.isBookmarked ? "Đã lưu vào Thư viện!" : "Đã bỏ lưu!");
+      }
+    } catch (err) {
+      alert("Lỗi khi lưu tài liệu");
+    }
+  };
 
   return (
-    <div className="animate-fadeIn space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-[#002045] flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#13696a]">
-            explore
-          </span>
-          Khám phá tài liệu khoa học
-        </h2>
-        <p className="text-xs text-[#74777f]">
-          Tìm kiếm và lọc hàng ngàn bài báo khoa học chất lượng cao từ cổng dữ
-          liệu OpenAlex.
+    <div className="animate-fadeIn space-y-6 h-full flex flex-col">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold text-[#002045]">Khám phá Tài liệu</h2>
+        <p className="text-sm text-slate-500">
+          Tìm kiếm hàng triệu bài báo khoa học.
         </p>
       </div>
 
-      {/* Thanh tìm kiếm và bộ lọc */}
-      <div className="bg-white p-4 rounded-xl border border-[#ebeef0] shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <div className="md:col-span-2 relative">
-          <input
-            type="text"
-            placeholder="Nhập tên bài báo, tác giả hoặc từ khóa..."
-            className="w-full pl-10 pr-4 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-lg text-xs font-medium focus:outline-none focus:border-[#13696a]"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <span className="material-symbols-outlined absolute left-3 top-2.5 text-[#74777f] text-sm">
-            search
-          </span>
-        </div>
+      {/* Thanh tìm kiếm */}
+      <form
+        onSubmit={handleSearch}
+        className="relative shadow-sm rounded-xl overflow-hidden shrink-0"
+      >
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Nhập từ khóa, tên bài báo hoặc tác giả..."
+          className="w-full pl-12 pr-32 py-4 bg-white border border-slate-200 text-slate-700 focus:outline-none focus:border-blue-500 text-base"
+        />
+        <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 text-2xl">
+          search
+        </span>
+        <button
+          type="submit"
+          className="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 rounded-lg transition-colors flex items-center gap-2"
+        >
+          {loading ? "Đang tìm..." : "Tìm kiếm"}
+        </button>
+      </form>
 
-        <div>
-          <select
-            className="w-full p-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-lg text-xs font-medium focus:outline-none text-[#43474e]"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-          >
-            <option value="All">Tất cả các năm</option>
-            <option value="2025">Năm 2025</option>
-            <option value="2024">Năm 2024</option>
-            <option value="2023">Năm 2023</option>
-          </select>
-        </div>
+      {/* Kết quả tìm kiếm */}
+      <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-y-auto">
+        {!searched ? (
+          <div className="h-full flex flex-col items-center justify-center text-slate-400">
+            <span className="material-symbols-outlined text-[60px] mb-4 opacity-50">
+              travel_explore
+            </span>
+            <p>Nhập từ khóa để bắt đầu tìm kiếm</p>
+          </div>
+        ) : searchResults.length === 0 && !loading ? (
+          <div className="h-full flex flex-col items-center justify-center text-slate-400">
+            <p>Không tìm thấy kết quả nào cho "{searchTerm}".</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider border-b pb-2">
+              Kết quả tìm kiếm
+            </h3>
+            {searchResults.map((paper) => (
+              <div
+                key={paper.paperId}
+                className="p-4 border border-slate-100 rounded-xl hover:border-blue-300 hover:bg-blue-50/30 transition-colors flex gap-4"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-1">
+                  <span className="material-symbols-outlined">article</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-slate-800 text-base mb-1">
+                    {paper.title}
+                  </h4>
+                  <p className="text-sm text-slate-600 mb-2">
+                    {paper.authors?.join(", ")} • {paper.publicationYear}
+                  </p>
 
-        <div>
-          <select
-            className="w-full p-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-lg text-xs font-medium focus:outline-none text-[#43474e]"
-            value={selectedTag}
-            onChange={(e) => setSelectedTag(e.target.value)}
-          >
-            <option value="All">Tất cả chuyên ngành</option>
-            <option value="Software Engineering">Software Engineering</option>
-            <option value="Artificial Intelligence">
-              Artificial Intelligence
-            </option>
-            <option value="Database">Database</option>
-          </select>
-        </div>
-      </div>
+                  {paper.keywords && paper.keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {paper.keywords.slice(0, 4).map((kw, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded"
+                        >
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
-      {/* Danh sách kết quả */}
-      <div className="space-y-4">
-        <p className="text-xs text-[#43474e] font-semibold">
-          Tìm thấy {filteredPapers.length} tài liệu phù hợp
-        </p>
-
-        <div className="grid grid-cols-1 gap-4">
-          {filteredPapers.map((paper) => (
-            <div
-              key={paper.id}
-              className="bg-white p-5 rounded-xl border border-[#ebeef0] shadow-sm hover:border-[#13696a] transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-            >
-              <div className="space-y-2 flex-1">
-                <span className="text-[10px] uppercase font-bold bg-[#e0f2f1] text-[#13696a] px-2 py-0.5 rounded">
-                  {paper.tag}
-                </span>
-                <h3 className="text-sm font-bold text-[#002045] hover:text-[#13696a] cursor-pointer transition-colors">
-                  {paper.title}
-                </h3>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-[#74777f]">
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">
-                      person
-                    </span>{" "}
-                    {paper.author}
+                  <div className="flex items-center gap-3 mt-3">
+                    <button
+                      onClick={() =>
+                        navigate(`/student/paper/${paper.paperId}`)
+                      }
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                    >
+                      Xem chi tiết
+                    </button>
+                    <button
+                      onClick={() => handleSavePaper(paper.paperId)}
+                      className="text-sm font-medium text-slate-500 hover:text-blue-600 flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        bookmark_add
+                      </span>
+                      Lưu
+                    </button>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <span className="block text-xl font-bold text-emerald-600">
+                    {paper.citationCount || 0}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">
-                      calendar_today
-                    </span>{" "}
-                    {paper.year}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">
-                      format_quote
-                    </span>{" "}
-                    {paper.citations} trích dẫn
+                  <span className="text-[10px] uppercase font-bold text-slate-400">
+                    Trích dẫn
                   </span>
                 </div>
               </div>
-
-              <div className="flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0">
-                <button className="p-2 border border-[#c4c6cf] hover:text-[#13696a] hover:border-[#13696a] rounded-lg flex items-center transition-colors">
-                  <span className="material-symbols-outlined text-sm">
-                    bookmark
-                  </span>
-                </button>
-                <button className="bg-[#13696a] hover:bg-[#0f5455] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
-                  Xem chi tiết
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

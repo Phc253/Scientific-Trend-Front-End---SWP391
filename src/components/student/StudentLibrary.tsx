@@ -1,103 +1,110 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { api, type BookmarkItem } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const StudentLibrary: React.FC = () => {
-  const [savedPapers, setSavedPapers] = useState([
-    {
-      id: 1,
-      title: "Phát triển ứng dụng Web an toàn với mẫu thiết kế MVC",
-      author: "Nguyen, P.",
-      year: 2024,
-      journal: "IEEE Software",
-    },
-    {
-      id: 2,
-      title: "Tối ưu hóa kiến trúc ứng dụng Java doanh nghiệp",
-      author: "Lee, S.",
-      year: 2023,
-      journal: "ACM Transactions",
-    },
-  ]);
+  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
-  const handleCitation = (paper: any, type: "APA" | "IEEE") => {
-    let text = "";
-    if (type === "APA") {
-      text = `${paper.author} (${paper.year}). ${paper.title}. ${paper.journal}.`;
-    } else {
-      text = `[1] ${paper.author}, "${paper.title}," ${paper.journal}, ${paper.year}.`;
+  useEffect(() => {
+    fetchBookmarks();
+  }, []);
+
+  const fetchBookmarks = async () => {
+    try {
+      setLoading(true);
+      const res = await api.getMyBookmarks();
+      if (res.success) {
+        setBookmarks(res.data);
+      }
+    } catch (err) {
+      console.error("Lỗi tải bookmark", err);
+    } finally {
+      setLoading(false);
     }
-    navigator.clipboard.writeText(text);
-    alert(`Đã copy cấu trúc trích dẫn dạng ${type} vào bộ nhớ tạm!`);
   };
 
-  const removePaper = (id: number) => {
-    setSavedPapers(savedPapers.filter((p) => p.id !== id));
+  const handleRemoveBookmark = async (targetId: number, targetType: string) => {
+    try {
+      // Ép kiểu targetType cho khớp với API ("Paper" | "Keyword")
+      const res = await api.toggleBookmark(
+        targetId,
+        targetType as "Paper" | "Keyword",
+      );
+      if (res.success && !res.isBookmarked) {
+        // Lọc bỏ item vừa xóa khỏi danh sách hiện tại để UI cập nhật ngay lập tức
+        setBookmarks(bookmarks.filter((b) => b.targetId !== targetId));
+      }
+    } catch (err) {
+      console.error("Lỗi khi xóa bookmark", err);
+      alert("Không thể xóa bookmark. Vui lòng thử lại!");
+    }
   };
+
+  if (loading)
+    return (
+      <div className="p-8 text-center text-blue-600">Đang tải thư viện...</div>
+    );
 
   return (
     <div className="animate-fadeIn space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-[#002045] flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#13696a]">
-            bookmarks
-          </span>
-          Tủ sách nghiên cứu của tôi
-        </h2>
-        <p className="text-xs text-[#74777f]">
-          Quản lý kho tài liệu tham khảo và trích xuất định dạng phục vụ viết
-          báo cáo luận văn.
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-[#002045]">Thư viện của tôi</h2>
+        <p className="text-sm text-slate-500">
+          Bạn đang có {bookmarks.length} tài liệu được lưu.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {savedPapers.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-dashed text-[#74777f] text-xs">
-            Chưa có bài báo nào được lưu. Hãy qua tab Khám phá để tìm kiếm!
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {bookmarks.length === 0 ? (
+          <p className="text-slate-500 italic">Thư viện của bạn đang trống.</p>
         ) : (
-          savedPapers.map((paper) => (
+          bookmarks.map((item) => (
             <div
-              key={paper.id}
-              className="bg-white p-5 rounded-xl border border-[#ebeef0] shadow-sm space-y-4"
+              key={item.bookmarkId}
+              className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
             >
               <div>
-                <h3 className="text-sm font-bold text-[#002045]">
-                  {paper.title}
-                </h3>
-                <p className="text-xs text-[#74777f] mt-1">
-                  {paper.author} • {paper.year} • {paper.journal}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2 justify-between items-center pt-2 border-t border-[#f1f4f6]">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleCitation(paper, "APA")}
-                    className="bg-[#f1f4f6] hover:bg-[#e0f2f1] text-[#13696a] text-[11px] font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-xs">
-                      format_quote
-                    </span>{" "}
-                    Trích dẫn APA
-                  </button>
-                  <button
-                    onClick={() => handleCitation(paper, "IEEE")}
-                    className="bg-[#f1f4f6] hover:bg-[#e0f2f1] text-[#13696a] text-[11px] font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-xs">
-                      format_quote
-                    </span>{" "}
-                    Trích dẫn IEEE
-                  </button>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                    {item.targetType}
+                  </span>
+                  <span className="text-xs font-medium text-slate-500">
+                    {item.publicationYear}
+                  </span>
                 </div>
-
+                <h3 className="text-lg font-bold text-slate-800 leading-snug mb-2">
+                  {item.title || item.keywordText}
+                </h3>
+                {item.authors && item.authors.length > 0 && (
+                  <p className="text-sm text-slate-600 mb-2">
+                    Tác giả: {item.authors.join(", ")}
+                  </p>
+                )}
+                {item.journalName && (
+                  <p className="text-xs text-slate-500">
+                    Tạp chí: {item.journalName}
+                  </p>
+                )}
+              </div>
+              <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
                 <button
-                  onClick={() => removePaper(paper.id)}
-                  className="text-xs text-red-600 hover:underline font-medium flex items-center gap-1"
+                  onClick={() => navigate(`/student/paper/${item.targetId}`)}
+                  className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium py-2 rounded-lg transition-colors border border-slate-200"
                 >
-                  <span className="material-symbols-outlined text-sm">
-                    delete
-                  </span>{" "}
-                  Xóa khỏi tủ sách
+                  Đọc tài liệu
+                </button>
+                <button
+                  onClick={() =>
+                    handleRemoveBookmark(item.targetId, item.targetType)
+                  }
+                  className="px-3 py-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                  title="Bỏ lưu"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    bookmark_remove
+                  </span>
                 </button>
               </div>
             </div>
