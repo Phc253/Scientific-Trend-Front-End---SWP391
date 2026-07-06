@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom"; // 1. Thêm Outlet
 
-const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+const StudentLayout: React.FC = () => {
+  // 2. Bỏ { children: React.ReactNode }
   const location = useLocation();
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<string | null>("Phúc"); // Giả lập tên user
+  const [fullName, setFullName] = useState<string>("Sinh viên");
 
   useEffect(() => {
-    const storedName = localStorage.getItem("userName");
-    if (storedName) setUserName(storedName);
-  }, [location]);
+    // 2. Lấy fullName từ localStorage (Giả sử bạn đã lưu "fullName" khi Login)
+    const storedName = localStorage.getItem("fullName");
+    if (storedName) {
+      setFullName(storedName);
+    }
+  }, []); // Chỉ chạy 1 lần khi component load
 
   const handleLogout = () => {
     localStorage.clear();
@@ -70,7 +72,7 @@ const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
             </div>
             <div>
               <p className="text-sm font-bold text-[#181c1e] truncate">
-                {userName}
+                {fullName}
               </p>
               <p className="text-xs text-[#74777f]">Sinh viên (Student)</p>
             </div>
@@ -87,7 +89,10 @@ const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 pl-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-8">{children}</main>
+        <main className="flex-1 p-8">
+          {/* 3. Dùng Outlet thay thế cho {children} */}
+          <Outlet />
+        </main>
       </div>
     </div>
   );

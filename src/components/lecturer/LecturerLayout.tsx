@@ -1,9 +1,8 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom"; // 1. Thêm Outlet
 
-const LecturerLayout: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+const LecturerLayout: React.FC = () => {
+  // 2. Bỏ { children: ... }
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -27,7 +26,7 @@ const LecturerLayout: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <div className="flex h-screen bg-[#f4f7f6] font-sans text-slate-800">
-      {/* Sidebar - Tông màu Teal/Emerald đậm cho Giảng viên */}
+      {/* Sidebar */}
       <aside className="w-64 bg-[#064e3b] text-white flex flex-col shadow-xl z-10">
         <div className="p-6 flex items-center gap-3 border-b border-emerald-800/50 shrink-0">
           <span className="material-symbols-outlined text-3xl text-emerald-400">
@@ -64,7 +63,7 @@ const LecturerLayout: React.FC<{ children: React.ReactNode }> = ({
           })}
         </nav>
 
-        {/* Thông tin Giảng viên (Góc dưới bên trái) */}
+        {/* User Info & Logout */}
         <div className="p-4 border-t border-emerald-800/50 shrink-0 bg-[#022c22]">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold border border-emerald-400 shrink-0 shadow-sm">
@@ -112,9 +111,9 @@ const LecturerLayout: React.FC<{ children: React.ReactNode }> = ({
           </div>
         </header>
 
-        {/* Dynamic Content */}
+        {/* 3. Dùng Outlet thay cho {children} */}
         <div className="flex-1 overflow-y-auto p-8 bg-[#f4f7f6]">
-          {children}
+          <Outlet />
         </div>
       </main>
     </div>

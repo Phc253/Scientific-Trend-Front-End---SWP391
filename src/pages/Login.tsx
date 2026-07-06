@@ -30,11 +30,10 @@ export const Login = () => {
 
       if (response.data && response.data.token) {
         // 1. Lưu token và tên người dùng vào localStorage
+        localStorage.setItem("fullName", response.data.fullName || "Sinh viên");
+        localStorage.setItem("userRoles", JSON.stringify(response.data.roles));
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem(
-          "userName",
-          response.data.user?.fullName || email.split("@")[0],
-        );
+        navigate("/student");
 
         // 2. XỬ LÝ LẤY QUYỀN (Đồng bộ cả trường roles và trường actorType từ DB)
         const userRoles =

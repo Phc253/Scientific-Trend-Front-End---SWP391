@@ -7,9 +7,9 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {/* 2. Bọc App trong AuthProvider để các trang con có thể sử dụng useAuth() */}
     <AuthProvider>
-      <App />
+      {/* Xóa <BrowserRouter> ở đây */}
+      <App /> {/* App đã có Router bên trong rồi */}
     </AuthProvider>
   </StrictMode>,
 );

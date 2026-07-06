@@ -1,6 +1,5 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://localhost:7174/api";
-import axios from "axios";
 
 export interface TrendingItem {
   name: string;
@@ -321,11 +320,21 @@ export const api = {
     );
   },
 
-  getDashboardSummary: async (): Promise<DashboardSummaryResponse> => {
-    // Đảm bảo URL gọi đúng cổng Backend của bạn (ví dụ 5225 hoặc 7174)
-    const response = await axios.get(
-      "http://localhost:5225/api/dashboard/summary",
-    );
-    return response.data;
+  async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+    return request<DashboardSummaryResponse>("/dashboard/summary", {
+      method: "GET",
+    });
+  },
+
+  async getTrendingTopics(topN: number = 10): Promise<any[]> {
+    return request<any[]>(`/Trends/trending?topN=${topN}`, {
+      method: "GET",
+    });
+  },
+
+  async getActivityScores(topN: number = 10): Promise<any[]> {
+    return request<any[]>(`/Trends/activity-score?topN=${topN}`, {
+      method: "GET",
+    });
   },
 };
