@@ -18,5 +18,31 @@ export interface SchedulerConfig {
   keyword: string;
   maxResults: number;
   intervalHours: number;
+  fetchNewWorksEnabled: boolean;
+  refreshExistingWorksEnabled: boolean;
+}
+
+export interface PaperReportItem {
+  paperId: number;
+  title: string;
+  publicationYear: number;
+  citationCount: number;
+  journalName: string | null;
+  keywords: string[];
+  authors: string[];
+}
+
+export interface PaperReportResponse {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  items: PaperReportItem[];
+}
+
+export interface KeywordStatisticItem {
+  keywordText: string;
+  totalPapers: number;
+  firstYear: number;
+  lastYear: number;
 }
 

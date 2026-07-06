@@ -31,6 +31,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
       case "nghiên cứu viên":
         return "Nghiên cứu viên";
       case "admin":
+      case "systemadministrator":
       case "quản trị viên":
         return "Quản trị viên";
       default:
@@ -68,21 +69,36 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
     fetchUsers();
   }, []);
 
-  // Tương tác thay đổi trạng thái user
-  const toggleUserStatus = (id: string) => {
-    setUsers(
-      users.map((user) => {
-        if (user.id === id) {
-          const nextStatus = user.status === "Hoạt động" ? "Đã khóa" : "Hoạt động";
-          addLog(
-            nextStatus === "Đã khóa" ? "WARNING" : "SUCCESS",
-            `Thay đổi trạng thái người dùng ${user.name} sang ${nextStatus}.`
-          );
-          return { ...user, status: nextStatus };
-        }
-        return user;
-      })
-    );
+  // Tương tác thay đổi trạng thái user bằng API thực tế
+  const toggleUserStatus = async (id: string) => {
+    const userToUpdate = users.find((u) => u.id === id);
+    if (!userToUpdate) return;
+
+    const isActive = userToUpdate.status === "Hoạt động";
+    const endpoint = isActive 
+      ? `/api/Admin/users/${id}/deactivate` 
+      : `/api/Admin/users/${id}/activate`;
+    
+    const token = localStorage.getItem("token");
+    try {
+      await axios.patch(endpoint, null, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      const nextStatus = isActive ? "Đã khóa" : "Hoạt động";
+      setUsers((prevUsers) =>
+        prevUsers.map((u) => (u.id === id ? { ...u, status: nextStatus } : u))
+      );
+
+      addLog(
+        isActive ? "WARNING" : "SUCCESS",
+        `Thay đổi trạng thái người dùng ${userToUpdate.name} sang ${nextStatus} thành công.`
+      );
+    } catch (err: any) {
+      console.error(`Lỗi thay đổi trạng thái user ${id}:`, err);
+      const errMsg = err.response?.data?.message || err.message || "Lỗi không xác định.";
+      addLog("ERROR", `Không thể thay đổi trạng thái user ${userToUpdate.name}: ${errMsg}`);
+    }
   };
 
   // Thêm người dùng mới
@@ -146,13 +162,6 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
           </select>
         </div>
 
-        <button
-          onClick={() => setShowAddUserModal(true)}
-          className="bg-[#002045] hover:opacity-90 text-white text-xs font-bold py-2.5 px-4 rounded-md flex items-center gap-1.5 transition-all cursor-pointer w-full md:w-auto justify-center"
-        >
-          <span className="material-symbols-outlined text-sm">person_add</span>
-          Thêm người dùng mới
-        </button>
       </div>
 
       {/* Form Thêm Người Dùng (Hiển thị ngay trên màn hình để tiện sử dụng) */}
@@ -298,16 +307,20 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
                         </span>
                       </td>
                       <td className="p-4 text-xs text-right">
-                        <button
-                          onClick={() => toggleUserStatus(user.id)}
-                          className={`text-[11px] font-bold px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                            user.status === "Hoạt động"
-                              ? "border border-[#ef4444] text-[#ef4444] hover:bg-[#fef2f2]"
-                              : "bg-[#13696a] text-white hover:opacity-90"
-                          }`}
-                        >
-                          {user.status === "Hoạt động" ? "Khóa" : "Mở khóa"}
-                        </button>
+                        {user.role !== "Quản trị viên" ? (
+                          <button
+                            onClick={() => toggleUserStatus(user.id)}
+                            className={`text-[11px] font-bold px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                              user.status === "Hoạt động"
+                                ? "border border-[#ef4444] text-[#ef4444] hover:bg-[#fef2f2]"
+                                : "bg-[#13696a] text-white hover:opacity-90"
+                            }`}
+                          >
+                            {user.status === "Hoạt động" ? "Khóa" : "Mở khóa"}
+                          </button>
+                        ) : (
+                          <span className="text-slate-400 font-semibold italic text-[11.5px] pr-2">-</span>
+                        )}
                       </td>
                     </tr>
                   );
