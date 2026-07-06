@@ -22,14 +22,12 @@ export const Register = () => {
     setError(null);
     setSuccessMessage(null);
 
-    // Kiểm tra mật khẩu nhập lại từ nhánh main
     if (password !== confirmPassword) {
       setError("Mật khẩu nhập lại không trùng khớp!");
       setIsLoading(false);
       return;
     }
 
-    // Kiểm tra ngày sinh từ nhánh duc
     if (!dateOfBirth) {
       setError("Vui lòng chọn ngày sinh.");
       setIsLoading(false);
@@ -37,7 +35,6 @@ export const Register = () => {
     }
 
     try {
-      // Gọi API từ thư mục services của nhánh duc
       const result = await api.register({
         email,
         password,
@@ -52,7 +49,6 @@ export const Register = () => {
           "Đăng ký tài khoản thành công! Đang chuyển hướng sang trang đăng nhập..."
       );
 
-      // Chờ 3 giây rồi tự động chuyển hướng sang Login (từ nhánh main)
       setTimeout(() => {
         navigate("/login");
       }, 3000);
@@ -63,7 +59,6 @@ export const Register = () => {
     }
   };
 
-  // Giao diện khi Đăng ký thành công (giữ nguyên thiết kế đẹp từ nhánh duc)
   if (successMessage) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn py-6">
@@ -72,9 +67,7 @@ export const Register = () => {
             <span className="material-symbols-outlined text-3xl">mail</span>
           </div>
           <h2 className="text-2xl font-bold text-[#002045]">Đăng ký thành công!</h2>
-          <p className="text-sm text-[#43474e] leading-relaxed">
-            {successMessage}
-          </p>
+          <p className="text-sm text-[#43474e] leading-relaxed">{successMessage}</p>
           <div className="pt-4 border-t border-[#ebeef0]">
             <Link
               to="/login"
@@ -89,21 +82,16 @@ export const Register = () => {
     );
   }
 
-  // Giao diện Form Đăng ký
   return (
     <div className="min-h-[85vh] flex items-center justify-center animate-fadeIn py-6 bg-[#f8fafc]">
       <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-2xl space-y-6">
-        {/* Tiêu đề trang */}
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-[#002045]">
-            Đăng ký tài khoản mới
-          </h2>
+          <h2 className="text-2xl font-bold text-[#002045]">Đăng ký tài khoản mới</h2>
           <p className="text-xs text-[#74777f]">
             Tham gia hệ thống nghiên cứu khoa học SciTrend
           </p>
         </div>
 
-        {/* Thông báo lỗi nếu có */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm flex items-center gap-2">
             <span className="material-symbols-outlined text-base text-red-600">error</span>
@@ -111,11 +99,8 @@ export const Register = () => {
           </div>
         )}
 
-        {/* Form nhập liệu */}
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Họ và Tên */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Họ và Tên</label>
               <input
@@ -129,7 +114,6 @@ export const Register = () => {
               />
             </div>
 
-            {/* Địa chỉ Email */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Địa chỉ Email</label>
               <input
@@ -143,10 +127,8 @@ export const Register = () => {
               />
             </div>
           </div>
-          
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Số điện thoại */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Số điện thoại</label>
               <input
@@ -160,7 +142,6 @@ export const Register = () => {
               />
             </div>
 
-            {/* Ngày sinh */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Ngày sinh</label>
               <input
@@ -175,7 +156,6 @@ export const Register = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Mật khẩu */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Mật khẩu</label>
               <input
@@ -189,7 +169,6 @@ export const Register = () => {
               />
             </div>
 
-            {/* Xác nhận mật khẩu */}
             <div className="space-y-1.5">
               <label className="block font-bold text-[#43474e]">Xác nhận mật khẩu</label>
               <input
@@ -203,18 +182,7 @@ export const Register = () => {
               />
             </div>
           </div>
-          <div>
-             <label className="block font-bold text-[#43474e]">Số điện thoại</label>
-            <input
-              type="tel"
-              required
-              placeholder="09xxxxxxxx"
-              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-            />
 
-          {/* Đối tượng nghiên cứu (Actor Type) */}
           <div className="space-y-1.5">
             <label className="block font-bold text-[#43474e]">Đối tượng (Actor Type)</label>
             <select
@@ -228,22 +196,7 @@ export const Register = () => {
               <option value="Researcher">Nhà nghiên cứu (Researcher)</option>
             </select>
           </div>
-           <div>
-             <label className="block font-bold text-[#43474e]">Vai trò</label>
-            <select  
-              required
-              className="w-full p-3 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] focus:ring-1 focus:ring-[#13696a] transition-all"
-              value={actorType}
-              onChange={(e) => setActorType(e.target.value)}
-            >
-              <option value="">Chọn vai trò</option>
-              <option value="Student">Sinh viên</option>
-              <option value="Researcher">Nhà Nghiên Cứu</option>
-              <option value="Lecturer">Giảng viên</option>
 
-            </select>
-
-          {/* Nút bấm Đăng ký */}
           <button
             type="submit"
             disabled={isLoading}
@@ -258,13 +211,9 @@ export const Register = () => {
           </button>
         </form>
 
-        {/* Liên kết chuyển đổi nhanh sang đăng nhập */}
         <div className="text-center text-xs text-[#43474e] pt-2 border-t border-[#ebeef0]">
           Đã có tài khoản hệ thống từ trước?{" "}
-          <Link
-            to="/login"
-            className="text-[#002045] font-bold hover:underline"
-          >
+          <Link to="/login" className="text-[#002045] font-bold hover:underline">
             Đăng nhập ngay
           </Link>
         </div>

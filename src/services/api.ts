@@ -181,6 +181,12 @@ export const api = {
     return request<UserProfile>("/Account/profile");
   },
 
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    return request<{ message: string }>(
+      `/Account/verify-email?token=${encodeURIComponent(token)}`
+    );
+  },
+
   // Papers Search & Detail
   async searchPapers(params: {
     q?: string;
