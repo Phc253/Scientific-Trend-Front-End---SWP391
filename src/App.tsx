@@ -22,6 +22,7 @@ import LecturerDashboard from "./components/lecturer/LecturerDashboard";
 import LecturerGroups from "./components/lecturer/LecturerGroups";
 import LecturerLibrary from "./components/lecturer/LecturerLibrary";
 import LecturerTrends from "./components/lecturer/LecturerTrends";
+import LecturerSearch from "./components/lecturer/LecturerSearch";
 import PaperDetails from "./components/common/PaperDetails";
 
 const App: React.FC = () => {
@@ -61,6 +62,8 @@ const App: React.FC = () => {
           <Route path="groups" element={<LecturerGroups />} />
           <Route path="library" element={<LecturerLibrary />} />
           <Route path="trends" element={<LecturerTrends />} />
+          <Route path="search" element={<LecturerSearch />} />
+          <Route path="paper/:id" element={<PaperDetails />} />
         </Route>
       </Routes>
     </Router>
