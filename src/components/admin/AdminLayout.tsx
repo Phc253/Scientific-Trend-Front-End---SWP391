@@ -1,11 +1,14 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isReportsPath = location.pathname.startsWith("/admin/paper-reports") || location.pathname.startsWith("/admin/keyword-stats");
+  const isReportsPath =
+    location.pathname.startsWith("/admin/paper-reports") ||
+    location.pathname.startsWith("/admin/keyword-stats");
   const [isReportsOpen, setIsReportsOpen] = React.useState(isReportsPath);
 
   // Sync state if route changes externally
@@ -27,8 +30,16 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: "/admin/users", icon: "group", label: "Quản lý người dùng" },
     { path: "/admin/api", icon: "api", label: "Đồng bộ OpenAlex" },
     { path: "/admin/scheduler", icon: "settings", label: "Cấu hình Scheduler" },
-    { path: "/admin/paper-reports", icon: "description", label: "Báo cáo bài báo" },
-    { path: "/admin/keyword-stats", icon: "bar_chart", label: "Thống kê từ khóa" },
+    {
+      path: "/admin/paper-reports",
+      icon: "description",
+      label: "Báo cáo bài báo",
+    },
+    {
+      path: "/admin/keyword-stats",
+      icon: "bar_chart",
+      label: "Thống kê từ khóa",
+    },
   ];
 
   // Helper to determine if a path is active
@@ -40,7 +51,8 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return location.pathname.startsWith(itemPath);
   };
 
-  const currentLabel = navItems.find((i) => isTabActive(i.path))?.label || "Bảng Điều Khiển";
+  const currentLabel =
+    navItems.find((i) => isTabActive(i.path))?.label || "Bảng Điều Khiển";
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-800">
@@ -52,7 +64,9 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             admin_panel_settings
           </span>
           <div>
-            <h1 className="text-xl font-bold tracking-wider text-slate-100">SciTrend</h1>
+            <h1 className="text-xl font-bold tracking-wider text-slate-100">
+              SciTrend
+            </h1>
             <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">
               Administrator
             </p>
@@ -73,9 +87,11 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
                 }`}
               >
-                <span className={`material-symbols-outlined text-[20px] transition-transform duration-300 ${
-                  isActive ? "scale-110 text-cyan-300" : ""
-                }`}>
+                <span
+                  className={`material-symbols-outlined text-[20px] transition-transform duration-300 ${
+                    isActive ? "scale-110 text-cyan-300" : ""
+                  }`}
+                >
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
@@ -94,14 +110,18 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={`material-symbols-outlined text-[20px] ${isReportsPath ? "text-cyan-300" : ""}`}>
+                <span
+                  className={`material-symbols-outlined text-[20px] ${isReportsPath ? "text-cyan-300" : ""}`}
+                >
                   monitoring
                 </span>
                 <span>Báo cáo & Thống kê</span>
               </div>
-              <span className={`material-symbols-outlined text-sm transition-transform duration-300 ${
-                isReportsOpen ? "rotate-180" : ""
-              }`}>
+              <span
+                className={`material-symbols-outlined text-sm transition-transform duration-300 ${
+                  isReportsOpen ? "rotate-180" : ""
+                }`}
+              >
                 keyboard_arrow_down
               </span>
             </button>
@@ -116,7 +136,9 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                       : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-100"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">description</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    description
+                  </span>
                   <span>Báo cáo bài báo</span>
                 </Link>
                 <Link
@@ -127,7 +149,9 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                       : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-100"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">bar_chart</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    bar_chart
+                  </span>
                   <span>Thống kê từ khóa</span>
                 </Link>
               </div>
@@ -169,9 +193,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm shrink-0">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse"></span>
-            <h2 className="text-lg font-bold text-slate-800">
-              {currentLabel}
-            </h2>
+            <h2 className="text-lg font-bold text-slate-800">{currentLabel}</h2>
           </div>
 
           <div className="flex items-center gap-4">
@@ -191,7 +213,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {/* Dynamic Content */}
         <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
           <div className="max-w-7xl mx-auto space-y-8 animate-fadeIn">
-            {children}
+            <Outlet />
           </div>
         </div>
       </main>

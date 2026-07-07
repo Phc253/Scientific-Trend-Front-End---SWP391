@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom"; // Đã bỏ import BrowserRouter as Router
+import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
@@ -8,29 +8,37 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import Admin from "./pages/Admin";
 import AdminLayout from "./components/admin/AdminLayout";
+
+// --- Sinh viên ---
 import StudentLayout from "./components/student/StudentLayout";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudentExplore from "./components/student/StudentExplore";
 import StudentLibrary from "./components/student/StudentLibrary";
 import StudentTrending from "./components/student/StudentTrending";
+
+// --- Nhà nghiên cứu ---
 import ResearcherLayout from "./components/researcher/ResearcherLayout";
 import ResearcherDashboard from "./components/researcher/ResearcherDashboard";
 import ResearcherAnalytics from "./components/researcher/ResearcherAnalytic";
 import ResearcherNetwork from "./components/researcher/ResearcherNetwork";
 import ResearcherAlerts from "./components/researcher/ResearcherAlerts";
+
+// --- Giảng viên ---
 import LecturerLayout from "./components/lecturer/LecturerLayout";
 import LecturerDashboard from "./components/lecturer/LecturerDashboard";
 import LecturerGroups from "./components/lecturer/LecturerGroups";
 import LecturerLibrary from "./components/lecturer/LecturerLibrary";
 import LecturerTrends from "./components/lecturer/LecturerTrends";
+import LecturerSearch from "./components/lecturer/LecturerSearch";
+
+// --- Dùng chung ---
 import PaperDetails from "./components/common/PaperDetails";
 
 const App: React.FC = () => {
   return (
-    // Bỏ <Router> ở đây vì đã bọc ở main.tsx
     <Routes>
       {/* ==========================================
-          KHU VỰC CHUNG (Sử dụng Layout gốc)
+          KHU VỰC CHUNG (Dành cho Khách)
       ========================================== */}
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
@@ -66,6 +74,7 @@ const App: React.FC = () => {
         <Route path="analytics" element={<ResearcherAnalytics />} />
         <Route path="network" element={<ResearcherNetwork />} />
         <Route path="alerts" element={<ResearcherAlerts />} />
+        <Route path="paper/:id" element={<PaperDetails />} />
       </Route>
 
       {/* ==========================================
@@ -76,6 +85,8 @@ const App: React.FC = () => {
         <Route path="groups" element={<LecturerGroups />} />
         <Route path="library" element={<LecturerLibrary />} />
         <Route path="trends" element={<LecturerTrends />} />
+        <Route path="search" element={<LecturerSearch />} />
+        <Route path="paper/:id" element={<PaperDetails />} />
       </Route>
     </Routes>
   );

@@ -337,4 +337,23 @@ export const api = {
       method: "GET",
     });
   },
+
+  async getBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
+    return request<{ success: boolean; data: BookmarkItem[] }>(
+      "/Bookmarks/my-bookmarks",
+    );
+  },
+
+  async removeBookmark(
+    targetId: number,
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>("/Bookmarks/toggle", {
+      method: "POST",
+      body: JSON.stringify({ targetId: targetId, targetType: "Paper" }),
+    });
+  },
+
+  async getLecturerGroups(): Promise<{ success: boolean; data: any[] }> {
+    return Promise.resolve({ success: true, data: [] });
+  },
 };
