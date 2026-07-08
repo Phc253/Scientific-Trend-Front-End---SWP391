@@ -20,56 +20,31 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5225/api/account/login",
-        {
-          email: email,
-          password: password,
-        },
+      // Gọi hàm login từ AuthContext để thực hiện đăng nhập và cập nhật trạng thái toàn cục
+      const response = await login(email, password);
+
+      // Lưu thông tin đăng nhập vào localStorage
+      localStorage.setItem(
+        "userName",
+        response.fullName || email.split("@")[0],
       );
 
-      if (response.data && response.data.token) {
-        // Lưu thông tin đăng nhập vào localStorage
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem(
-          "userName",
-          response.data.user?.fullName || email.split("@")[0],
-        );
+      const userRoles = response.roles || [];
+      localStorage.setItem("userRoles", JSON.stringify(userRoles));
 
-        const userRoles =
-          response.data.user?.roles || response.data.roles || [];
-        localStorage.setItem("userRoles", JSON.stringify(userRoles));
+      const isAdmin = Array.isArray(userRoles)
+        ? userRoles.includes("Administrator")
+        : userRoles === "Administrator";
 
-        // Gọi hàm login từ AuthContext để cập nhật trạng thái toàn cục (Global State)
-        // Lưu ý: Tham số truyền vào tùy thuộc vào cách bạn "duc" định nghĩa hàm login
-        if (login) {
-          login(response.data.token, response.data.user);
-        }
-
-        const isAdmin = Array.isArray(userRoles)
-          ? userRoles.includes("Administrator")
-          : userRoles === "Administrator";
-
-        if (isAdmin) {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
-
-        // Mẹo: Khi đã dùng AuthContext và useNavigate, bạn không nên dùng window.location.reload()
-        // vì nó làm mất đi ưu điểm chuyển trang mượt mà (Single Page Application) của React.
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/");
       }
     } catch (err: any) {
-      if (err.response && err.response.data) {
-        setError(
-          err.response.data.message ||
-            "Tài khoản hoặc mật khẩu không chính xác!",
-        );
-      } else {
-        setError(
-          "Không thể kết nối đến máy chủ Back-end. Bạn đã chạy lệnh dotnet run chưa?",
-        );
-      }
+      setError(
+        err.message || "Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối đến máy chủ!"
+      );
     } finally {
       setIsLoading(false);
     }

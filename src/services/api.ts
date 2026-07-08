@@ -327,11 +327,7 @@ export const api = {
     );
   },
 
-  getDashboardSummary: async (): Promise<DashboardSummaryResponse> => {
-    // Đảm bảo URL gọi đúng cổng Backend của bạn (ví dụ 5225 hoặc 7174)
-    const response = await axios.get(
-      "http://localhost:5225/api/dashboard/summary",
-    );
-    return response.data;
+  async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+    return request<DashboardSummaryResponse>("/Dashboard/summary");
   },
 };
