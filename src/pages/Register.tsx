@@ -7,7 +7,7 @@ export const Register = () => {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
-  const [actorType, setActorType] = useState("Student");
+  const [actorType, setActorType] = useState(""); // Để trống để bắt buộc chọn
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -18,7 +18,6 @@ export const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
 
@@ -34,26 +33,28 @@ export const Register = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const result = await api.register({
         email,
         password,
-        fullName: fullName.trim() || undefined,
+        fullName: fullName.trim(),
         dateOfBirth,
         phoneNumber,
         actorType,
       });
 
       setSuccessMessage(
-        result.message ||
-          "Đăng ký tài khoản thành công! Đang chuyển hướng sang trang đăng nhập..."
+        result.message || "Đăng ký thành công! Đang chuyển hướng...",
       );
 
       setTimeout(() => {
         navigate("/login");
       }, 3000);
     } catch (err: any) {
-      setError(err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin đăng ký.");
+      setError(
+        err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -93,9 +94,8 @@ export const Register = () => {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm flex items-center gap-2">
-            <span className="material-symbols-outlined text-base text-red-600">error</span>
-            <span>{error}</span>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+            {error}
           </div>
         )}
 
@@ -106,11 +106,9 @@ export const Register = () => {
               <input
                 type="text"
                 required
-                placeholder="Nguyễn Văn A"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                disabled={isLoading}
               />
             </div>
 
@@ -119,11 +117,9 @@ export const Register = () => {
               <input
                 type="email"
                 required
-                placeholder="name@fpt.edu.vn"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
               />
             </div>
           </div>
@@ -134,11 +130,9 @@ export const Register = () => {
               <input
                 type="tel"
                 required
-                placeholder="0912345678"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                disabled={isLoading}
               />
             </div>
 
@@ -147,10 +141,9 @@ export const Register = () => {
               <input
                 type="date"
                 required
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                disabled={isLoading}
               />
             </div>
           </div>
@@ -161,11 +154,9 @@ export const Register = () => {
               <input
                 type="password"
                 required
-                placeholder="Tối thiểu 6 ký tự"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
               />
             </div>
 
@@ -174,11 +165,9 @@ export const Register = () => {
               <input
                 type="password"
                 required
-                placeholder="••••••••"
-                className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
+                className="w-full p-3 border rounded"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
               />
             </div>
           </div>
@@ -186,11 +175,13 @@ export const Register = () => {
           <div className="space-y-1.5">
             <label className="block font-bold text-[#43474e]">Đối tượng (Actor Type)</label>
             <select
+              required
               className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
               value={actorType}
               onChange={(e) => setActorType(e.target.value)}
               disabled={isLoading}
             >
+              <option value="">Chọn vai trò</option>
               <option value="Student">Sinh viên (Student)</option>
               <option value="Lecturer">Giảng viên (Lecturer)</option>
               <option value="Researcher">Nhà nghiên cứu (Researcher)</option>
@@ -200,13 +191,8 @@ export const Register = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-[#002855] hover:opacity-95 text-white font-semibold py-3 rounded transition-opacity mt-4 cursor-pointer flex items-center justify-center gap-2 ${
-              isLoading ? "opacity-75 cursor-not-allowed" : ""
-            }`}
+            className="w-full bg-[#002855] text-white py-3 rounded font-bold mt-4"
           >
-            <span className="material-symbols-outlined text-sm">
-              {isLoading ? "sync" : "person_add"}
-            </span>
             {isLoading ? "Đang xử lý..." : "Xác nhận tạo tài khoản"}
           </button>
         </form>

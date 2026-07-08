@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import type { SystemLog } from "../../types/admin";
 
 interface AdminOverviewProps {
@@ -6,22 +7,69 @@ interface AdminOverviewProps {
 }
 
 export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [studentCount, setStudentCount] = useState(0);
+  const [lecturerCount, setLecturerCount] = useState(0);
+  const [researcherCount, setResearcherCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("/api/admin/users", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const items = response.data.items || [];
+        setTotalUsers(items.length);
+        
+        let students = 0;
+        let lecturers = 0;
+        let researchers = 0;
+        items.forEach((item: any) => {
+          const type = item.actorType?.toLowerCase();
+          if (type === "student" || type === "sinh viên") {
+            students++;
+          } else if (type === "lecturer" || type === "giảng viên") {
+            lecturers++;
+          } else if (type === "researcher" || type === "nghiên cứu viên") {
+            researchers++;
+          }
+        });
+        setStudentCount(students);
+        setLecturerCount(lecturers);
+        setResearcherCount(researchers);
+      } catch (err) {
+        console.error("Error fetching overview user stats:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Hộp chỉ số đo lường */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-lg border border-[#ebeef0] shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-lg border border-[#ebeef0] shadow-sm flex flex-col justify-between relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-xs flex items-center justify-center z-10 rounded-lg">
+              <span className="animate-spin text-[#13696a] text-sm">⏳</span>
+            </div>
+          )}
           <span className="text-xs font-bold text-[#74777f] uppercase tracking-wider">
-            Người dùng trực tuyến
+            Tổng số người dùng
           </span>
           <div className="flex items-baseline gap-2 mt-2">
-            <h3 className="text-3xl font-extrabold text-[#002045]">36</h3>
+            <h3 className="text-3xl font-extrabold text-[#002045]">{totalUsers}</h3>
             <span className="text-xs font-semibold text-[#13696a] bg-[#e0f7f7] px-2 py-0.5 rounded-full flex items-center">
-              +12% hôm nay
+              Hệ thống
             </span>
           </div>
           <p className="text-xs text-[#74777f] mt-2">
-            Sinh viên: 24 | Giảng viên: 8 | NC Viên: 4
+            Sinh viên: {studentCount} | Giảng viên: {lecturerCount} | NC Viên: {researcherCount}
           </p>
         </div>
 

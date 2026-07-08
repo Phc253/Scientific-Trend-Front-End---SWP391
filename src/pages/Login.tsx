@@ -20,31 +20,63 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      // Gọi hàm login từ AuthContext để thực hiện đăng nhập và cập nhật trạng thái toàn cục
-      const response = await login(email, password);
-
-      // Lưu thông tin đăng nhập vào localStorage
-      localStorage.setItem(
-        "userName",
-        response.fullName || email.split("@")[0],
+      const response = await axios.post(
+        "http://localhost:5225/api/account/login",
+        {
+          email: email,
+          password: password,
+        }
       );
 
-      const userRoles = response.roles || [];
-      localStorage.setItem("userRoles", JSON.stringify(userRoles));
+      if (response.data && response.data.token) {
+        // 1. Lưu token và tên người dùng vào localStorage
+        const userData = response.data.user || response.data;
+        localStorage.setItem("fullName", userData.fullName || "User");
+        localStorage.setItem("token", response.data.token);
 
-      const isAdmin = Array.isArray(userRoles)
-        ? userRoles.includes("Administrator")
-        : userRoles === "Administrator";
+        // 2. XỬ LÝ LẤY QUYỀN (Đồng bộ cả trường roles và trường actorType từ DB)
+        const userRoles = userData.roles || [];
+        const actorType = userData.actorType || "";
 
-      if (isAdmin) {
-        navigate("/admin");
-      } else {
-        navigate("/");
+        // Chuẩn hóa chuỗi lưu vào localStorage để hàm .includes() ở các Layout hoạt động chính xác
+        const finalRole = actorType
+          ? actorType
+          : Array.isArray(userRoles)
+          ? userRoles.join(",")
+          : userRoles;
+
+        localStorage.setItem("userRoles", finalRole);
+
+        // Gọi hàm login từ AuthContext để cập nhật trạng thái toàn cục (Global State)
+        if (login) {
+          login(response.data.token, userData);
+        }
+
+        // 3. LOGIC ĐIỀU HƯỚNG ROUTE THEO TỪNG ROLE CỤ THỂ
+        if (finalRole.includes("Administrator")) {
+          navigate("/admin");
+        } else if (finalRole.includes("Student")) {
+          navigate("/student"); 
+        } else if (finalRole.includes("Researcher")) {
+          navigate("/researcher"); 
+        } else if (finalRole.includes("Lecturer")) {
+          navigate("/lecturer"); 
+        } else {
+          navigate("/"); 
+        }
       }
     } catch (err: any) {
-      setError(
-        err.message || "Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối đến máy chủ!"
-      );
+      if (err.response && err.response.data) {
+        setError(
+          err.response.data.message ||
+          "Tài khoản hoặc mật khẩu không chính xác!"
+        );
+      } else {
+        setError(
+          err.message || 
+          "Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối đến máy chủ!"
+        );
+      }
     } finally {
       setIsLoading(false);
     }

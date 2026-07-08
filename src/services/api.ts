@@ -1,6 +1,5 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://localhost:7174/api";
-import axios from "axios";
 
 export interface TrendingItem {
   name: string;
@@ -327,7 +326,41 @@ export const api = {
     );
   },
 
+  // Dashboard & Trends
   async getDashboardSummary(): Promise<DashboardSummaryResponse> {
-    return request<DashboardSummaryResponse>("/Dashboard/summary");
+    return request<DashboardSummaryResponse>("/Dashboard/summary", {
+      method: "GET",
+    });
+  },
+
+  async getTrendingTopics(topN: number = 10): Promise<any[]> {
+    return request<any[]>(`/Trends/trending?topN=${topN}`, {
+      method: "GET",
+    });
+  },
+
+  async getActivityScores(topN: number = 10): Promise<any[]> {
+    return request<any[]>(`/Trends/activity-score?topN=${topN}`, {
+      method: "GET",
+    });
+  },
+
+  async getBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
+    return request<{ success: boolean; data: BookmarkItem[] }>(
+      "/Bookmarks/my-bookmarks",
+    );
+  },
+
+  async removeBookmark(
+    targetId: number,
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>("/Bookmarks/toggle", {
+      method: "POST",
+      body: JSON.stringify({ targetId: targetId, targetType: "Paper" }),
+    });
+  },
+
+  async getLecturerGroups(): Promise<{ success: boolean; data: any[] }> {
+    return Promise.resolve({ success: true, data: [] });
   },
 };
