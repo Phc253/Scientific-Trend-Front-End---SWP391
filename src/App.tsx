@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import Admin from "./pages/Admin";
+import VerifyEmail from "./pages/VerifyEmail"; // Import từ nhánh duc
 import AdminLayout from "./components/admin/AdminLayout";
 
 // --- Sinh viên ---
@@ -38,14 +39,21 @@ const App: React.FC = () => {
   return (
     <Routes>
       {/* ==========================================
+          KHU VỰC KHÔNG CẦN LAYOUT (Auth)
+      ========================================== */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+
+      {/* ==========================================
           KHU VỰC CHUNG (Dành cho Khách)
       ========================================== */}
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="search" element={<Search />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+        <Route path="paper/:id" element={<PaperDetails />} />
+        <Route path="library" element={<StudentLibrary />} /> {/* Giả sử MyLibrary dùng chung */}
       </Route>
 
       {/* ==========================================

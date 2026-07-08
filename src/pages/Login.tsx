@@ -25,58 +25,56 @@ export const Login = () => {
         {
           email: email,
           password: password,
-        },
+        }
       );
 
       if (response.data && response.data.token) {
         // 1. Lưu token và tên người dùng vào localStorage
-        localStorage.setItem("fullName", response.data.fullName || "Sinh viên");
-        localStorage.setItem("userRoles", JSON.stringify(response.data.roles));
+        const userData = response.data.user || response.data;
+        localStorage.setItem("fullName", userData.fullName || "User");
         localStorage.setItem("token", response.data.token);
-        navigate("/student");
 
         // 2. XỬ LÝ LẤY QUYỀN (Đồng bộ cả trường roles và trường actorType từ DB)
-        const userRoles =
-          response.data.user?.roles || response.data.roles || [];
-        const actorType =
-          response.data.user?.actorType || response.data.actorType || "";
+        const userRoles = userData.roles || [];
+        const actorType = userData.actorType || "";
 
         // Chuẩn hóa chuỗi lưu vào localStorage để hàm .includes() ở các Layout hoạt động chính xác
         const finalRole = actorType
           ? actorType
           : Array.isArray(userRoles)
-            ? userRoles.join(",")
-            : userRoles;
+          ? userRoles.join(",")
+          : userRoles;
 
         localStorage.setItem("userRoles", finalRole);
 
         // Gọi hàm login từ AuthContext để cập nhật trạng thái toàn cục (Global State)
         if (login) {
-          login(response.data.token, response.data.user);
+          login(response.data.token, userData);
         }
 
         // 3. LOGIC ĐIỀU HƯỚNG ROUTE THEO TỪNG ROLE CỤ THỂ
         if (finalRole.includes("Administrator")) {
           navigate("/admin");
         } else if (finalRole.includes("Student")) {
-          navigate("/student"); // Đẩy thẳng Sinh viên vào khu vực giao diện riêng (/student)
+          navigate("/student"); 
         } else if (finalRole.includes("Researcher")) {
-          navigate("/researcher"); // Đẩy Nhà nghiên cứu vào workspace riêng
+          navigate("/researcher"); 
         } else if (finalRole.includes("Lecturer")) {
-          navigate("/lecturer"); // Đẩy Giảng viên vào không gian riêng
+          navigate("/lecturer"); 
         } else {
-          navigate("/"); // Khách hoặc các role khác về trang chủ công cộng
+          navigate("/"); 
         }
       }
     } catch (err: any) {
       if (err.response && err.response.data) {
         setError(
           err.response.data.message ||
-            "Tài khoản hoặc mật khẩu không chính xác!",
+          "Tài khoản hoặc mật khẩu không chính xác!"
         );
       } else {
         setError(
-          "Không thể kết nối đến máy chủ Back-end. Bạn đã chạy lệnh dotnet run chưa?",
+          err.message || 
+          "Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối đến máy chủ!"
         );
       }
     } finally {

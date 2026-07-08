@@ -180,6 +180,12 @@ export const api = {
     return request<UserProfile>("/Account/profile");
   },
 
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    return request<{ message: string }>(
+      `/Account/verify-email?token=${encodeURIComponent(token)}`
+    );
+  },
+
   // Papers Search & Detail
   async searchPapers(params: {
     q?: string;
@@ -320,8 +326,9 @@ export const api = {
     );
   },
 
+  // Dashboard & Trends
   async getDashboardSummary(): Promise<DashboardSummaryResponse> {
-    return request<DashboardSummaryResponse>("/dashboard/summary", {
+    return request<DashboardSummaryResponse>("/Dashboard/summary", {
       method: "GET",
     });
   },
