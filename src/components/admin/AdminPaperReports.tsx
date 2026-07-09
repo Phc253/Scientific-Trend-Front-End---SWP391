@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { api } from "../../services/api";
 import type { SystemLog, PaperReportItem, PaperReportResponse } from "../../types/admin";
 
 interface AdminPaperReportsProps {
@@ -30,14 +30,10 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
   React.useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get<PaperReportResponse>("/api/Report/papers", {
-          params: { page: 1, pageSize: 1000 },
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (response.data && response.data.items) {
-          const items = response.data.items;
-          const totalPapers = response.data.totalCount || items.length;
+        const data = await api.getPaperReports({ page: 1, pageSize: 1000 });
+        if (data && data.items) {
+          const items = data.items;
+          const totalPapers = data.totalCount || items.length;
           const totalCitations = items.reduce((acc, curr) => acc + curr.citationCount, 0);
           const avgCitations = totalPapers > 0 ? (totalCitations / totalPapers).toFixed(1) : "0";
           const topPaper = items.reduce(
@@ -70,22 +66,18 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
       setIsLoading(true);
       setErrorMsg("");
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get<PaperReportResponse>("/api/Report/papers", {
-          params: {
-            page: currentPage,
-            pageSize: pageSize,
-            search: paperSearch.trim() || undefined,
-          },
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        const data = await api.getPaperReports({
+          page: currentPage,
+          pageSize: pageSize,
+          search: paperSearch.trim() || undefined,
         });
-        if (response.data) {
-          setPapersData(response.data.items || []);
-          setTotalCount(response.data.totalCount || 0);
+        if (data) {
+          setPapersData(data.items || []);
+          setTotalCount(data.totalCount || 0);
         }
       } catch (err: any) {
         console.error("Error fetching papers:", err);
-        setErrorMsg(err.response?.data?.message || err.message || "Không thể kết nối API để tải danh sách bài báo.");
+        setErrorMsg(err.message || "Không thể kết nối API để tải danh sách bài báo.");
       } finally {
         setIsLoading(false);
       }

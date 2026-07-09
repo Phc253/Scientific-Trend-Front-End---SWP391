@@ -1,6 +1,8 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://localhost:7174/api";
 import axios from "axios";
+import type { SchedulerConfig, PaperReportResponse, KeywordStatisticItem, SyncJobResult } from "../types/admin";
+
 
 export interface TrendingItem {
   name: string;
@@ -327,5 +329,65 @@ export const api = {
       "http://localhost:5225/api/dashboard/summary",
     );
     return response.data;
+  },
+
+  // Admin APIs
+  async getKeywordStats(): Promise<KeywordStatisticItem[]> {
+    return request<KeywordStatisticItem[]>("/Report/keyword-stats");
+  },
+
+  async syncOpenAlex(params: {
+    keyword: string;
+    maxResults: number;
+    useCheckpoint: boolean;
+  }): Promise<SyncJobResult> {
+    const searchParams = new URLSearchParams();
+    searchParams.append("keyword", params.keyword);
+    searchParams.append("maxResults", params.maxResults.toString());
+    searchParams.append("useCheckpoint", params.useCheckpoint.toString());
+    return request<SyncJobResult>(`/fetchdata/openalex?${searchParams.toString()}`, {
+      method: "POST",
+    });
+  },
+
+  async getSchedulerConfig(): Promise<SchedulerConfig> {
+    return request<SchedulerConfig>("/Admin/scheduler-config");
+  },
+
+  async updateSchedulerConfig(payload: SchedulerConfig): Promise<any> {
+    return request<any>("/Admin/scheduler-config", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getAdminUsers(): Promise<{ items: any[] }> {
+    return request<{ items: any[] }>("/admin/users");
+  },
+
+  async activateUser(userId: string): Promise<any> {
+    return request<any>(`/Admin/users/${userId}/activate`, {
+      method: "PATCH",
+    });
+  },
+
+  async deactivateUser(userId: string): Promise<any> {
+    return request<any>(`/Admin/users/${userId}/deactivate`, {
+      method: "PATCH",
+    });
+  },
+
+  async getPaperReports(params: {
+    page: number;
+    pageSize: number;
+    search?: string;
+  }): Promise<PaperReportResponse> {
+    const searchParams = new URLSearchParams();
+    searchParams.append("page", params.page.toString());
+    searchParams.append("pageSize", params.pageSize.toString());
+    if (params.search) {
+      searchParams.append("search", params.search);
+    }
+    return request<PaperReportResponse>(`/Report/papers?${searchParams.toString()}`);
   },
 };

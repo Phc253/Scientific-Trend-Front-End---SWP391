@@ -1,21 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
-import type { SystemLog } from "../../types/admin";
+import { api } from "../../services/api";
+import type { SystemLog, SyncJobResult } from "../../types/admin";
 
 interface AdminOpenAlexProps {
   addLog: (type: SystemLog["type"], message: string) => void;
-}
-
-interface SyncJobResult {
-  syncJobId: number;
-  sourceName: string;
-  keyword: string;
-  maxResults: number;
-  recordsFetched: number;
-  status: string;
-  startTime: string;
-  endTime: string;
-  errorMessage: string | null;
 }
 
 export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
@@ -37,22 +25,11 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
     addLog("INFO", `Bắt đầu đồng bộ OpenAlex cho từ khóa "${keyword}" (maxResults: ${maxResults}, useCheckpoint: ${useCheckpoint})`);
 
     try {
-      const token = localStorage.getItem("token");
-      // Thực hiện gọi API POST /api/fetchdata/openalex với params
-      const response = await axios.post<SyncJobResult>(
-        "/api/fetchdata/openalex",
-        null,
-        {
-          params: {
-            keyword: keyword,
-            maxResults: maxResults,
-            useCheckpoint: useCheckpoint,
-          },
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
-
-      const data = response.data;
+      const data = await api.syncOpenAlex({
+        keyword,
+        maxResults,
+        useCheckpoint,
+      });
       setSyncResult(data);
 
       if (data.status === "Completed") {
@@ -71,8 +48,6 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
     } catch (err: any) {
       console.error(err);
       const message =
-        err.response?.data?.message ||
-        err.response?.data?.errorMessage ||
         err.message ||
         "Lỗi không xác định khi kết nối với máy chủ.";
       setErrorMsg(message);

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import axios from "axios";
+import { api } from "../../services/api";
 import type { SystemLog, KeywordStatisticItem } from "../../types/admin";
 
 interface AdminKeywordStatsProps {
@@ -22,16 +22,11 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
       setIsLoading(true);
       setErrorMsg("");
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get<KeywordStatisticItem[]>("/api/Report/keyword-stats", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (response.data) {
-          setKeywords(response.data);
-        }
+        const data = await api.getKeywordStats();
+        setKeywords(data);
       } catch (err: any) {
         console.error("Error loading keyword stats:", err);
-        setErrorMsg(err.response?.data?.message || err.message || "Không thể kết nối API để tải thống kê từ khóa.");
+        setErrorMsg(err.message || "Không thể kết nối API để tải thống kê từ khóa.");
       } finally {
         setIsLoading(false);
       }

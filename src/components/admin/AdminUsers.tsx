@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../../services/api";
 import type { User, SystemLog } from "../../types/admin";
 
 interface AdminUsersProps {
@@ -43,11 +43,8 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
     setIsLoadingUsers(true);
     setErrorUsers("");
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/admin/users", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const fetchedItems = response.data.items || [];
+      const response = await api.getAdminUsers();
+      const fetchedItems = response.items || [];
       const mappedUsers: User[] = fetchedItems.map((item: any) => ({
         id: String(item.userId),
         name: item.fullName || "",
@@ -59,7 +56,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
       setUsers(mappedUsers);
     } catch (err: any) {
       console.error(err);
-      setErrorUsers(err.response?.data?.message || "Lỗi tải danh sách người dùng từ máy chủ.");
+      setErrorUsers(err.message || "Lỗi tải danh sách người dùng từ máy chủ.");
     } finally {
       setIsLoadingUsers(false);
     }
@@ -75,15 +72,12 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
     if (!userToUpdate) return;
 
     const isActive = userToUpdate.status === "Hoạt động";
-    const endpoint = isActive 
-      ? `/api/Admin/users/${id}/deactivate` 
-      : `/api/Admin/users/${id}/activate`;
-    
-    const token = localStorage.getItem("token");
     try {
-      await axios.patch(endpoint, null, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      if (isActive) {
+        await api.deactivateUser(id);
+      } else {
+        await api.activateUser(id);
+      }
 
       const nextStatus = isActive ? "Đã khóa" : "Hoạt động";
       setUsers((prevUsers) =>
@@ -96,7 +90,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
       );
     } catch (err: any) {
       console.error(`Lỗi thay đổi trạng thái user ${id}:`, err);
-      const errMsg = err.response?.data?.message || err.message || "Lỗi không xác định.";
+      const errMsg = err.message || "Lỗi không xác định.";
       addLog("ERROR", `Không thể thay đổi trạng thái user ${userToUpdate.name}: ${errMsg}`);
     }
   };

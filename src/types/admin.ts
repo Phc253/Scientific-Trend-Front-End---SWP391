@@ -46,3 +46,16 @@ export interface KeywordStatisticItem {
   lastYear: number;
 }
 
+export interface SyncJobResult {
+  syncJobId: number;
+  sourceName: string;
+  keyword: string;
+  maxResults: number;
+  recordsFetched: number;
+  status: string;
+  startTime: string;
+  endTime: string;
+  errorMessage: string | null;
+}
+
+
