@@ -23,6 +23,13 @@ export const Register = () => {
 
     if (password !== confirmPassword) {
       setError("Mật khẩu nhập lại không trùng khớp!");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!dateOfBirth) {
+      setError("Vui lòng chọn ngày sinh.");
+      setIsLoading(false);
       return;
     }
 
@@ -40,7 +47,10 @@ export const Register = () => {
       setSuccessMessage(
         result.message || "Đăng ký thành công! Đang chuyển hướng...",
       );
-      setTimeout(() => navigate("/login"), 3000);
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
     } catch (err: any) {
       setError(
         err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.",
@@ -53,29 +63,48 @@ export const Register = () => {
   if (successMessage) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn py-6">
-        <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md text-center">
-          <h2 className="text-2xl font-bold text-[#002045] mb-4">
+        <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md space-y-6 text-center">
+          <div className="w-16 h-16 bg-[#e1f5fe] text-[#002855] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#b2ebf2]">
+            <span className="material-symbols-outlined text-3xl">mail</span>
+          </div>
+          <h2 className="text-2xl font-bold text-[#002045]">
             Đăng ký thành công!
           </h2>
-          <p className="text-sm text-[#43474e] mb-6">{successMessage}</p>
-          <Link
-            to="/login"
-            className="bg-[#002855] text-white py-2.5 px-6 rounded text-sm font-semibold"
-          >
-            Đăng nhập ngay
-          </Link>
+          <p className="text-sm text-[#43474e] leading-relaxed">
+            {successMessage}
+          </p>
+          <div className="pt-4 border-t border-[#ebeef0]">
+            <Link
+              to="/login"
+              className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center gap-2 text-sm"
+            >
+              <span className="material-symbols-outlined text-sm">login</span>
+              Đi đến trang Đăng nhập ngay
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center animate-fadeIn py-6 bg-[#f8fafc]">
+    <div className="relative min-h-screen flex items-center justify-center animate-fadeIn py-6 bg-[#f8fafc]">
+      {/* Nút Quay về trang chủ */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors"
+      >
+        <span className="material-symbols-outlined text-xl">arrow_back</span>
+        Quay về trang chủ
+      </Link>
       <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-2xl space-y-6">
-        <div className="text-center">
+        <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-[#002045]">
-            Đăng ký tài khoản
+            Đăng ký tài khoản mới
           </h2>
+          <p className="text-xs text-[#74777f]">
+            Tham gia hệ thống nghiên cứu khoa học SciTrend
+          </p>
         </div>
 
         {error && (
@@ -86,8 +115,10 @@ export const Register = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="font-bold">Họ và Tên</label>
+            <div className="space-y-1.5">
+              <label className="block font-bold text-[#43474e]">
+                Họ và Tên
+              </label>
               <input
                 type="text"
                 required
@@ -96,8 +127,11 @@ export const Register = () => {
                 onChange={(e) => setFullName(e.target.value)}
               />
             </div>
-            <div className="space-y-1">
-              <label className="font-bold">Địa chỉ Email</label>
+
+            <div className="space-y-1.5">
+              <label className="block font-bold text-[#43474e]">
+                Địa chỉ Email
+              </label>
               <input
                 type="email"
                 required
@@ -109,8 +143,10 @@ export const Register = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="font-bold">Số điện thoại</label>
+            <div className="space-y-1.5">
+              <label className="block font-bold text-[#43474e]">
+                Số điện thoại
+              </label>
               <input
                 type="tel"
                 required
@@ -119,8 +155,11 @@ export const Register = () => {
                 onChange={(e) => setPhoneNumber(e.target.value)}
               />
             </div>
-            <div className="space-y-1">
-              <label className="font-bold">Ngày sinh</label>
+
+            <div className="space-y-1.5">
+              <label className="block font-bold text-[#43474e]">
+                Ngày sinh
+              </label>
               <input
                 type="date"
                 required
@@ -132,8 +171,8 @@ export const Register = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="font-bold">Mật khẩu</label>
+            <div className="space-y-1.5">
+              <label className="block font-bold text-[#43474e]">Mật khẩu</label>
               <input
                 type="password"
                 required
@@ -142,8 +181,11 @@ export const Register = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <div className="space-y-1">
-              <label className="font-bold">Xác nhận mật khẩu</label>
+
+            <div className="space-y-1.5">
+              <label className="block font-bold text-[#43474e]">
+                Xác nhận mật khẩu
+              </label>
               <input
                 type="password"
                 required
@@ -154,18 +196,21 @@ export const Register = () => {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="font-bold">Vai trò</label>
+          <div className="space-y-1.5">
+            <label className="block font-bold text-[#43474e]">
+              Đối tượng (Actor Type)
+            </label>
             <select
               required
-              className="w-full p-3 border rounded"
+              className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
               value={actorType}
               onChange={(e) => setActorType(e.target.value)}
+              disabled={isLoading}
             >
               <option value="">Chọn vai trò</option>
-              <option value="Student">Sinh viên</option>
-              <option value="Researcher">Nhà nghiên cứu</option>
-              <option value="Lecturer">Giảng viên</option>
+              <option value="Student">Sinh viên (Student)</option>
+              <option value="Lecturer">Giảng viên (Lecturer)</option>
+              <option value="Researcher">Nhà nghiên cứu (Researcher)</option>
             </select>
           </div>
 
@@ -177,6 +222,16 @@ export const Register = () => {
             {isLoading ? "Đang xử lý..." : "Xác nhận tạo tài khoản"}
           </button>
         </form>
+
+        <div className="text-center text-xs text-[#43474e] pt-2 border-t border-[#ebeef0]">
+          Đã có tài khoản hệ thống từ trước?{" "}
+          <Link
+            to="/login"
+            className="text-[#002045] font-bold hover:underline"
+          >
+            Đăng nhập ngay
+          </Link>
+        </div>
       </div>
     </div>
   );

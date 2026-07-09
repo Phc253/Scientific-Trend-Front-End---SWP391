@@ -30,17 +30,13 @@ export const Login = () => {
 
       if (response.data && response.data.token) {
         // 1. Lưu token và tên người dùng vào localStorage
+        const userData = response.data.user || response.data;
+        localStorage.setItem("fullName", userData.fullName || "User");
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem(
-          "userName",
-          response.data.user?.fullName || email.split("@")[0],
-        );
 
         // 2. XỬ LÝ LẤY QUYỀN (Đồng bộ cả trường roles và trường actorType từ DB)
-        const userRoles =
-          response.data.user?.roles || response.data.roles || [];
-        const actorType =
-          response.data.user?.actorType || response.data.actorType || "";
+        const userRoles = userData.roles || [];
+        const actorType = userData.actorType || "";
 
         // Chuẩn hóa chuỗi lưu vào localStorage để hàm .includes() ở các Layout hoạt động chính xác
         const finalRole = actorType
@@ -53,20 +49,20 @@ export const Login = () => {
 
         // Gọi hàm login từ AuthContext để cập nhật trạng thái toàn cục (Global State)
         if (login) {
-          login(response.data.token, response.data.user);
+          login(response.data.token, userData);
         }
 
         // 3. LOGIC ĐIỀU HƯỚNG ROUTE THEO TỪNG ROLE CỤ THỂ
         if (finalRole.includes("Administrator")) {
           navigate("/admin");
         } else if (finalRole.includes("Student")) {
-          navigate("/student"); // Đẩy thẳng Sinh viên vào khu vực giao diện riêng (/student)
+          navigate("/student");
         } else if (finalRole.includes("Researcher")) {
-          navigate("/researcher"); // Đẩy Nhà nghiên cứu vào workspace riêng
+          navigate("/researcher");
         } else if (finalRole.includes("Lecturer")) {
-          navigate("/lecturer"); // Đẩy Giảng viên vào không gian riêng
+          navigate("/lecturer");
         } else {
-          navigate("/"); // Khách hoặc các role khác về trang chủ công cộng
+          navigate("/");
         }
       }
     } catch (err: any) {
@@ -77,7 +73,8 @@ export const Login = () => {
         );
       } else {
         setError(
-          "Không thể kết nối đến máy chủ Back-end. Bạn đã chạy lệnh dotnet run chưa?",
+          err.message ||
+            "Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối đến máy chủ!",
         );
       }
     } finally {
@@ -91,10 +88,37 @@ export const Login = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "60vh",
+        minHeight: "100vh", // Sửa lại thành 100vh cho đẹp
         backgroundColor: "#f8fafc",
+        position: "relative", // Thêm dòng này để định vị nút Quay lại
       }}
     >
+      <Link
+        to="/"
+        style={{
+          position: "absolute",
+          top: "1.5rem",
+          left: "1.5rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          textDecoration: "none",
+          color: "#64748b",
+          fontWeight: "500",
+          fontSize: "0.875rem",
+          transition: "color 0.2s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "#0f172a")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+      >
+        <span
+          className="material-symbols-outlined"
+          style={{ fontSize: "1.25rem" }}
+        >
+          arrow_back
+        </span>
+        Quay về trang chủ
+      </Link>
       <div
         style={{
           width: "100%",

@@ -1,11 +1,20 @@
-import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom"; // 1. Thêm Outlet
 
-const ResearcherLayout: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+const ResearcherLayout: React.FC = () => {
+  // 2. Bỏ { children: ... }
   const location = useLocation();
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState<string>("Nhà nghiên cứu");
+
+  useEffect(() => {
+    // Lấy 'fullName' hoặc fallback về 'userName' tùy vào việc lúc Đăng nhập bạn lưu key nào
+    const storedName =
+      localStorage.getItem("fullName") || localStorage.getItem("userName");
+    if (storedName) {
+      setFullName(storedName);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -68,15 +77,15 @@ const ResearcherLayout: React.FC<{ children: React.ReactNode }> = ({
           })}
         </nav>
 
-        {/* Thông tin người dùng & Đăng xuất (Góc dưới bên trái) */}
+        {/* User Info & Logout */}
         <div className="p-4 border-t border-indigo-900/50 shrink-0 bg-[#16143a]">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold border border-indigo-400 shrink-0 shadow-sm">
-              {localStorage.getItem("userName")?.charAt(0).toUpperCase() || "U"}
+              {fullName.charAt(0).toUpperCase()}{" "}
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-bold text-white truncate">
-                {localStorage.getItem("userName") || "Người dùng"}
+                {fullName}
               </p>
               <p className="text-xs text-indigo-300 font-medium truncate">
                 Nhà nghiên cứu
@@ -105,7 +114,6 @@ const ResearcherLayout: React.FC<{ children: React.ReactNode }> = ({
               "Trang cá nhân"}
           </h2>
 
-          {/* Góc phải Header bây giờ để các công cụ bổ trợ (Ví dụ: Nút thông báo) */}
           <div className="flex items-center gap-4">
             <button className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50">
               <span className="material-symbols-outlined">notifications</span>
@@ -114,8 +122,10 @@ const ResearcherLayout: React.FC<{ children: React.ReactNode }> = ({
           </div>
         </header>
 
-        {/* Dynamic Content */}
-        <div className="flex-1 overflow-y-auto p-8 bg-slate-50">{children}</div>
+        {/* Dynamic Content: Dùng Outlet thay cho children */}
+        <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

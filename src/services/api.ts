@@ -1,6 +1,5 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://localhost:7174/api";
-import axios from "axios";
 import type { SchedulerConfig, PaperReportResponse, KeywordStatisticItem, SyncJobResult } from "../types/admin";
 
 
@@ -183,6 +182,12 @@ export const api = {
     return request<UserProfile>("/Account/profile");
   },
 
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    return request<{ message: string }>(
+      `/Account/verify-email?token=${encodeURIComponent(token)}`
+    );
+  },
+
   // Papers Search & Detail
   async searchPapers(params: {
     q?: string;
@@ -323,12 +328,42 @@ export const api = {
     );
   },
 
-  getDashboardSummary: async (): Promise<DashboardSummaryResponse> => {
-    // Đảm bảo URL gọi đúng cổng Backend của bạn (ví dụ 5225 hoặc 7174)
-    const response = await axios.get(
-      "http://localhost:5225/api/dashboard/summary",
+  // Dashboard & Trends
+  async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+    return request<DashboardSummaryResponse>("/Dashboard/summary", {
+      method: "GET",
+    });
+  },
+
+  async getTrendingTopics(topN: number = 10): Promise<any[]> {
+    return request<any[]>(`/Trends/trending?topN=${topN}`, {
+      method: "GET",
+    });
+  },
+
+  async getActivityScores(topN: number = 10): Promise<any[]> {
+    return request<any[]>(`/Trends/activity-score?topN=${topN}`, {
+      method: "GET",
+    });
+  },
+
+  async getBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
+    return request<{ success: boolean; data: BookmarkItem[] }>(
+      "/Bookmarks/my-bookmarks",
     );
-    return response.data;
+  },
+
+  async removeBookmark(
+    targetId: number,
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>("/Bookmarks/toggle", {
+      method: "POST",
+      body: JSON.stringify({ targetId: targetId, targetType: "Paper" }),
+    });
+  },
+
+  async getLecturerGroups(): Promise<{ success: boolean; data: any[] }> {
+    return Promise.resolve({ success: true, data: [] });
   },
 
   // Admin APIs
