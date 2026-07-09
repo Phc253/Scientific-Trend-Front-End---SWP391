@@ -16,6 +16,54 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
 
   const mountLogged = React.useRef(false);
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    addLog("INFO", "Bắt đầu xuất thống kê từ khóa ra file CSV...");
+    try {
+      const blob = await api.exportKeywordStatsCsv();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `keyword_stats_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      addLog("SUCCESS", "Xuất file CSV thống kê từ khóa thành công.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Lỗi khi xuất file CSV");
+      addLog("ERROR", `Xuất file CSV thất bại: ${err.message}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    addLog("INFO", "Bắt đầu xuất thống kê từ khóa ra file PDF...");
+    try {
+      const blob = await api.exportKeywordStatsPdf();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `keyword_stats_${new Date().toISOString().split("T")[0]}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      addLog("SUCCESS", "Xuất file PDF thống kê từ khóa thành công.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Lỗi khi xuất file PDF");
+      addLog("ERROR", `Xuất file PDF thất bại: ${err.message}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Tải dữ liệu từ khóa từ API
   React.useEffect(() => {
     const fetchKeywords = async () => {
@@ -131,18 +179,43 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
 
       {/* Bảng Danh Sách */}
       <div className="bg-white rounded-lg border border-[#ebeef0] shadow-sm p-6 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
-            <input
-              type="text"
-              value={keywordSearch}
-              onChange={(e) => setKeywordSearch(e.target.value)}
-              placeholder="Tìm kiếm từ khóa..."
-              className="w-full pl-9 pr-4 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-md focus:outline-none focus:border-[#13696a] text-xs text-[#181c1e] font-semibold"
-            />
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row flex-1 items-stretch sm:items-center gap-3">
+            <div className="relative flex-1 max-w-md">
+              <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
+              <input
+                type="text"
+                value={keywordSearch}
+                onChange={(e) => setKeywordSearch(e.target.value)}
+                placeholder="Tìm kiếm từ khóa..."
+                className="w-full pl-9 pr-4 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-md focus:outline-none focus:border-[#13696a] text-xs text-[#181c1e] font-semibold"
+              />
+            </div>
+            
+            {/* Nút Xuất File */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportCSV}
+                disabled={isExporting}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Xuất thống kê từ khóa ra file CSV"
+              >
+                <span className="material-symbols-outlined text-sm">table_view</span>
+                <span>{isExporting ? "Đang xuất..." : "Xuất CSV"}</span>
+              </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white rounded text-xs font-bold transition-all shadow-md shadow-rose-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Xuất thống kê từ khóa ra file PDF"
+              >
+                <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                <span>{isExporting ? "Đang xuất..." : "Xuất PDF"}</span>
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 shrink-0">
             <label className="text-xs font-bold text-slate-500 uppercase shrink-0">Sắp xếp:</label>
             <select
               value={keywordSort}

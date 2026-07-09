@@ -18,10 +18,17 @@ const AdminLayout: React.FC = () => {
     }
   }, [location.pathname, isReportsPath]);
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
     localStorage.removeItem("userRoles");
+    setShowLogoutConfirm(false);
     navigate("/login");
   };
 
@@ -217,6 +224,35 @@ const AdminLayout: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Confirmation Logout Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-100 max-w-sm w-full p-6 mx-4 transform scale-100 transition-all duration-300">
+            <div className="flex items-center gap-3 text-rose-500 mb-4">
+              <span className="material-symbols-outlined text-3xl">logout</span>
+              <h3 className="text-lg font-bold text-slate-900">Xác nhận đăng xuất</h3>
+            </div>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              Bạn có chắc chắn muốn đăng xuất không?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 rounded-lg shadow-md shadow-rose-500/20 transition-all cursor-pointer"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

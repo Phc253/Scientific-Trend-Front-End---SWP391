@@ -97,6 +97,54 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
     setCurrentPage(1);
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    addLog("INFO", "Bắt đầu xuất dữ liệu bài báo ra file CSV...");
+    try {
+      const blob = await api.exportPapersCsv();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `papers_report_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      addLog("SUCCESS", "Xuất file CSV báo cáo bài báo thành công.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Lỗi khi xuất file CSV");
+      addLog("ERROR", `Xuất file CSV thất bại: ${err.message}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    addLog("INFO", "Bắt đầu xuất báo cáo bài báo ra file PDF...");
+    try {
+      const blob = await api.exportPapersPdf();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `papers_report_${new Date().toISOString().split("T")[0]}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      addLog("SUCCESS", "Xuất file PDF báo cáo bài báo thành công.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Lỗi khi xuất file PDF");
+      addLog("ERROR", `Xuất file PDF thất bại: ${err.message}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Cards Chỉ số tổng quan */}
@@ -149,17 +197,41 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
       {/* Bảng Danh Sách */}
       <div className="bg-white rounded-lg border border-[#ebeef0] shadow-sm p-6 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
-            <input
-              type="text"
-              value={paperSearch}
-              onChange={handleSearchChange}
-              placeholder="Tìm kiếm theo tiêu đề, tác giả, tạp chí..."
-              className="w-full pl-9 pr-4 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-md focus:outline-none focus:border-[#13696a] text-xs text-[#181c1e] font-semibold"
-            />
+          <div className="flex flex-col sm:flex-row flex-1 items-stretch sm:items-center gap-3">
+            <div className="relative flex-1 max-w-md">
+              <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
+              <input
+                type="text"
+                value={paperSearch}
+                onChange={handleSearchChange}
+                placeholder="Tìm kiếm theo tiêu đề, tác giả, tạp chí..."
+                className="w-full pl-9 pr-4 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-md focus:outline-none focus:border-[#13696a] text-xs text-[#181c1e] font-semibold"
+              />
+            </div>
+            
+            {/* Nút Xuất File */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportCSV}
+                disabled={isExporting}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Xuất dữ liệu bài báo ra file CSV"
+              >
+                <span className="material-symbols-outlined text-sm">table_view</span>
+                <span>{isExporting ? "Đang xuất..." : "Xuất CSV"}</span>
+              </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white rounded text-xs font-bold transition-all shadow-md shadow-rose-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Xuất báo cáo bài báo ra file PDF"
+              >
+                <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                <span>{isExporting ? "Đang xuất..." : "Xuất PDF"}</span>
+              </button>
+            </div>
           </div>
-          <div className="text-xs text-slate-500 font-semibold">
+          <div className="text-xs text-slate-500 font-semibold shrink-0">
             Hiển thị {totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalCount)} trong tổng số {totalCount} bài báo
           </div>
         </div>
