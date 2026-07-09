@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../../services/api";
 import type { SystemLog, SchedulerConfig } from "../../types/admin";
 
 interface AdminOpenAlexConfigProps {
@@ -26,18 +26,15 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
       setIsLoading(true);
       setErrorMsg("");
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get<SchedulerConfig>("/api/Admin/scheduler-config", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const data = await api.getSchedulerConfig();
         
-        if (response.data) {
-          setEnabled(response.data.enabled);
-          setKeyword(response.data.keyword || "Computer Science");
-          setMaxResults(response.data.maxResults || 20);
-          setIntervalHours(response.data.intervalHours || 24);
-          setFetchNewWorksEnabled(response.data.fetchNewWorksEnabled !== false);
-          setRefreshExistingWorksEnabled(response.data.refreshExistingWorksEnabled !== false);
+        if (data) {
+          setEnabled(data.enabled);
+          setKeyword(data.keyword || "Computer Science");
+          setMaxResults(data.maxResults || 20);
+          setIntervalHours(data.intervalHours || 24);
+          setFetchNewWorksEnabled(data.fetchNewWorksEnabled !== false);
+          setRefreshExistingWorksEnabled(data.refreshExistingWorksEnabled !== false);
           if (!mountLogged.current) {
             addLog("INFO", "Tải cấu hình scheduler OpenAlex thành công.");
             mountLogged.current = true;
@@ -46,8 +43,6 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
       } catch (err: any) {
         console.error("Error fetching scheduler config:", err);
         const errMsg =
-          err.response?.data?.message ||
-          err.response?.data?.errorMessage ||
           err.message ||
           "Không thể kết nối đến API để lấy cấu hình.";
         
@@ -82,10 +77,7 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
     addLog("INFO", `Đang lưu cấu hình scheduler OpenAlex: Chế độ ${enabled ? "Auto" : "Manual"}, Từ khóa: "${payload.keyword}"`);
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.put("/api/Admin/scheduler-config", payload, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      await api.updateSchedulerConfig(payload);
 
       setSuccessMsg("Cấu hình scheduler đã được cập nhật thành công!");
       addLog("SUCCESS", `Cập nhật cấu hình scheduler thành công. Chế độ: ${enabled ? "Tự động" : "Thủ công"}`);
@@ -97,8 +89,6 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
     } catch (err: any) {
       console.error("Error saving scheduler config:", err);
       const errMsg =
-        err.response?.data?.message ||
-        err.response?.data?.errorMessage ||
         err.message ||
         "Lỗi không xác định khi lưu cấu hình.";
       

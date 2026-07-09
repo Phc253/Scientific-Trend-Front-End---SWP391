@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "../../services/api";
 import type { SystemLog } from "../../types/admin";
 
 interface AdminOverviewProps {
@@ -17,11 +17,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
     const fetchStats = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("/api/admin/users", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const items = response.data.items || [];
+        const response = await api.getAdminUsers();
+        const items = response.items || [];
         setTotalUsers(items.length);
         
         let students = 0;
