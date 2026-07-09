@@ -49,7 +49,7 @@ const MemberLayout: React.FC = () => {
         console.error("Lỗi đăng xuất", error);
       } finally {
         localStorage.clear();
-        navigate("/login");
+        navigate("/"); // Đã đổi từ "/login" thành "/"
       }
     }
   };
