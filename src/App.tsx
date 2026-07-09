@@ -54,6 +54,7 @@ const App: React.FC = () => {
       ========================================== */}
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Admin />} />
+        <Route path="*" element={<Admin />} />
       </Route>
 
       {/* ==========================================
