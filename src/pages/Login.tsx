@@ -25,7 +25,7 @@ export const Login = () => {
         {
           email: email,
           password: password,
-        }
+        },
       );
 
       if (response.data && response.data.token) {
@@ -42,8 +42,8 @@ export const Login = () => {
         const finalRole = actorType
           ? actorType
           : Array.isArray(userRoles)
-          ? userRoles.join(",")
-          : userRoles;
+            ? userRoles.join(",")
+            : userRoles;
 
         localStorage.setItem("userRoles", finalRole);
 
@@ -56,25 +56,25 @@ export const Login = () => {
         if (finalRole.includes("Administrator")) {
           navigate("/admin");
         } else if (finalRole.includes("Student")) {
-          navigate("/student"); 
+          navigate("/student");
         } else if (finalRole.includes("Researcher")) {
-          navigate("/researcher"); 
+          navigate("/researcher");
         } else if (finalRole.includes("Lecturer")) {
-          navigate("/lecturer"); 
+          navigate("/lecturer");
         } else {
-          navigate("/"); 
+          navigate("/");
         }
       }
     } catch (err: any) {
       if (err.response && err.response.data) {
         setError(
           err.response.data.message ||
-          "Tài khoản hoặc mật khẩu không chính xác!"
+            "Tài khoản hoặc mật khẩu không chính xác!",
         );
       } else {
         setError(
-          err.message || 
-          "Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối đến máy chủ!"
+          err.message ||
+            "Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối đến máy chủ!",
         );
       }
     } finally {
@@ -88,10 +88,37 @@ export const Login = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "60vh",
+        minHeight: "100vh", // Sửa lại thành 100vh cho đẹp
         backgroundColor: "#f8fafc",
+        position: "relative", // Thêm dòng này để định vị nút Quay lại
       }}
     >
+      <Link
+        to="/"
+        style={{
+          position: "absolute",
+          top: "1.5rem",
+          left: "1.5rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          textDecoration: "none",
+          color: "#64748b",
+          fontWeight: "500",
+          fontSize: "0.875rem",
+          transition: "color 0.2s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "#0f172a")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+      >
+        <span
+          className="material-symbols-outlined"
+          style={{ fontSize: "1.25rem" }}
+        >
+          arrow_back
+        </span>
+        Quay về trang chủ
+      </Link>
       <div
         style={{
           width: "100%",

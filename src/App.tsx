@@ -46,7 +46,7 @@ const App: React.FC = () => {
         <Route path="search" element={<Search />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="paper/:id" element={<PaperDetails />} />
-        <Route path="library" element={<StudentLibrary />} /> {/* Giả sử MyLibrary dùng chung */}
+        <Route path="library" element={<SharedLibrary />} />
       </Route>
 
       {/* ==========================================

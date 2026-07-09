@@ -67,8 +67,12 @@ export const Register = () => {
           <div className="w-16 h-16 bg-[#e1f5fe] text-[#002855] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#b2ebf2]">
             <span className="material-symbols-outlined text-3xl">mail</span>
           </div>
-          <h2 className="text-2xl font-bold text-[#002045]">Đăng ký thành công!</h2>
-          <p className="text-sm text-[#43474e] leading-relaxed">{successMessage}</p>
+          <h2 className="text-2xl font-bold text-[#002045]">
+            Đăng ký thành công!
+          </h2>
+          <p className="text-sm text-[#43474e] leading-relaxed">
+            {successMessage}
+          </p>
           <div className="pt-4 border-t border-[#ebeef0]">
             <Link
               to="/login"
@@ -84,10 +88,20 @@ export const Register = () => {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center animate-fadeIn py-6 bg-[#f8fafc]">
+    <div className="relative min-h-screen flex items-center justify-center animate-fadeIn py-6 bg-[#f8fafc]">
+      {/* Nút Quay về trang chủ */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors"
+      >
+        <span className="material-symbols-outlined text-xl">arrow_back</span>
+        Quay về trang chủ
+      </Link>
       <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-2xl space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-[#002045]">Đăng ký tài khoản mới</h2>
+          <h2 className="text-2xl font-bold text-[#002045]">
+            Đăng ký tài khoản mới
+          </h2>
           <p className="text-xs text-[#74777f]">
             Tham gia hệ thống nghiên cứu khoa học SciTrend
           </p>
@@ -102,7 +116,9 @@ export const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Họ và Tên</label>
+              <label className="block font-bold text-[#43474e]">
+                Họ và Tên
+              </label>
               <input
                 type="text"
                 required
@@ -113,7 +129,9 @@ export const Register = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Địa chỉ Email</label>
+              <label className="block font-bold text-[#43474e]">
+                Địa chỉ Email
+              </label>
               <input
                 type="email"
                 required
@@ -126,7 +144,9 @@ export const Register = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Số điện thoại</label>
+              <label className="block font-bold text-[#43474e]">
+                Số điện thoại
+              </label>
               <input
                 type="tel"
                 required
@@ -137,7 +157,9 @@ export const Register = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Ngày sinh</label>
+              <label className="block font-bold text-[#43474e]">
+                Ngày sinh
+              </label>
               <input
                 type="date"
                 required
@@ -161,7 +183,9 @@ export const Register = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-bold text-[#43474e]">Xác nhận mật khẩu</label>
+              <label className="block font-bold text-[#43474e]">
+                Xác nhận mật khẩu
+              </label>
               <input
                 type="password"
                 required
@@ -173,7 +197,9 @@ export const Register = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block font-bold text-[#43474e]">Đối tượng (Actor Type)</label>
+            <label className="block font-bold text-[#43474e]">
+              Đối tượng (Actor Type)
+            </label>
             <select
               required
               className="w-full p-3 bg-white border border-[#c4c6cf] rounded focus:outline-none focus:border-[#002855] focus:ring-1 focus:ring-[#002855] transition-all"
@@ -199,7 +225,10 @@ export const Register = () => {
 
         <div className="text-center text-xs text-[#43474e] pt-2 border-t border-[#ebeef0]">
           Đã có tài khoản hệ thống từ trước?{" "}
-          <Link to="/login" className="text-[#002045] font-bold hover:underline">
+          <Link
+            to="/login"
+            className="text-[#002045] font-bold hover:underline"
+          >
             Đăng nhập ngay
           </Link>
         </div>
