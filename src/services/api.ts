@@ -162,6 +162,42 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   return text ? JSON.parse(text) : ({} as T);
 }
 
+// Fetch wrapper for binary responses (blobs)
+async function requestBlob(url: string, options: RequestInit = {}): Promise<Blob> {
+  const fullUrl = `${API_BASE_URL}${url}`;
+
+  const headers = new Headers();
+  const token = localStorage.getItem("token");
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  if (options.headers) {
+    const customHeaders = new Headers(options.headers);
+    customHeaders.forEach((value, key) => {
+      headers.set(key, value);
+    });
+  }
+
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    let errorMessage = "An error occurred during file download";
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      errorMessage = response.statusText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.blob();
+}
+
 export const api = {
   // Authentication
   async login(email: string, password: string): Promise<LoginResponse> {
@@ -424,5 +460,22 @@ export const api = {
       searchParams.append("search", params.search);
     }
     return request<PaperReportResponse>(`/Report/papers?${searchParams.toString()}`);
+  },
+
+  // Export APIs
+  async exportPapersCsv(): Promise<Blob> {
+    return requestBlob("/Report/export/papers");
+  },
+
+  async exportPapersPdf(): Promise<Blob> {
+    return requestBlob("/Report/export/papers-pdf");
+  },
+
+  async exportKeywordStatsCsv(): Promise<Blob> {
+    return requestBlob("/Report/export/keyword-stats");
+  },
+
+  async exportKeywordStatsPdf(): Promise<Blob> {
+    return requestBlob("/Report/export/keyword-stats-pdf");
   },
 };

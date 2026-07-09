@@ -234,7 +234,7 @@ const AdminLayout: React.FC = () => {
               <h3 className="text-lg font-bold text-slate-900">Xác nhận đăng xuất</h3>
             </div>
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản Quản trị viên không?
+              Bạn có chắc chắn muốn đăng xuất không?
             </p>
             <div className="flex justify-end gap-3">
               <button
