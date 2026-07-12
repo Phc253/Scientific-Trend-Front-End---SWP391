@@ -35,7 +35,7 @@ const AdminLayout: React.FC = () => {
   const navItems = [
     { path: "/admin", icon: "dashboard", label: "Tổng quan hệ thống" },
     { path: "/admin/users", icon: "group", label: "Quản lý người dùng" },
-    { path: "/admin/api", icon: "api", label: "Đồng bộ OpenAlex" },
+    { path: "/admin/api", icon: "api", label: "Tải dữ liệu OpenAlex" },
     { path: "/admin/scheduler", icon: "settings", label: "Cấu hình Scheduler" },
     {
       path: "/admin/paper-reports",

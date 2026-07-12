@@ -78,10 +78,10 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
         <div>
           <h3 className="font-bold text-base text-[#002045] flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[#13696a]">cloud_download</span>
-            Đồng bộ hóa dữ liệu từ OpenAlex
+            Tải dữ liệu từ OpenAlex
           </h3>
           <p className="text-xs text-[#74777f] mt-0.5">
-            Gửi yêu cầu đồng bộ dữ liệu nghiên cứu khoa học từ cổng OpenAlex API về cơ sở dữ liệu nội bộ.
+            Gửi yêu cầu tải dữ liệu nghiên cứu khoa học từ cổng OpenAlex API về cơ sở dữ liệu nội bộ.
           </p>
         </div>
 
@@ -144,7 +144,7 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
               <span className={`material-symbols-outlined text-sm ${isLoading ? "animate-spin" : ""}`}>
                 sync
               </span>
-              {isLoading ? "Đang thực hiện đồng bộ..." : "Bắt đầu đồng bộ dữ liệu"}
+              {isLoading ? "Đang thực hiện đồng bộ..." : "Bắt đầu lấy dữ liệu"}
             </button>
           </div>
         </form>
@@ -155,10 +155,10 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
         <div>
           <h3 className="font-bold text-base text-[#002045] flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[#13696a]">assignment</span>
-            Trạng thái công việc đồng bộ
+            Trạng thái công việc tải dữ liệu
           </h3>
           <p className="text-xs text-[#74777f] mt-0.5">
-            Kết quả của tiến trình đồng bộ dữ liệu gần nhất trong phiên làm việc.
+            Kết quả của tiến trình tải dữ liệu gần nhất trong phiên làm việc.
           </p>
         </div>
 
@@ -167,7 +167,7 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
             <div className="text-center py-8 space-y-3">
               <div className="inline-block animate-spin text-3xl text-[#13696a] font-light">⏳</div>
               <p className="text-xs text-[#43474e] font-semibold">
-                Đang gửi yêu cầu đồng bộ và chờ OpenAlex phản hồi...
+                Đang gửi yêu cầu và chờ OpenAlex phản hồi...
               </p>
               <p className="text-[10px] text-[#74777f] italic">
                 (Quá trình này có thể mất vài giây tùy thuộc vào số lượng tài liệu yêu cầu)

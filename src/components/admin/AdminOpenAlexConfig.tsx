@@ -225,41 +225,43 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
           </div>
 
           {/* Tùy chọn đồng bộ bổ sung */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#ebeef0] pt-4 mt-2">
-            {/* Tải bài viết mới */}
-            <div className="flex items-center space-x-3 p-3.5 bg-[#f8fafc] rounded-lg border border-[#ebeef0] hover:border-slate-300 transition-colors">
-              <input
-                id="fetchNewWorksEnabled"
-                type="checkbox"
-                checked={fetchNewWorksEnabled}
-                onChange={(e) => setFetchNewWorksEnabled(e.target.checked)}
-                className="h-4.5 w-4.5 rounded border-gray-300 text-[#13696a] focus:ring-[#13696a] cursor-pointer"
-              />
-              <div className="text-xs">
-                <label htmlFor="fetchNewWorksEnabled" className="font-bold text-[#002045] block cursor-pointer select-none">
-                  Tải bài viết mới (Fetch New)
-                </label>
-                <p className="text-[10px] text-[#74777f] mt-0.5">Tìm kiếm và lưu trữ các ấn phẩm khoa học mới phát hành.</p>
+          {enabled && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#ebeef0] pt-4 mt-2">
+              {/* Tải bài viết mới */}
+              <div className="flex items-center space-x-3 p-3.5 bg-[#f8fafc] rounded-lg border border-[#ebeef0] hover:border-slate-300 transition-colors">
+                <input
+                  id="fetchNewWorksEnabled"
+                  type="checkbox"
+                  checked={fetchNewWorksEnabled}
+                  onChange={(e) => setFetchNewWorksEnabled(e.target.checked)}
+                  className="h-4.5 w-4.5 rounded border-gray-300 text-[#13696a] focus:ring-[#13696a] cursor-pointer"
+                />
+                <div className="text-xs">
+                  <label htmlFor="fetchNewWorksEnabled" className="font-bold text-[#002045] block cursor-pointer select-none">
+                    Tải bài viết mới (Fetch New)
+                  </label>
+                  <p className="text-[10px] text-[#74777f] mt-0.5">Tìm kiếm và lưu trữ các ấn phẩm khoa học mới phát hành.</p>
+                </div>
               </div>
-            </div>
 
-            {/* Làm mới bài viết cũ */}
-            <div className="flex items-center space-x-3 p-3.5 bg-[#f8fafc] rounded-lg border border-[#ebeef0] hover:border-slate-300 transition-colors">
-              <input
-                id="refreshExistingWorksEnabled"
-                type="checkbox"
-                checked={refreshExistingWorksEnabled}
-                onChange={(e) => setRefreshExistingWorksEnabled(e.target.checked)}
-                className="h-4.5 w-4.5 rounded border-gray-300 text-[#13696a] focus:ring-[#13696a] cursor-pointer"
-              />
-              <div className="text-xs">
-                <label htmlFor="refreshExistingWorksEnabled" className="font-bold text-[#002045] block cursor-pointer select-none">
-                  Cập nhật bài viết cũ (Refresh Existing)
-                </label>
-                <p className="text-[10px] text-[#74777f] mt-0.5">Làm mới số trích dẫn và thông tin của các bài viết hiện tại.</p>
+              {/* Làm mới bài viết cũ */}
+              <div className="flex items-center space-x-3 p-3.5 bg-[#f8fafc] rounded-lg border border-[#ebeef0] hover:border-slate-300 transition-colors">
+                <input
+                  id="refreshExistingWorksEnabled"
+                  type="checkbox"
+                  checked={refreshExistingWorksEnabled}
+                  onChange={(e) => setRefreshExistingWorksEnabled(e.target.checked)}
+                  className="h-4.5 w-4.5 rounded border-gray-300 text-[#13696a] focus:ring-[#13696a] cursor-pointer"
+                />
+                <div className="text-xs">
+                  <label htmlFor="refreshExistingWorksEnabled" className="font-bold text-[#002045] block cursor-pointer select-none">
+                    Cập nhật bài viết cũ (Refresh Existing)
+                  </label>
+                  <p className="text-[10px] text-[#74777f] mt-0.5">Làm mới số trích dẫn và thông tin của các bài viết hiện tại.</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="pt-2 flex justify-end">
             <button

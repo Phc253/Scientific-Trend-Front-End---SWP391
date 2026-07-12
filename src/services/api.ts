@@ -478,4 +478,12 @@ export const api = {
   async exportKeywordStatsPdf(): Promise<Blob> {
     return requestBlob("/Report/export/keyword-stats-pdf");
   },
+
+  async syncOpenAlexData(maxResults: number): Promise<any> {
+    const searchParams = new URLSearchParams();
+    searchParams.append("maxResults", maxResults.toString());
+    return request<any>(`/datasync/sync-openalex?${searchParams.toString()}`, {
+      method: "POST",
+    });
+  },
 };
