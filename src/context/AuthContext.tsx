@@ -21,6 +21,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const profile = await api.getProfile();
       setUser(profile);
+      localStorage.setItem("fullName", profile.fullName || "User");
+      localStorage.setItem(
+        "userRoles",
+        profile.actorType || profile.roles?.join(",") || ""
+      );
     } catch (error) {
       console.error("Failed to load user profile:", error);
       logout();
@@ -44,9 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await api.login(email, password);
       localStorage.setItem("token", response.token);
-      
-      // Map login response to profile if it contains enough info, 
-      // or fetch the full profile from the server.
+      localStorage.setItem("fullName", response.fullName || response.email || "User");
+      localStorage.setItem(
+        "userRoles",
+        response.actorType || response.roles?.join(",") || ""
+      );
+
       await refreshProfile();
       return response;
     } catch (error) {
@@ -59,6 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("fullName");
+    localStorage.removeItem("userRoles");
     setUser(null);
   };
 
