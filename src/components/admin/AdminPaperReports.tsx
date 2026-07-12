@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../../services/api";
-import type { SystemLog, PaperReportItem, PaperReportResponse } from "../../types/admin";
+import type { SystemLog, PaperReportItem } from "../../types/admin";
 
 interface AdminPaperReportsProps {
   addLog: (type: SystemLog["type"], message: string) => void;

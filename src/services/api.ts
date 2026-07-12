@@ -462,7 +462,6 @@ export const api = {
     return request<PaperReportResponse>(`/Report/papers?${searchParams.toString()}`);
   },
 
-<<<<<<< Updated upstream
   // Export APIs
   async exportPapersCsv(): Promise<Blob> {
     return requestBlob("/Report/export/papers");
@@ -478,13 +477,13 @@ export const api = {
 
   async exportKeywordStatsPdf(): Promise<Blob> {
     return requestBlob("/Report/export/keyword-stats-pdf");
-=======
+  },
+
   async syncOpenAlexData(maxResults: number): Promise<any> {
     const searchParams = new URLSearchParams();
     searchParams.append("maxResults", maxResults.toString());
     return request<any>(`/datasync/sync-openalex?${searchParams.toString()}`, {
       method: "POST",
     });
->>>>>>> Stashed changes
   },
 };
