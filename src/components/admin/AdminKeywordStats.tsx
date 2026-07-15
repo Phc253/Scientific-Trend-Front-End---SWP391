@@ -2,21 +2,65 @@ import React, { useState, useMemo } from "react";
 import { api } from "../../services/api";
 import type { SystemLog, KeywordStatisticItem } from "../../types/admin";
 
+const getPaginationRange = (current: number, total: number) => {
+  const range: (number | string)[] = [];
+  const delta = 1;
+
+  for (let i = 1; i <= total; i++) {
+    if (
+      i === 1 ||
+      i === total ||
+      (i >= current - delta && i <= current + delta)
+    ) {
+      range.push(i);
+    } else {
+      if (i === 2 && current - delta === 3) {
+        range.push(2);
+      } else if (i === total - 1 && current + delta === total - 2) {
+        range.push(total - 1);
+      } else if (range[range.length - 1] !== "...") {
+        range.push("...");
+      }
+    }
+  }
+  return range;
+};
+
 interface AdminKeywordStatsProps {
   addLog: (type: SystemLog["type"], message: string) => void;
 }
 
 export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) => {
   const [keywordSearch, setKeywordSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [keywordSort, setKeywordSort] = useState<"papers-desc" | "papers-asc" | "alpha-asc" | "alpha-desc">("papers-desc");
 
-  const [keywords, setKeywords] = useState<KeywordStatisticItem[]>([]);
+  const [keywords, setKeywords] = useState<KeywordStatisticItem[]>(() => {
+    try {
+      const cached = sessionStorage.getItem("scitrend_admin_keyword_stats");
+      if (cached) return JSON.parse(cached);
+    } catch (err) {
+      console.error("Error reading keyword stats cache:", err);
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
 
   const mountLogged = React.useRef(false);
 
   const [isExporting, setIsExporting] = useState(false);
+
+  // Debounce search input
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(keywordSearch);
+      setCurrentPage(1); // Reset to page 1 when search term changes
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [keywordSearch]);
 
   const handleExportCSV = async () => {
     setIsExporting(true);
@@ -67,11 +111,15 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
   // Tải dữ liệu từ khóa từ API
   React.useEffect(() => {
     const fetchKeywords = async () => {
+      if (sessionStorage.getItem("scitrend_admin_keyword_stats")) {
+        return;
+      }
       setIsLoading(true);
       setErrorMsg("");
       try {
         const data = await api.getKeywordStats();
         setKeywords(data);
+        sessionStorage.setItem("scitrend_admin_keyword_stats", JSON.stringify(data));
       } catch (err: any) {
         console.error("Error loading keyword stats:", err);
         setErrorMsg(err.message || "Không thể kết nối API để tải thống kê từ khóa.");
@@ -109,7 +157,7 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
   // Lọc và sắp xếp từ khóa
   const processedKeywords = useMemo(() => {
     const filtered = keywords.filter((k) =>
-      k.keywordText.toLowerCase().includes(keywordSearch.toLowerCase())
+      k.keywordText.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
 
     return [...filtered].sort((a, b) => {
@@ -126,7 +174,15 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
           return 0;
       }
     });
-  }, [keywords, keywordSearch, keywordSort]);
+  }, [keywords, debouncedSearch, keywordSort]);
+
+  // Phân trang dữ liệu hiển thị ở client-side
+  const paginatedKeywords = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return processedKeywords.slice(startIndex, startIndex + pageSize);
+  }, [processedKeywords, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(processedKeywords.length / pageSize);
 
   return (
     <div className="space-y-6">
@@ -215,13 +271,17 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <label className="text-xs font-bold text-slate-500 uppercase shrink-0">Sắp xếp:</label>
-            <select
-              value={keywordSort}
-              onChange={(e) => setKeywordSort(e.target.value as any)}
-              className="p-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] text-xs font-semibold text-[#181c1e]"
-            >
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="text-xs text-slate-500 font-semibold">
+              Hiển thị {processedKeywords.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, processedKeywords.length)} trong tổng số {processedKeywords.length}
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-bold text-slate-500 uppercase shrink-0">Sắp xếp:</label>
+              <select
+                value={keywordSort}
+                onChange={(e) => setKeywordSort(e.target.value as any)}
+                className="p-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] text-xs font-semibold text-[#181c1e]"
+              >
               <option value="papers-desc">Số bài báo (Nhiều → Ít)</option>
               <option value="papers-asc">Số bài báo (Ít → Nhiều)</option>
               <option value="alpha-asc">Từ khóa (A → Z)</option>
@@ -229,6 +289,7 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
             </select>
           </div>
         </div>
+      </div>
 
         {errorMsg && (
           <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-xs flex items-center gap-1.5">
@@ -254,14 +315,14 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
               </tr>
             </thead>
             <tbody className="divide-y divide-[#ebeef0] text-[#181c1e] font-medium bg-white">
-              {processedKeywords.length === 0 && !isLoading ? (
+              {paginatedKeywords.length === 0 && !isLoading ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-10 text-center text-slate-400 italic">
                     Không tìm thấy từ khóa nào khớp với tiêu chí tìm kiếm.
                   </td>
                 </tr>
               ) : (
-                processedKeywords.map((kw, i) => (
+                paginatedKeywords.map((kw, i) => (
                   <tr key={i} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-bold text-slate-800">{kw.keywordText}</td>
                     <td className="px-6 py-4 font-bold">
@@ -277,6 +338,50 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
             </tbody>
           </table>
         </div>
+
+        {/* Phân trang */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center pt-2 animate-fadeIn">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="flex items-center gap-1 px-3 py-1.5 border border-[#c4c6cf] rounded text-xs font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">chevron_left</span> Trước
+            </button>
+            <div className="flex items-center gap-1.5">
+              {getPaginationRange(currentPage, totalPages).map((p, idx) => {
+                if (p === "...") {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 text-xs font-bold select-none">
+                      ...
+                    </span>
+                  );
+                }
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setCurrentPage(p as number)}
+                    className={`w-8 h-8 rounded text-xs font-bold transition-all cursor-pointer ${
+                      currentPage === p
+                        ? "bg-[#13696a] text-white"
+                        : "border border-[#c4c6cf] text-[#43474e] hover:bg-slate-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="flex items-center gap-1 px-3 py-1.5 border border-[#c4c6cf] rounded text-xs font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            >
+              Sau <span className="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

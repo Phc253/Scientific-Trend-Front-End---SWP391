@@ -450,13 +450,25 @@ export const api = {
   },
 
   async getSchedulerConfig(): Promise<SchedulerConfig> {
-    return request<SchedulerConfig>("/Admin/scheduler-config");
+    return request<SchedulerConfig>("/admin/scheduler-config");
   },
 
   async updateSchedulerConfig(payload: SchedulerConfig): Promise<any> {
-    return request<any>("/Admin/scheduler-config", {
+    return request<any>("/admin/scheduler-config", {
       method: "PUT",
       body: JSON.stringify(payload),
+    });
+  },
+
+  async enableScheduler(): Promise<any> {
+    return request<any>("/admin/scheduler-config/enable", {
+      method: "PATCH",
+    });
+  },
+
+  async disableScheduler(): Promise<any> {
+    return request<any>("/admin/scheduler-config/disable", {
+      method: "PATCH",
     });
   },
 
@@ -513,5 +525,21 @@ export const api = {
     return request<any>(`/datasync/sync-openalex?${searchParams.toString()}`, {
       method: "POST",
     });
+  },
+
+  async getTopicFacetsAdmin(params: {
+    q?: string;
+    page: number;
+    pageSize: number;
+  }): Promise<{ success: boolean; data: { totalCount: number; items: { id: string; name: string; paperCount: number }[] } }> {
+    const searchParams = new URLSearchParams();
+    if (params.q) {
+      searchParams.append("q", params.q);
+    }
+    searchParams.append("page", params.page.toString());
+    searchParams.append("pageSize", params.pageSize.toString());
+    return request<{ success: boolean; data: { totalCount: number; items: { id: string; name: string; paperCount: number }[] } }>(
+      `/papers/facets/topics?${searchParams.toString()}`
+    );
   },
 };

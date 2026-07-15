@@ -77,7 +77,17 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
     addLog("INFO", `Đang lưu cấu hình scheduler OpenAlex: Chế độ ${enabled ? "Auto" : "Manual"}, Từ khóa: "${payload.keyword}"`);
 
     try {
+      // 1. Update config parameters
       await api.updateSchedulerConfig(payload);
+
+      // 2. Enable or disable the scheduler based on the selection
+      if (enabled) {
+        await api.enableScheduler();
+        addLog("INFO", "Đã kích hoạt tự động quét scheduler (Auto Mode).");
+      } else {
+        await api.disableScheduler();
+        addLog("INFO", "Đã hủy kích hoạt tự động quét scheduler (Manual Mode).");
+      }
 
       setSuccessMsg("Cấu hình scheduler đã được cập nhật thành công!");
       addLog("SUCCESS", `Cập nhật cấu hình scheduler thành công. Chế độ: ${enabled ? "Tự động" : "Thủ công"}`);
@@ -104,10 +114,10 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
       <div className="border-b border-[#ebeef0] pb-4 mb-4">
         <h3 className="font-bold text-base text-[#002045] flex items-center gap-1.5">
           <span className="material-symbols-outlined text-[#13696a]">settings</span>
-          Cấu hình tự động đồng bộ (OpenAlex Scheduler)
+          Cấu hình tự động Fetch dữ liệu (OpenAlex Scheduler)
         </h3>
         <p className="text-xs text-[#74777f] mt-0.5">
-          Quản lý chế độ đồng bộ dữ liệu: thủ công hoặc tự động quét các bài báo khoa học theo chu kỳ thời gian.
+          Quản lý chế độ fetch dữ liệu: thủ công hoặc tự động quét các bài báo khoa học theo chu kỳ thời gian.
         </p>
       </div>
 
@@ -143,8 +153,8 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
                 onChange={(e) => setEnabled(e.target.value === "true")}
                 className="w-full p-2.5 bg-[#f1f4f6] border border-[#c4c6cf] rounded focus:outline-none focus:border-[#13696a] text-xs font-semibold text-[#181c1e]"
               >
-                <option value="false">Đồng bộ thủ công (Manual Mode)</option>
-                <option value="true">Tự động đồng bộ (Auto Mode)</option>
+                <option value="false"> Thủ công </option>
+                <option value="true">Tự động </option>
               </select>
               <p className="text-[10px] text-[#74777f] italic">
                 {enabled 
