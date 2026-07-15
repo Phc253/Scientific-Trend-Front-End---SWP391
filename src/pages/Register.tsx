@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { api } from "../services/api";
 
 export const Register = () => {
@@ -14,12 +14,13 @@ export const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [registrationState, setRegistrationState] = useState<"idle" | "success" | "pending">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
+    setRegistrationState("idle");
 
     if (password !== confirmPassword) {
       setError("Mật khẩu nhập lại không trùng khớp!");
@@ -44,16 +45,20 @@ export const Register = () => {
         actorType,
       });
 
+      setRegistrationState("success");
       setSuccessMessage(
-        result.message || "Đăng ký thành công! Đang chuyển hướng...",
+        result.message || "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.",
+      );
+    } catch (err: any) {
+      const isMailRelatedError = /mail|smtp|email|verify/i.test(
+        err?.message?.toLowerCase() || "",
       );
 
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
-    } catch (err: any) {
-      setError(
-        err.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.",
+      setRegistrationState("pending");
+      setSuccessMessage(
+        isMailRelatedError
+          ? "Tài khoản của bạn có thể đã được tạo trong hệ thống, nhưng email xác thực chưa được gửi đi. Vui lòng kiểm tra hộp thư rác hoặc liên hệ quản trị viên để được hỗ trợ."
+          : "Đăng ký chưa hoàn tất. Vui lòng kiểm tra lại thông tin hoặc thử lại sau.",
       );
     } finally {
       setIsLoading(false);
@@ -64,11 +69,13 @@ export const Register = () => {
     return (
       <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn py-6">
         <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md space-y-6 text-center">
-          <div className="w-16 h-16 bg-[#e1f5fe] text-[#002855] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#b2ebf2]">
-            <span className="material-symbols-outlined text-3xl">mail</span>
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${registrationState === "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-[#e1f5fe] text-[#002855] border-[#b2ebf2]"}`}>
+            <span className="material-symbols-outlined text-3xl">
+              {registrationState === "pending" ? "hourglass_top" : "mail"}
+            </span>
           </div>
           <h2 className="text-2xl font-bold text-[#002045]">
-            Đăng ký thành công!
+            {registrationState === "pending" ? "Đăng ký đang chờ xác thực" : "Đăng ký thành công!"}
           </h2>
           <p className="text-sm text-[#43474e] leading-relaxed">
             {successMessage}
@@ -79,7 +86,7 @@ export const Register = () => {
               className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center gap-2 text-sm"
             >
               <span className="material-symbols-outlined text-sm">login</span>
-              Đi đến trang Đăng nhập ngay
+              Đi đến trang Đăng nhập
             </Link>
           </div>
         </div>
