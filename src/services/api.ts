@@ -498,4 +498,20 @@ export const api = {
       method: "POST",
     });
   },
+
+  async getTopicFacetsAdmin(params: {
+    q?: string;
+    page: number;
+    pageSize: number;
+  }): Promise<{ success: boolean; data: { totalCount: number; items: { id: string; name: string; paperCount: number }[] } }> {
+    const searchParams = new URLSearchParams();
+    if (params.q) {
+      searchParams.append("q", params.q);
+    }
+    searchParams.append("page", params.page.toString());
+    searchParams.append("pageSize", params.pageSize.toString());
+    return request<{ success: boolean; data: { totalCount: number; items: { id: string; name: string; paperCount: number }[] } }>(
+      `/papers/facets/topics?${searchParams.toString()}`
+    );
+  },
 };
