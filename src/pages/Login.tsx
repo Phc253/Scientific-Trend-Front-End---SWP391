@@ -226,25 +226,40 @@ export const Login = () => {
           </button>
         </form>
 
-        <p
+        <div
           style={{
             marginTop: "1.5rem",
             fontSize: "0.875rem",
             color: "#64748b",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.5rem",
           }}
         >
-          Chưa có tài khoản?{" "}
           <Link
-            to="/register"
+            to="/forgot-password"
             style={{
               color: "#002855",
               fontWeight: "600",
               textDecoration: "underline",
             }}
           >
-            Đăng ký ngay
+            Quên mật khẩu?
           </Link>
-        </p>
+          <span>
+            Chưa có tài khoản?{" "}
+            <Link
+              to="/register"
+              style={{
+                color: "#002855",
+                fontWeight: "600",
+                textDecoration: "underline",
+              }}
+            >
+              Đăng ký ngay
+            </Link>
+          </span>
+        </div>
       </div>
     </div>
   );

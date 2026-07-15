@@ -6,6 +6,7 @@ import Search from "./pages/Search";
 import Dashboard from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { ForgotPassword } from "./pages/ForgotPassword";
 
 // --- Admin ---
 import Admin from "./pages/Admin";
@@ -36,6 +37,7 @@ const App: React.FC = () => {
       ========================================== */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* ==========================================
