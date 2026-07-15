@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://localhost:7174/api";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:7174/api";
 import type { SchedulerConfig, PaperReportResponse, KeywordStatisticItem, SyncJobResult } from "../types/admin";
 
 
@@ -115,24 +115,25 @@ export interface RegisterResponseData {
   message: string;
 }
 
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
 // Generic fetch wrapper
 async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   const fullUrl = `${API_BASE_URL}${url}`;
 
   const headers = new Headers();
 
-  // Set content type if not FormData (multipart)
   if (!(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
 
-  // Set JWT authorization token if available
   const token = localStorage.getItem("token");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  // Merge custom headers from options
   if (options.headers) {
     const customHeaders = new Headers(options.headers);
     customHeaders.forEach((value, key) => {
@@ -140,26 +141,39 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     });
   }
 
-  const response = await fetch(fullUrl, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(fullUrl, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok) {
-    let errorMessage = "An error occurred";
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch {
-      // JSON parsing failed
-      errorMessage = response.statusText || errorMessage;
+    if (!response.ok) {
+      let errorMessage = "Có lỗi xảy ra khi gửi yêu cầu.";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
-    throw new Error(errorMessage);
-  }
 
-  // Handle empty responses
-  const text = await response.text();
-  return text ? JSON.parse(text) : ({} as T);
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return text as unknown as T;
+    }
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("Không thể kết nối tới backend. Hãy đảm bảo BE đang chạy trên http://localhost:5225 và thử lại.");
+    }
+    throw error;
+  }
 }
 
 // Fetch wrapper for binary responses (blobs)
@@ -222,6 +236,20 @@ export const api = {
     return request<{ message: string }>(
       `/Account/verify-email?token=${encodeURIComponent(token)}`
     );
+  },
+
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    return request<ForgotPasswordResponse>("/Account/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ Email: email.trim() }),
+    });
+  },
+
+  async resetPassword(email: string, pin: string, newPassword: string): Promise<ForgotPasswordResponse> {
+    return request<ForgotPasswordResponse>("/Account/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ Email: email.trim(), Pin: pin.trim(), NewPassword: newPassword }),
+    });
   },
 
   // Papers Search & Detail
