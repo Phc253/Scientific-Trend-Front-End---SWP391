@@ -56,6 +56,37 @@ export interface SyncJobResult {
   startTime: string;
   endTime: string;
   errorMessage: string | null;
+  newPaperPreviews?: {
+    paperId: number;
+    title: string;
+    abstract?: string;
+    citationCount: number;
+    publicationYear?: number;
+    authors?: string[];
+    journalName?: string | null;
+  }[];
+}
+
+export interface UpdatedPaperItem {
+  paperId: number;
+  title: string;
+  oldCitationCount: number;
+  newCitationCount: number;
+  citationDelta: number;
+  topicName: string;
+  updatedAt: string;
+}
+
+export interface GlobalSyncResponse {
+  syncJobId: number;
+  sourceName: string;
+  maxResults: number;
+  recordsFetched: number;
+  status: string;
+  startTime: string;
+  endTime: string;
+  errorMessage: string | null;
+  updatedPapers: UpdatedPaperItem[];
 }
 
 

@@ -2,6 +2,30 @@ import React, { useState } from "react";
 import { api } from "../../services/api";
 import type { SystemLog, PaperReportItem } from "../../types/admin";
 
+const getPaginationRange = (current: number, total: number) => {
+  const range: (number | string)[] = [];
+  const delta = 1;
+
+  for (let i = 1; i <= total; i++) {
+    if (
+      i === 1 ||
+      i === total ||
+      (i >= current - delta && i <= current + delta)
+    ) {
+      range.push(i);
+    } else {
+      if (i === 2 && current - delta === 3) {
+        range.push(2);
+      } else if (i === total - 1 && current + delta === total - 2) {
+        range.push(total - 1);
+      } else if (range[range.length - 1] !== "...") {
+        range.push("...");
+      }
+    }
+  }
+  return range;
+};
+
 interface AdminPaperReportsProps {
   addLog: (type: SystemLog["type"], message: string) => void;
 }
@@ -16,21 +40,34 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [overallStats, setOverallStats] = useState({
-    totalPapers: 0,
-    totalCitations: 0,
-    avgCitations: "0",
-    topPaperTitle: "-",
-    topPaperCitations: 0,
+  const [overallStats, setOverallStats] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem("scitrend_admin_paper_stats");
+      if (cached) return JSON.parse(cached);
+    } catch (err) {
+      console.error("Error reading paper stats cache:", err);
+    }
+    return {
+      totalPapers: 0,
+      totalCitations: 0,
+      avgCitations: "0",
+      topPaperTitle: "-",
+      topPaperCitations: 0,
+    };
   });
 
   const mountLogged = React.useRef(false);
 
-  // 1. Tải số liệu thống kê tổng hợp (tải tối đa 1000 bản ghi trên mount để tính aggregate)
+  // 1. Tải số liệu thống kê tổng hợp (tải tối đa 300 bản ghi trên mount để tính aggregate và lưu cache)
   React.useEffect(() => {
     const fetchStats = async () => {
+      // Nếu đã có cache trong session, không cần fetch lại
+      if (sessionStorage.getItem("scitrend_admin_paper_stats")) {
+        return;
+      }
+      
       try {
-        const data = await api.getPaperReports({ page: 1, pageSize: 1000 });
+        const data = await api.getPaperReports({ page: 1, pageSize: 50 });
         if (data && data.items) {
           const items = data.items;
           const totalPapers = data.totalCount || items.length;
@@ -41,13 +78,16 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
             items[0]
           );
 
-          setOverallStats({
+          const calculatedStats = {
             totalPapers,
             totalCitations,
             avgCitations,
             topPaperTitle: topPaper?.title || "-",
             topPaperCitations: topPaper?.citationCount || 0
-          });
+          };
+
+          setOverallStats(calculatedStats);
+          sessionStorage.setItem("scitrend_admin_paper_stats", JSON.stringify(calculatedStats));
         }
       } catch (err) {
         console.error("Error loading overall paper statistics:", err);
@@ -208,7 +248,7 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
                 className="w-full pl-9 pr-4 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-md focus:outline-none focus:border-[#13696a] text-xs text-[#181c1e] font-semibold"
               />
             </div>
-            
+
             {/* Nút Xuất File */}
             <div className="flex items-center gap-2">
               <button
@@ -310,19 +350,28 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
               <span className="material-symbols-outlined text-sm">chevron_left</span> Trước
             </button>
             <div className="flex items-center gap-1.5">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
-                  className={`w-8 h-8 rounded text-xs font-bold transition-all cursor-pointer ${
-                    currentPage === p
-                      ? "bg-[#13696a] text-white"
-                      : "border border-[#c4c6cf] text-[#43474e] hover:bg-slate-50"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+              {getPaginationRange(currentPage, totalPages).map((p, idx) => {
+                if (p === "...") {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 text-xs font-bold select-none">
+                      ...
+                    </span>
+                  );
+                }
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setCurrentPage(p as number)}
+                    className={`w-8 h-8 rounded text-xs font-bold transition-all cursor-pointer ${
+                      currentPage === p
+                        ? "bg-[#13696a] text-white"
+                        : "border border-[#c4c6cf] text-[#43474e] hover:bg-slate-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
             </div>
             <button
               disabled={currentPage === totalPages}

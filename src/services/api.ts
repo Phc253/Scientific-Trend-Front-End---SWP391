@@ -422,13 +422,25 @@ export const api = {
   },
 
   async getSchedulerConfig(): Promise<SchedulerConfig> {
-    return request<SchedulerConfig>("/Admin/scheduler-config");
+    return request<SchedulerConfig>("/admin/scheduler-config");
   },
 
   async updateSchedulerConfig(payload: SchedulerConfig): Promise<any> {
-    return request<any>("/Admin/scheduler-config", {
+    return request<any>("/admin/scheduler-config", {
       method: "PUT",
       body: JSON.stringify(payload),
+    });
+  },
+
+  async enableScheduler(): Promise<any> {
+    return request<any>("/admin/scheduler-config/enable", {
+      method: "PATCH",
+    });
+  },
+
+  async disableScheduler(): Promise<any> {
+    return request<any>("/admin/scheduler-config/disable", {
+      method: "PATCH",
     });
   },
 
