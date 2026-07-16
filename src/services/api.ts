@@ -1,7 +1,20 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:7174/api";
-import type { SchedulerConfig, PaperReportResponse, KeywordStatisticItem, SyncJobResult } from "../types/admin";
+import type {
+  SchedulerConfig,
+  PaperReportResponse,
+  KeywordStatisticItem,
+  SyncJobResult,
+} from "../types/admin";
 
+export interface NotificationItem {
+  id: string | number;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  paperId?: string;
+}
 
 export interface TrendingItem {
   name: string;
@@ -170,14 +183,19 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     }
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error("Không thể kết nối tới backend. Hãy đảm bảo BE đang chạy trên http://localhost:5225 và thử lại.");
+      throw new Error(
+        "Không thể kết nối tới backend. Hãy đảm bảo BE đang chạy trên http://localhost:5225 và thử lại.",
+      );
     }
     throw error;
   }
 }
 
 // Fetch wrapper for binary responses (blobs)
-async function requestBlob(url: string, options: RequestInit = {}): Promise<Blob> {
+async function requestBlob(
+  url: string,
+  options: RequestInit = {},
+): Promise<Blob> {
   const fullUrl = `${API_BASE_URL}${url}`;
 
   const headers = new Headers();
@@ -234,7 +252,7 @@ export const api = {
 
   async verifyEmail(token: string): Promise<{ message: string }> {
     return request<{ message: string }>(
-      `/Account/verify-email?token=${encodeURIComponent(token)}`
+      `/Account/verify-email?token=${encodeURIComponent(token)}`,
     );
   },
 
@@ -245,10 +263,18 @@ export const api = {
     });
   },
 
-  async resetPassword(email: string, pin: string, newPassword: string): Promise<ForgotPasswordResponse> {
+  async resetPassword(
+    email: string,
+    pin: string,
+    newPassword: string,
+  ): Promise<ForgotPasswordResponse> {
     return request<ForgotPasswordResponse>("/Account/reset-password", {
       method: "POST",
-      body: JSON.stringify({ Email: email.trim(), Pin: pin.trim(), NewPassword: newPassword }),
+      body: JSON.stringify({
+        Email: email.trim(),
+        Pin: pin.trim(),
+        NewPassword: newPassword,
+      }),
     });
   },
 
@@ -444,9 +470,12 @@ export const api = {
     searchParams.append("keyword", params.keyword);
     searchParams.append("maxResults", params.maxResults.toString());
     searchParams.append("useCheckpoint", params.useCheckpoint.toString());
-    return request<SyncJobResult>(`/fetchdata/openalex?${searchParams.toString()}`, {
-      method: "POST",
-    });
+    return request<SyncJobResult>(
+      `/fetchdata/openalex?${searchParams.toString()}`,
+      {
+        method: "POST",
+      },
+    );
   },
 
   async getSchedulerConfig(): Promise<SchedulerConfig> {
@@ -498,16 +527,22 @@ export const api = {
     const searchParams = new URLSearchParams();
     searchParams.append("page", params.page.toString());
     searchParams.append("pageSize", params.pageSize.toString());
+    
     if (params.search) {
       searchParams.append("search", params.search);
     }
+    
+    // Giữ lại logic xử lý year và keywordText từ nhánh main
     if (params.year !== undefined) {
       searchParams.append("year", params.year.toString());
     }
     if (params.keywordText) {
       searchParams.append("keywordText", params.keywordText);
     }
-    return request<PaperReportResponse>(`/Report/papers?${searchParams.toString()}`);
+    
+    return request<PaperReportResponse>(
+      `/Report/papers?${searchParams.toString()}`
+    );
   },
 
   // Export APIs
@@ -555,15 +590,46 @@ export const api = {
     q?: string;
     page: number;
     pageSize: number;
-  }): Promise<{ success: boolean; data: { totalCount: number; items: { id: string; name: string; paperCount: number }[] } }> {
+  }): Promise<{
+    success: boolean;
+    data: {
+      totalCount: number;
+      items: { id: string; name: string; paperCount: number }[];
+    };
+  }> {
     const searchParams = new URLSearchParams();
     if (params.q) {
       searchParams.append("q", params.q);
     }
     searchParams.append("page", params.page.toString());
     searchParams.append("pageSize", params.pageSize.toString());
-    return request<{ success: boolean; data: { totalCount: number; items: { id: string; name: string; paperCount: number }[] } }>(
-      `/papers/facets/topics?${searchParams.toString()}`
-    );
+    return request<{
+      success: boolean;
+      data: {
+        totalCount: number;
+        items: { id: string; name: string; paperCount: number }[];
+      };
+    }>(`/papers/facets/topics?${searchParams.toString()}`);
+  },
+
+  // 1. Lấy danh sách thông báo
+  getNotifications: async (page = 1, pageSize = 10) => {
+    return request<any>(`/Notification?page=${page}&pageSize=${pageSize}`, {
+      method: "GET",
+    });
+  },
+
+  // 2. Đánh dấu 1 thông báo là đã đọc
+  markNotificationAsRead: async (id: string | number) => {
+    return request<any>(`/Notification/${id}/read`, {
+      method: "PUT", // Hoặc POST nếu Backend của bạn yêu cầu POST
+    });
+  },
+
+  // 3. Đánh dấu tất cả là đã đọc (Tùy chọn)
+  markAllAsRead: async () => {
+    return request<any>("/Notification/read-all", {
+      method: "PUT", // Hoặc POST
+    });
   },
 };

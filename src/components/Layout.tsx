@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import axios from "axios";
+import NotificationBell from "./shared/NotificationBell";
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -140,9 +141,21 @@ const Layout: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 pl-64 flex flex-col min-h-screen">
-        <header className="h-16 bg-white border-b border-[#ebeef0] flex items-center justify-between px-8 sticky top-0 z-20">
-          <div className="text-sm font-medium text-[#43474e]">
-            Hệ thống theo dõi xu hướng công bố khoa học
+        <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+          {/* === GÓC BÊN TRÁI === (Thường chứa Logo, Tiêu đề hoặc Nút ẩn/hiện Sidebar) */}
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-black text-slate-800">
+              Scientific Trend
+            </h2>
+          </div>
+
+          {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
+          <div className="flex items-center gap-5">
+            {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}
+            <NotificationBell />
+
+            {/* Đường kẻ dọc phân cách cho đẹp (Tùy chọn) */}
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
           </div>
         </header>
 
