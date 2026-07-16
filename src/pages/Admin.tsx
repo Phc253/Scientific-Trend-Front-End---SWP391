@@ -7,7 +7,6 @@ import { AdminOpenAlexConfig } from "../components/admin/AdminOpenAlexConfig";
 import { AdminPaperReports } from "../components/admin/AdminPaperReports";
 import { AdminKeywordStats } from "../components/admin/AdminKeywordStats";
 import type { SystemLog } from "../types/admin";
-import { api } from "../services/api";
 
 const Admin: React.FC = () => {
   const location = useLocation();
@@ -41,13 +40,6 @@ const Admin: React.FC = () => {
     const now = new Date();
     const timeStr = now.toTimeString().split(" ")[0];
     setLogs((prev) => [{ time: timeStr, type, message }, ...prev.slice(0, 7)]);
-  };
-
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => {
-      setToast(null);
-    }, 5000);
   };
 
   // Banner sync has been moved to a separate "sync" page.
