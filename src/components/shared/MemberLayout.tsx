@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import axios from "axios";
+import NotificationBell from "./NotificationBell";
 
 const MemberLayout: React.FC = () => {
   const location = useLocation();
@@ -168,6 +169,14 @@ const MemberLayout: React.FC = () => {
               month: "long",
               day: "numeric",
             })}
+          </div>
+          {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
+          <div className="flex items-center gap-5">
+            {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}
+            <NotificationBell />
+
+            {/* Đường kẻ dọc phân cách cho đẹp (Tùy chọn) */}
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
           </div>
         </header>
 

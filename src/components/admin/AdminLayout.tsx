@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Outlet } from "react-router-dom";
+import NotificationBell from "../shared/NotificationBell";
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
@@ -215,6 +216,14 @@ const AdminLayout: React.FC = () => {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
             </button>
           </div>
+          {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
+          <div className="flex items-center gap-5">
+            {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}
+            <NotificationBell />
+
+            {/* Đường kẻ dọc phân cách cho đẹp (Tùy chọn) */}
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+          </div>
         </header>
 
         {/* Dynamic Content */}
@@ -231,7 +240,9 @@ const AdminLayout: React.FC = () => {
           <div className="bg-white rounded-xl shadow-2xl border border-slate-100 max-w-sm w-full p-6 mx-4 transform scale-100 transition-all duration-300">
             <div className="flex items-center gap-3 text-rose-500 mb-4">
               <span className="material-symbols-outlined text-3xl">logout</span>
-              <h3 className="text-lg font-bold text-slate-900">Xác nhận đăng xuất</h3>
+              <h3 className="text-lg font-bold text-slate-900">
+                Xác nhận đăng xuất
+              </h3>
             </div>
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
               Bạn có chắc chắn muốn đăng xuất không?
