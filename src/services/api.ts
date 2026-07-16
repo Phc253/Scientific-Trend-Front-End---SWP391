@@ -521,25 +521,53 @@ export const api = {
     page: number;
     pageSize: number;
     search?: string;
+    year?: number;
+    keywordText?: string;
   }): Promise<PaperReportResponse> {
     const searchParams = new URLSearchParams();
     searchParams.append("page", params.page.toString());
     searchParams.append("pageSize", params.pageSize.toString());
+    
     if (params.search) {
       searchParams.append("search", params.search);
     }
+    
+    // Giữ lại logic xử lý year và keywordText từ nhánh main
+    if (params.year !== undefined) {
+      searchParams.append("year", params.year.toString());
+    }
+    if (params.keywordText) {
+      searchParams.append("keywordText", params.keywordText);
+    }
+    
     return request<PaperReportResponse>(
-      `/Report/papers?${searchParams.toString()}`,
+      `/Report/papers?${searchParams.toString()}`
     );
   },
 
   // Export APIs
-  async exportPapersCsv(): Promise<Blob> {
-    return requestBlob("/Report/export/papers");
+  async exportPapersCsv(params?: { year?: number; keywordText?: string }): Promise<Blob> {
+    const searchParams = new URLSearchParams();
+    if (params?.year !== undefined) {
+      searchParams.append("year", params.year.toString());
+    }
+    if (params?.keywordText) {
+      searchParams.append("keywordText", params.keywordText);
+    }
+    const queryString = searchParams.toString();
+    return requestBlob(`/Report/export/papers${queryString ? `?${queryString}` : ""}`);
   },
 
-  async exportPapersPdf(): Promise<Blob> {
-    return requestBlob("/Report/export/papers-pdf");
+  async exportPapersPdf(params?: { year?: number; keywordText?: string }): Promise<Blob> {
+    const searchParams = new URLSearchParams();
+    if (params?.year !== undefined) {
+      searchParams.append("year", params.year.toString());
+    }
+    if (params?.keywordText) {
+      searchParams.append("keywordText", params.keywordText);
+    }
+    const queryString = searchParams.toString();
+    return requestBlob(`/Report/export/papers-pdf${queryString ? `?${queryString}` : ""}`);
   },
 
   async exportKeywordStatsCsv(): Promise<Blob> {
