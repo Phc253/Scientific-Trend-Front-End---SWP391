@@ -455,17 +455,25 @@ const Search: React.FC = () => {
                       >
                         {item.name}
                       </Link>
+                    ) : activeTab === "topics" ? ( // 👈 THÊM ĐIỀU KIỆN CHO TAB CHỦ ĐỀ
+                      <Link
+                        to={`/topic/${encodeURIComponent(item.name)}`}
+                        className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors line-clamp-2 leading-snug"
+                      >
+                        {item.name}
+                      </Link>
+                    ) : activeTab === "authors" ? ( // 👇 BỔ SUNG LINK CHO TÁC GIẢ TẠI ĐÂY
+                      <Link
+                        to={`/author/${encodeURIComponent(item.name)}`}
+                        className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors line-clamp-2 leading-snug"
+                      >
+                        {item.name}
+                      </Link>
                     ) : (
                       <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">
-                        {activeTab === "keywords" ? `#${item.name}` : item.name}
+                        {item.name}
                       </p>
                     )}
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
-                      <span className="material-symbols-outlined text-[14px]">
-                        article
-                      </span>{" "}
-                      {item.paperCount} bài báo liên quan
-                    </p>
                   </div>
                   <button
                     onClick={handleRequiresAuth}
