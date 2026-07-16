@@ -29,6 +29,8 @@ import SharedTrending from "./components/shared/SharedTrending";
 // --- Dùng chung ---
 import PaperDetails from "./components/common/PaperDetails";
 import JournalDetail from "./pages/JournalDetail";
+import TopicDetail from "./pages/TopicDetail";
+import AuthorDetail from "./pages/AuthorDetail";
 
 const App: React.FC = () => {
   return (
@@ -51,6 +53,8 @@ const App: React.FC = () => {
         <Route path="paper/:id" element={<PaperDetails />} />
         <Route path="library" element={<SharedLibrary />} />
         <Route path="/journal/:journalName" element={<JournalDetail />} />
+        <Route path="/topic/:topicName" element={<TopicDetail />} />
+        <Route path="/author/:authorName" element={<AuthorDetail />} />
       </Route>
 
       {/* ==========================================
@@ -71,6 +75,8 @@ const App: React.FC = () => {
         <Route path="trending" element={<SharedTrending />} />
         <Route path="paper/:id" element={<PaperDetails />} />
         <Route path="journal/:journalName" element={<JournalDetail />} />
+        <Route path="topic/:topicName" element={<TopicDetail />} />
+        <Route path="author/:authorName" element={<AuthorDetail />} />
       </Route>
 
       {/* ==========================================
