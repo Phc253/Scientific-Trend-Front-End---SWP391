@@ -28,6 +28,7 @@ import SharedLibrary from "./components/shared/SharedLibrary";
 import SharedTrending from "./components/shared/SharedTrending";
 // --- Dùng chung ---
 import PaperDetails from "./components/common/PaperDetails";
+import JournalDetail from "./pages/JournalDetail";
 
 const App: React.FC = () => {
   return (
@@ -49,6 +50,7 @@ const App: React.FC = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="paper/:id" element={<PaperDetails />} />
         <Route path="library" element={<SharedLibrary />} />
+        <Route path="/journal/:journalName" element={<JournalDetail />} />
       </Route>
 
       {/* ==========================================
@@ -68,6 +70,7 @@ const App: React.FC = () => {
         <Route path="library" element={<SharedLibrary />} />
         <Route path="trending" element={<SharedTrending />} />
         <Route path="paper/:id" element={<PaperDetails />} />
+        <Route path="journal/:journalName" element={<JournalDetail />} />
       </Route>
 
       {/* ==========================================

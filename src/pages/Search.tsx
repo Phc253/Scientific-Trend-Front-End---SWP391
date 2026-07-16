@@ -448,9 +448,18 @@ const Search: React.FC = () => {
                   className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex justify-between items-center gap-4"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">
-                      {activeTab === "keywords" ? `#${item.name}` : item.name}
-                    </p>
+                    {activeTab === "journals" ? (
+                      <Link
+                        to={`/journal/${encodeURIComponent(item.name)}`}
+                        className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors line-clamp-2 leading-snug"
+                      >
+                        {item.name}
+                      </Link>
+                    ) : (
+                      <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">
+                        {activeTab === "keywords" ? `#${item.name}` : item.name}
+                      </p>
+                    )}
                     <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
                       <span className="material-symbols-outlined text-[14px]">
                         article
