@@ -32,6 +32,8 @@ interface AdminPaperReportsProps {
 
 export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) => {
   const [paperSearch, setPaperSearch] = useState("");
+  const [selectedYear, setSelectedYear] = useState<number | "">("");
+  const [selectedKeywordText, setSelectedKeywordText] = useState<string>("");
   const [selectedPaper, setSelectedPaper] = useState<PaperReportItem | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
@@ -110,6 +112,8 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
           page: currentPage,
           pageSize: pageSize,
           search: paperSearch.trim() || undefined,
+          year: selectedYear !== "" ? Number(selectedYear) : undefined,
+          keywordText: selectedKeywordText.trim() || undefined,
         });
         if (data) {
           setPapersData(data.items || []);
@@ -128,7 +132,7 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
     }, 350);
 
     return () => clearTimeout(delayDebounce);
-  }, [currentPage, paperSearch]);
+  }, [currentPage, paperSearch, selectedYear, selectedKeywordText]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -143,7 +147,10 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
     setIsExporting(true);
     addLog("INFO", "Bắt đầu xuất dữ liệu bài báo ra file CSV...");
     try {
-      const blob = await api.exportPapersCsv();
+      const blob = await api.exportPapersCsv({
+        year: selectedYear !== "" ? Number(selectedYear) : undefined,
+        keywordText: selectedKeywordText.trim() || undefined,
+      });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -166,7 +173,10 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
     setIsExporting(true);
     addLog("INFO", "Bắt đầu xuất báo cáo bài báo ra file PDF...");
     try {
-      const blob = await api.exportPapersPdf();
+      const blob = await api.exportPapersPdf({
+        year: selectedYear !== "" ? Number(selectedYear) : undefined,
+        keywordText: selectedKeywordText.trim() || undefined,
+      });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -236,9 +246,9 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
 
       {/* Bảng Danh Sách */}
       <div className="bg-white rounded-lg border border-[#ebeef0] shadow-sm p-6 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row flex-1 items-stretch sm:items-center gap-3">
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 min-w-[200px]">
               <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
               <input
                 type="text"
@@ -249,8 +259,37 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
               />
             </div>
 
+            {/* Lọc theo Năm */}
+            <div className="relative w-full sm:w-32 shrink-0">
+              <input
+                type="number"
+                value={selectedYear}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedYear(val === "" ? "" : Number(val));
+                  setCurrentPage(1);
+                }}
+                placeholder="Năm (vd: 2026)"
+                className="w-full px-3 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-md focus:outline-none focus:border-[#13696a] text-xs text-[#181c1e] font-semibold"
+              />
+            </div>
+
+            {/* Lọc theo Từ khóa */}
+            <div className="relative w-full sm:w-44 shrink-0">
+              <input
+                type="text"
+                value={selectedKeywordText}
+                onChange={(e) => {
+                  setSelectedKeywordText(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Lọc từ khóa..."
+                className="w-full px-3 py-2 bg-[#f1f4f6] border border-[#c4c6cf] rounded-md focus:outline-none focus:border-[#13696a] text-xs text-[#181c1e] font-semibold"
+              />
+            </div>
+
             {/* Nút Xuất File */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={handleExportCSV}
                 disabled={isExporting}
