@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import type { SystemLog, KeywordStatisticItem } from "../../types/admin";
 
@@ -31,6 +32,7 @@ interface AdminKeywordStatsProps {
 }
 
 export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) => {
+  const navigate = useNavigate();
   const [keywordSearch, setKeywordSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [keywordSort, setKeywordSort] = useState<"papers-desc" | "papers-asc" | "alpha-asc" | "alpha-desc">("papers-desc");
@@ -324,7 +326,16 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
               ) : (
                 paginatedKeywords.map((kw, i) => (
                   <tr key={i} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-slate-800">{kw.keywordText}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => navigate(`/admin/paper-reports?keywordText=${encodeURIComponent(kw.keywordText)}`)}
+                        className="font-bold text-left text-slate-800 hover:text-[#13696a] hover:underline cursor-pointer border-0 bg-transparent p-0 flex items-center gap-1.5"
+                        title={`Xem danh sách bài báo của từ khóa "${kw.keywordText}"`}
+                      >
+                        <span>{kw.keywordText}</span>
+                        <span className="material-symbols-outlined text-xs text-[#13696a] opacity-0 hover:opacity-100 transition-opacity">open_in_new</span>
+                      </button>
+                    </td>
                     <td className="px-6 py-4 font-bold">
                       <span className="px-2.5 py-0.5 rounded bg-teal-50 text-teal-700">
                         {kw.totalPapers} bài báo

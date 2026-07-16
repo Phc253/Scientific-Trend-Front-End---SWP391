@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../../services/api";
 import type { SystemLog, PaperReportItem } from "../../types/admin";
 
@@ -31,10 +32,20 @@ interface AdminPaperReportsProps {
 }
 
 export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialKeyword = searchParams.get("keywordText") || "";
   const [paperSearch, setPaperSearch] = useState("");
   const [selectedYear, setSelectedYear] = useState<number | "">("");
-  const [selectedKeywordText, setSelectedKeywordText] = useState<string>("");
+  const [selectedKeywordText, setSelectedKeywordText] = useState<string>(initialKeyword);
   const [selectedPaper, setSelectedPaper] = useState<PaperReportItem | null>(null);
+
+  React.useEffect(() => {
+    if (initialKeyword) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("keywordText");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [initialKeyword]);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
@@ -488,12 +499,18 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
                 </h4>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedPaper.keywords && selectedPaper.keywords.map((kw, idx) => (
-                    <span
+                    <button
                       key={idx}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-semibold border border-slate-200 transition-colors"
+                      onClick={() => {
+                        setSelectedKeywordText(kw);
+                        setSelectedPaper(null);
+                        setCurrentPage(1);
+                      }}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-semibold border border-slate-200 transition-colors cursor-pointer text-xs"
+                      title={`Lọc danh sách theo từ khóa "${kw}"`}
                     >
                       #{kw}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </div>
