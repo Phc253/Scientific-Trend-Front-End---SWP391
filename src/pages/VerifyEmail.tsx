@@ -41,12 +41,8 @@ const VerifyEmail: React.FC = () => {
   useEffect(() => {
     if (status !== "success") return;
 
-    const timer = window.setTimeout(() => {
-      navigate("/");
-    }, 1500);
-
-    return () => window.clearTimeout(timer);
-  }, [status, navigate]);
+    return undefined;
+  }, [status]);
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center animate-fadeIn py-12 bg-[#f8fafc]">
@@ -75,15 +71,23 @@ const VerifyEmail: React.FC = () => {
             </div>
             <div className="pt-4 border-t border-[#ebeef0] space-y-3">
               <p className="text-sm text-[#43474e]">
-                Bạn sẽ được chuyển về trang chủ trong vài giây...
+                Tài khoản của bạn đã được kích hoạt. Bạn có thể đăng nhập ngay bây giờ.
               </p>
               <button
                 type="button"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/login")}
                 className="w-full bg-[#002045] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center justify-center gap-2 text-sm cursor-pointer"
               >
+                <span className="material-symbols-outlined text-sm">login</span>
+                Đăng nhập ngay
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="w-full border border-[#cbd5e1] hover:bg-slate-50 text-[#43474e] font-semibold py-2.5 px-6 rounded transition-colors inline-flex items-center justify-center gap-2 text-sm cursor-pointer"
+              >
                 <span className="material-symbols-outlined text-sm">home</span>
-                Về trang chủ ngay
+                Về trang chủ
               </button>
             </div>
           </div>

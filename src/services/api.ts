@@ -113,6 +113,7 @@ export interface RegisterResponseData {
   createdAt?: string;
   isActive: boolean;
   message: string;
+  verificationLink?: string;
 }
 
 export interface ForgotPasswordResponse {

@@ -14,7 +14,7 @@ export const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [registrationState, setRegistrationState] = useState<"idle" | "success" | "pending">("idle");
+  const [registrationState, setRegistrationState] = useState<"idle" | "pending">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +45,10 @@ export const Register = () => {
         actorType,
       });
 
-      setRegistrationState("success");
+      setRegistrationState("pending");
       setSuccessMessage(
-        result.message || "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.",
+        result.message ||
+          "Đăng ký đã được ghi nhận. Vui lòng mở email và nhấn liên kết xác thực để kích hoạt tài khoản.",
       );
     } catch (err: any) {
       const isMailRelatedError = /mail|smtp|email|verify/i.test(
@@ -75,18 +76,23 @@ export const Register = () => {
             </span>
           </div>
           <h2 className="text-2xl font-bold text-[#002045]">
-            {registrationState === "pending" ? "Đăng ký đang chờ xác thực" : "Đăng ký thành công!"}
+            {registrationState === "pending"
+              ? "Đăng ký đang chờ xác thực"
+              : "Đăng ký thành công!"}
           </h2>
-          <p className="text-sm text-[#43474e] leading-relaxed">
+          <p className="text-sm text-[#43474e] leading-relaxed whitespace-pre-wrap">
             {successMessage}
           </p>
-          <div className="pt-4 border-t border-[#ebeef0]">
+          <div className="pt-4 border-t border-[#ebeef0] flex flex-col gap-3">
+            <p className="text-sm text-[#43474e]">
+              Vui lòng mở hộp thư email và bấm liên kết xác thực để kích hoạt tài khoản.
+            </p>
             <Link
-              to="/login"
-              className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center gap-2 text-sm"
+              to="/"
+              className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center justify-center gap-2 text-sm"
             >
-              <span className="material-symbols-outlined text-sm">login</span>
-              Đi đến trang Đăng nhập
+              <span className="material-symbols-outlined text-sm">home</span>
+              Quay về trang chủ
             </Link>
           </div>
         </div>
