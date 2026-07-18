@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Outlet } from "react-router-dom";
-import NotificationBell from "../shared/NotificationBell";
+import NotificationBell from "../common/NotificationBell";
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
@@ -206,8 +206,7 @@ const AdminLayout: React.FC = () => {
           {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
           <div className="flex items-center gap-5">
             {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}
-            <NotificationBell />
-
+            <NotificationBell basePath="/admin" />
             {/* Đường kẻ dọc phân cách cho đẹp (Tùy chọn) */}
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
           </div>

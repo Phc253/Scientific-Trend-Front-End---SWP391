@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
-import NotificationBell from "../shared/NotificationBell";
+import NotificationBell from "../common/NotificationBell";
 
 const ResearcherLayout: React.FC = () => {
   const location = useLocation();
@@ -128,8 +128,7 @@ const ResearcherLayout: React.FC = () => {
           {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
           <div className="flex items-center gap-5">
             {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}
-            <NotificationBell />
-
+            <NotificationBell basePath="/researcher" />
             {/* Đường kẻ dọc phân cách cho đẹp (Tùy chọn) */}
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import axios from "axios";
-import NotificationBell from "./shared/NotificationBell";
+import NotificationBell from "./common/NotificationBell";
 
 const Layout: React.FC = () => {
   const location = useLocation();

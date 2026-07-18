@@ -31,6 +31,7 @@ import PaperDetails from "./components/common/PaperDetails";
 import JournalDetail from "./pages/JournalDetail";
 import TopicDetail from "./pages/TopicDetail";
 import AuthorDetail from "./pages/AuthorDetail";
+import { NotificationPage } from "./pages/NotificationPage";
 
 const App: React.FC = () => {
   return (
@@ -77,6 +78,7 @@ const App: React.FC = () => {
         <Route path="journal/:journalName" element={<JournalDetail />} />
         <Route path="topic/:topicName" element={<TopicDetail />} />
         <Route path="author/:authorName" element={<AuthorDetail />} />
+        <Route path="notifications" element={<NotificationPage />} />
       </Route>
 
       {/* ==========================================
@@ -88,6 +90,7 @@ const App: React.FC = () => {
         <Route path="network" element={<ResearcherNetwork />} />
         <Route path="alerts" element={<ResearcherAlerts />} />
         <Route path="paper/:id" element={<PaperDetails />} />
+        <Route path="notifications" element={<NotificationPage />} />
       </Route>
 
       {/* ==========================================
