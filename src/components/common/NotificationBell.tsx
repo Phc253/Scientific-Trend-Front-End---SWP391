@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // Đã xóa Link ở đây
 import { api, type NotificationItem } from "../../services/api";
 
-const NotificationBell: React.FC = () => {
+interface NotificationBellProps {
+  basePath: string;
+}
+
+const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -27,35 +31,45 @@ const NotificationBell: React.FC = () => {
   // Gọi API lấy thông báo khi component load
   useEffect(() => {
     fetchNotifications();
-
-    // (Tùy chọn) Cứ mỗi 60 giây sẽ tự động fetch lại thông báo mới 1 lần
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
 
   const fetchNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return;
+    }
     try {
       const res: any = await api.getNotifications();
-      // Tùy cấu trúc API của bạn (có thể là res.items, res.data.items...)
       const items = res?.data?.items || res?.items || res || [];
       setNotifications(items);
 
-      // Đếm số lượng chưa đọc
       const unread = items.filter(
         (item: NotificationItem) => !item.isRead,
       ).length;
       setUnreadCount(unread);
     } catch (error) {
       console.error("Lỗi khi tải thông báo:", error);
+      if (error instanceof Error) {
+        if (
+          error.message.includes("Unauthorized") ||
+          error.message.includes("401")
+        ) {
+          localStorage.removeItem("token");
+        }
+      } else if (typeof error === "string") {
+        if (error.includes("Unauthorized") || error.includes("401")) {
+          localStorage.removeItem("token");
+        }
+      }
     }
   };
 
   const handleNotificationClick = async (notification: NotificationItem) => {
-    // Nếu chưa đọc thì gọi API đánh dấu đã đọc
     if (!notification.isRead) {
       try {
         await api.markNotificationAsRead(notification.id);
-        // Cập nhật state UI để mất chấm xanh ngay lập tức
         setNotifications((prev) =>
           prev.map((n) =>
             n.id === notification.id ? { ...n, isRead: true } : n,
@@ -66,12 +80,7 @@ const NotificationBell: React.FC = () => {
         console.error("Lỗi khi đánh dấu đã đọc:", error);
       }
     }
-
-    // Đóng dropdown
     setIsOpen(false);
-
-    // Chuyển hướng nếu thông báo liên quan đến 1 bài báo (paperId)
-    // Thay đổi đường dẫn tùy theo Role nếu cần
     if (notification.paperId) {
       navigate(`/paper/${notification.paperId}`);
     }
@@ -91,6 +100,23 @@ const NotificationBell: React.FC = () => {
     }
   };
 
+  // --- HÀM MỚI ĐƯỢC THÊM VÀO Ở ĐÂY ---
+  const handleViewAllClick = () => {
+    const token = localStorage.getItem("token");
+
+    // Nếu chưa đăng nhập
+    if (!token) {
+      alert("Bạn cần đăng nhập để có thể sử dụng chức năng này.");
+      setIsOpen(false); // Đóng menu
+      return; // Chặn không cho sang trang khác
+    }
+
+    // Nếu đã đăng nhập thì cho phép chuyển trang
+    setIsOpen(false);
+    navigate(`${basePath}/notifications`);
+  };
+  // ------------------------------------
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Nút Bấm Quả Chuông */}
@@ -101,8 +127,6 @@ const NotificationBell: React.FC = () => {
         <span className="material-symbols-outlined text-[26px]">
           notifications
         </span>
-
-        {/* Chấm đỏ báo số lượng */}
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white animate-bounce-short">
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -143,7 +167,6 @@ const NotificationBell: React.FC = () => {
                     className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 ${!notification.isRead ? "bg-blue-50/30" : ""}`}
                   >
                     <div className="shrink-0 mt-1">
-                      {/* Tự động đổi Icon theo kiểu thông báo, mặc định là article */}
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center ${!notification.isRead ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500"}`}
                       >
@@ -180,13 +203,14 @@ const NotificationBell: React.FC = () => {
           </div>
 
           <div className="p-3 border-t border-slate-100 text-center bg-slate-50/50">
-            <Link
-              to="/notifications"
-              onClick={() => setIsOpen(false)}
-              className="text-sm font-bold text-slate-500 hover:text-slate-800"
+            {/* --- NÚT ĐÃ ĐƯỢC THAY ĐỔI Ở ĐÂY --- */}
+            <button
+              onClick={handleViewAllClick}
+              className="w-full text-sm font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
             >
               Xem tất cả
-            </Link>
+            </button>
+            {/* ---------------------------------- */}
           </div>
         </div>
       )}
