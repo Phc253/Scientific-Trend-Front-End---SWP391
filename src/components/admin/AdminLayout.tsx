@@ -203,19 +203,6 @@ const AdminLayout: React.FC = () => {
             <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse"></span>
             <h2 className="text-lg font-bold text-slate-800">{currentLabel}</h2>
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-              Hệ thống theo dõi xu hướng khoa học
-            </div>
-            <button
-              className="relative p-2 text-slate-400 hover:text-cyan-600 transition-colors rounded-full hover:bg-slate-50"
-              title="Thông báo hệ thống"
-            >
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
-          </div>
           {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
           <div className="flex items-center gap-5">
             {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}

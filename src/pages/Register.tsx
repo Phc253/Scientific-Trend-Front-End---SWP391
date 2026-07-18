@@ -3,18 +3,23 @@ import { Link } from "react-router-dom";
 import { api } from "../services/api";
 
 export const Register = () => {
+  // 1. Lấy ngày hôm nay theo định dạng YYYY-MM-DD để làm mốc chặn ngày ở tương lai
+  const today = new Date().toISOString().split("T")[0];
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
-  const [actorType, setActorType] = useState(""); // Để trống để bắt buộc chọn
+  const [actorType, setActorType] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [registrationState, setRegistrationState] = useState<"idle" | "pending">("idle");
+  const [registrationState, setRegistrationState] = useState<
+    "idle" | "pending"
+  >("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +75,9 @@ export const Register = () => {
     return (
       <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn py-6">
         <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md space-y-6 text-center">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${registrationState === "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-[#e1f5fe] text-[#002855] border-[#b2ebf2]"}`}>
+          <div
+            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${registrationState === "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-[#e1f5fe] text-[#002855] border-[#b2ebf2]"}`}
+          >
             <span className="material-symbols-outlined text-3xl">
               {registrationState === "pending" ? "hourglass_top" : "mail"}
             </span>
@@ -85,7 +92,8 @@ export const Register = () => {
           </p>
           <div className="pt-4 border-t border-[#ebeef0] flex flex-col gap-3">
             <p className="text-sm text-[#43474e]">
-              Vui lòng mở hộp thư email và bấm liên kết xác thực để kích hoạt tài khoản.
+              Vui lòng mở hộp thư email và bấm liên kết xác thực để kích hoạt
+              tài khoản.
             </p>
             <Link
               to="/"
@@ -179,6 +187,9 @@ export const Register = () => {
                 className="w-full p-3 border rounded"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
+                // 2. Chặn nhập năm quá khứ xa và chặn nhập ngày tương lai
+                min="1900-01-01"
+                max={today}
               />
             </div>
           </div>

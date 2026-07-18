@@ -6,6 +6,7 @@ const ResearcherLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState<string>("Nhà nghiên cứu");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const storedName =
@@ -15,11 +16,16 @@ const ResearcherLayout: React.FC = () => {
     }
   }, []);
 
-  const handleLogout = () => {
+  // Hàm xử lý khi người dùng thực sự bấm nút "Đăng xuất" màu đỏ
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirm(false);
+    // Thực hiện logic xóa token/dữ liệu ở đây
     localStorage.removeItem("token");
-    localStorage.removeItem("fullName");
-    localStorage.removeItem("userName");
     localStorage.removeItem("userRoles");
+    localStorage.removeItem("actorType");
+    // logout(); // Gọi hàm logout context nếu có
+
+    // Điều hướng về trang Login
     navigate("/login");
   };
 
@@ -102,10 +108,10 @@ const ResearcherLayout: React.FC = () => {
           </div>
 
           <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10 hover:text-red-200 rounded-lg transition-colors"
+            onClick={() => setShowLogoutConfirm(true)} // MỞ MODAL XÁC NHẬN
+            className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all font-bold w-full cursor-pointer group"
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span className="material-symbols-outlined transition-transform group-hover:-translate-x-1">
               logout
             </span>
             Đăng xuất
@@ -119,12 +125,6 @@ const ResearcherLayout: React.FC = () => {
             {activeLabel}
           </h2>
 
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
-          </div>
           {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
           <div className="flex items-center gap-5">
             {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}
@@ -139,7 +139,47 @@ const ResearcherLayout: React.FC = () => {
           <Outlet />
         </div>
       </main>
-    </div>
+      {/* ========================================================= */}
+      {/* MODAL XÁC NHẬN ĐĂNG XUẤT                                  */}
+      {/* ========================================================= */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
+          {/* Vùng hộp thoại */}
+          <div className="bg-white rounded-2xl p-6 sm:p-8 w-[90%] max-w-[400px] shadow-2xl animate-scaleIn">
+            {/* Tiêu đề & Icon */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="material-symbols-outlined text-rose-600 text-3xl font-bold">
+                logout
+              </span>
+              <h3 className="text-xl font-black text-slate-800">
+                Xác nhận đăng xuất
+              </h3>
+            </div>
+
+            {/* Nội dung tin nhắn */}
+            <p className="text-slate-500 font-medium mb-8">
+              Bạn có chắc chắn muốn đăng xuất không?
+            </p>
+
+            {/* Các nút hành động */}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmLogout}
+                className="px-6 py-2.5 text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 rounded-xl transition-colors shadow-sm cursor-pointer"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div> // Thẻ đóng </div> cuối cùng của Component Layout
   );
 };
 
