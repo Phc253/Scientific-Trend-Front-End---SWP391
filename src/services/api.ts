@@ -9,6 +9,8 @@ import type {
 
 export interface NotificationItem {
   id: string | number;
+  Id?: string | number; // Bổ sung dòng này
+  notificationId?: string | number; // Bổ sung dòng này
   title: string;
   message: string;
   isRead: boolean;

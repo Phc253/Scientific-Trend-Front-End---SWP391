@@ -1,27 +1,32 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api, type NotificationItem } from "../../services/api";
 
 interface NotificationBellProps {
   basePath?: string;
 }
 
-const NotificationBell: React.FC<NotificationBellProps> = ({
-  basePath = "/researcher",
-}) => {
+const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
   const token = localStorage.getItem("token");
+  const location = useLocation();
+
+  // TỰ ĐỘNG NHẬN DIỆN BASEPATH DỰA VÀO URL (Ví dụ: /student, /researcher, /admin)
+  const resolvedBasePath =
+    basePath || `/${location.pathname.split("/")[1]}` || "/researcher";
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // 1. Chỉ lấy số lượng chưa đọc khi mới render (Tối ưu hiệu năng cực tốt)
+  // Đếm trực tiếp số lượng chưa đọc từ mảng dữ liệu
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  // 1. Tải danh sách thông báo ngầm khi mới vào trang để lấy số đếm
   useEffect(() => {
     if (token) {
-      fetchUnreadCount();
+      fetchNotifications(true);
     }
   }, [token]);
 
@@ -39,18 +44,9 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const fetchUnreadCount = async () => {
+  const fetchNotifications = async (isBackground = false) => {
     try {
-      const count = await api.getUnreadCount();
-      setUnreadCount(count);
-    } catch (error) {
-      console.error("Lỗi tải số lượng thông báo:", error);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      setIsLoading(true);
+      if (!isBackground) setIsLoading(true);
       const res: any = await api.getNotifications(1, 10);
       const items = res?.data?.items || res?.items || res?.data || res || [];
       setNotifications(Array.isArray(items) ? items : []);
@@ -61,7 +57,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     }
   };
 
-  // Mở chuông -> gọi API tải danh sách
   const handleToggleDropdown = () => {
     const nextState = !isOpen;
     setIsOpen(nextState);
@@ -70,48 +65,70 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     }
   };
 
-  // Đánh dấu đã đọc & Chuyển hướng
-  const handleItemClick = async (alert: NotificationItem) => {
+  // ĐÁNH DẤU 1 ITEM ĐÃ ĐỌC (Tối ưu Optimistic UI)
+  const handleItemClick = async (alert: any) => {
     try {
-      if (!alert.isRead) {
-        await api.markNotificationAsRead(alert.id);
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === alert.id ? { ...n, isRead: true } : n)),
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+      const targetId = alert.id || alert.Id || alert.notificationId;
+
+      if (!targetId) {
+        console.error("Dữ liệu thông báo bị thiếu ID:", alert);
+        return;
       }
 
-      setIsOpen(false);
+      if (!alert.isRead) {
+        // 1. Gọi API ngầm
+        await api
+          .markNotificationAsRead(targetId)
+          .catch((err) => console.error(err));
+
+        // 2. Cập nhật UI ngay lập tức (Làm mất chấm tròn xanh)
+        setNotifications((prev) =>
+          prev.map((n: any) =>
+            (n.id || n.Id || n.notificationId) === targetId
+              ? { ...n, isRead: true }
+              : n,
+          ),
+        );
+      }
+
+      // 3. LOGIC CHUYỂN HƯỚNG VÀ ĐÓNG MENU
       if (alert.paperId) {
-        navigate(`${basePath}/paper/${alert.paperId}`);
+        // Chỉ đóng dropdown khi thực sự cần chuyển trang đi nơi khác
+        setIsOpen(false);
+        navigate(`${resolvedBasePath}/paper/${alert.paperId}`);
       }
     } catch (error) {
-      console.error("Lỗi khi đánh dấu đã đọc:", error);
+      console.error("LỖI API ĐÁNH DẤU ĐÃ ĐỌC:", error);
     }
   };
 
+  // ĐÁNH DẤU TẤT CẢ ĐÃ ĐỌC (Tối ưu Optimistic UI)
   const handleMarkAllAsRead = async () => {
     try {
-      await api.markAllAsRead();
+      // 1. Chuyển toàn bộ danh sách thành màu trắng NGAY LẬP TỨC
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      // 2. Gọi API ngầm
+      await api.markAllAsRead().catch((err) => console.error(err));
     } catch (error) {
       console.error("Lỗi khi đánh dấu đọc tất cả:", error);
     }
   };
 
-  const handleDelete = async (
-    e: React.MouseEvent,
-    id: string | number,
-    isRead: boolean,
-  ) => {
-    e.stopPropagation(); // Ngăn sự kiện click lan ra component cha (chuyển trang)
+  // XÓA THÔNG BÁO (Tối ưu Optimistic UI)
+  const handleDelete = async (e: React.MouseEvent, alertObj: any) => {
+    e.stopPropagation();
     try {
-      await api.deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      if (!isRead) {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
+      const targetId = alertObj.id || alertObj.Id || alertObj.notificationId;
+      if (!targetId) return;
+
+      // 1. Xóa UI ngay lập tức
+      setNotifications((prev) =>
+        prev.filter(
+          (n: any) => (n.id || n.Id || n.notificationId) !== targetId,
+        ),
+      );
+      // 2. Gọi API ngầm
+      await api.deleteNotification(targetId).catch((err) => console.error(err));
     } catch (error) {
       console.error("Lỗi khi xóa thông báo:", error);
     }
@@ -155,10 +172,12 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                 </span>
               )}
             </div>
+
+            {/* Nút Đánh dấu tất cả (Chỉ hiện khi có thông báo chưa đọc) */}
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-xs font-semibold text-[#13696a] hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                className="text-xs font-semibold text-[#13696a] hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[14px]">
                   done_all
@@ -171,7 +190,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
           {/* Danh sách thông báo */}
           <div className="overflow-y-auto flex-1 custom-scrollbar bg-slate-50/50">
             {isLoading ? (
-              // Loading Skeletons
               <div className="p-4 space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex gap-4 animate-pulse">
@@ -185,7 +203,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                 ))}
               </div>
             ) : notifications.length === 0 ? (
-              // Empty State
               <div className="py-14 px-6 text-center flex flex-col items-center">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined text-3xl text-slate-400">
@@ -200,82 +217,93 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                 </p>
               </div>
             ) : (
-              // Danh sách items
               <div className="divide-y divide-slate-100">
-                {notifications.map((alert) => (
-                  <div
-                    key={alert.id}
-                    onClick={() => handleItemClick(alert)}
-                    className={`group relative p-4 cursor-pointer transition-all duration-200 flex gap-4 hover:bg-slate-50 ${
-                      !alert.isRead ? "bg-blue-50/30" : "bg-white"
-                    }`}
-                  >
-                    {/* Chấm xanh báo chưa đọc */}
-                    {!alert.isRead && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>
-                    )}
+                {notifications.map((alert, index) => {
+                  // Ép kiểu ID an toàn chống lỗi màn hình vàng
+                  const targetId =
+                    alert.id ||
+                    (alert as any).Id ||
+                    (alert as any).notificationId ||
+                    `bell-key-${index}`;
 
-                    {/* Icon đại diện */}
-                    <div className="shrink-0 pt-0.5">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm border ${
-                          !alert.isRead
-                            ? "bg-[#13696a] text-white border-[#13696a]"
-                            : "bg-slate-100 text-slate-500 border-slate-200"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[20px]">
-                          {alert.paperId ? "article" : "campaign"}
-                        </span>
+                  return (
+                    <div
+                      key={targetId}
+                      onClick={() => handleItemClick(alert)}
+                      className={`group relative p-4 cursor-pointer transition-all duration-200 flex gap-4 hover:bg-slate-50 ${
+                        !alert.isRead ? "bg-blue-50/30" : "bg-white"
+                      }`}
+                    >
+                      {/* Icon đại diện */}
+                      <div className="shrink-0 pt-0.5">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm border ${
+                            !alert.isRead
+                              ? "bg-[#13696a] text-white border-[#13696a]"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">
+                            {alert.paperId ? "article" : "campaign"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Nội dung */}
+                      <div className="flex-1 min-w-0 pr-6">
+                        <p
+                          className={`text-sm mb-1 line-clamp-1 ${
+                            !alert.isRead
+                              ? "font-bold text-[#002045]"
+                              : "font-medium text-slate-700"
+                          }`}
+                        >
+                          {alert.title}
+                        </p>
+                        <p
+                          className={`text-[13px] line-clamp-2 leading-relaxed mb-2 ${
+                            !alert.isRead ? "text-slate-700" : "text-slate-500"
+                          }`}
+                        >
+                          {alert.message}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[12px]">
+                            schedule
+                          </span>
+                          {alert.createdAt &&
+                            new Date(alert.createdAt).toLocaleString("vi-VN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })}
+                        </p>
+                      </div>
+
+                      {/* KHÔI PHỤC: Chấm tròn xanh báo chưa đọc */}
+                      {!alert.isRead && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center group-hover:opacity-0 transition-opacity">
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm"></span>
+                        </div>
+                      )}
+
+                      {/* Nút Xóa (Chỉ hiện khi hover) */}
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => handleDelete(e, alert)} // Sửa lỗi gọi hàm Delete
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Xóa thông báo"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            delete
+                          </span>
+                        </button>
                       </div>
                     </div>
-
-                    {/* Nội dung */}
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm mb-1 line-clamp-1 ${
-                          !alert.isRead
-                            ? "font-bold text-[#002045]"
-                            : "font-medium text-slate-700"
-                        }`}
-                      >
-                        {alert.title}
-                      </p>
-                      <p
-                        className={`text-[13px] line-clamp-2 leading-relaxed mb-2 ${
-                          !alert.isRead ? "text-slate-700" : "text-slate-500"
-                        }`}
-                      >
-                        {alert.message}
-                      </p>
-                      <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">
-                          schedule
-                        </span>
-                        {new Date(alert.createdAt).toLocaleString("vi-VN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })}
-                      </p>
-                    </div>
-
-                    {/* Nút Xóa (Chỉ hiện khi hover) */}
-                    <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => handleDelete(e, alert.id, alert.isRead)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Xóa thông báo"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">
-                          delete
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -283,7 +311,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
           {/* Footer */}
           <div className="p-3 border-t border-slate-100 text-center bg-white shrink-0">
             <Link
-              to={`${basePath}/notifications`}
+              to={`${resolvedBasePath}/notifications`}
               onClick={() => setIsOpen(false)}
               className="text-sm font-bold text-[#13696a] hover:text-[#0a3f40] transition-colors inline-block py-1 px-4 hover:bg-slate-50 rounded-lg"
             >
