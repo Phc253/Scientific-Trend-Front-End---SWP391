@@ -80,21 +80,16 @@ export const ResearcherAnalytic = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-sm">
-                  <th className="p-4 w-16 text-center">Top</th>
+                  <th className="p-4 w-20 text-center">Xếp hạng</th>
                   <th className="p-4">Chủ đề / Từ khóa</th>
-                  <th className="p-4 text-center">Điểm xu hướng</th>
-                  <th className="p-4 text-center">Bài báo mới</th>
-                  <th className="p-4 text-right">Tăng trưởng</th>
+                  <th className="p-4 text-center w-36">Loại mục tiêu</th>
+                  <th className="p-4 text-right w-44">Tổng số bài báo</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {trendingTopics.map((topic, index) => {
-                  // Đặt giá trị mặc định là 0 nếu dữ liệu từ BE bị null/undefined
-                  const score = topic.trendScore || 0;
-                  const growth = topic.growthRate || 0;
-                  const count = topic.recentPaperCount || 0;
-
-                  const isPositive = growth >= 0;
+                  const count = topic.paperCount || 0;
+                  const isTopic = topic.type === "Topic";
 
                   return (
                     <tr
@@ -103,15 +98,15 @@ export const ResearcherAnalytic = () => {
                     >
                       <td className="p-4 text-center">
                         <span
-                          className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
+                          className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-extrabold text-sm
                           ${
                             index === 0
-                              ? "bg-amber-100 text-amber-600"
+                              ? "bg-amber-100 text-amber-700 ring-2 ring-amber-300"
                               : index === 1
-                                ? "bg-slate-200 text-slate-600"
+                                ? "bg-slate-200 text-slate-700 ring-2 ring-slate-300"
                                 : index === 2
-                                  ? "bg-orange-100 text-orange-600"
-                                  : "bg-slate-50 text-slate-400"
+                                  ? "bg-orange-100 text-orange-700 ring-2 ring-orange-300"
+                                  : "bg-slate-50 text-slate-500 border border-slate-200"
                           }`}
                         >
                           {index + 1}
@@ -120,28 +115,23 @@ export const ResearcherAnalytic = () => {
                       <td className="p-4">
                         <div className="font-bold text-slate-800 text-base flex items-center gap-2">
                           {topic.name || "Chưa xác định"}
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 uppercase tracking-wider font-semibold border border-slate-200">
-                            {topic.type === "Keyword" ? "Từ khóa" : "Chủ đề"}
-                          </span>
                         </div>
                       </td>
-                      <td className="p-4 text-center font-mono font-medium text-indigo-600">
-                        {/* Đã gọi toLocaleString trên biến score an toàn */}
-                        {score.toLocaleString()}
-                      </td>
-                      <td className="p-4 text-center text-slate-600">
-                        {count}
+                      <td className="p-4 text-center">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${
+                          isTopic 
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200" 
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}>
+                          {isTopic ? "Chủ đề" : "Từ khóa"}
+                        </span>
                       </td>
                       <td className="p-4 text-right">
-                        <div
-                          className={`inline-flex items-center gap-1 font-bold px-2 py-1 rounded
-                          ${isPositive ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50"}`}
-                        >
-                          <span className="material-symbols-outlined text-sm">
-                            {isPositive ? "trending_up" : "trending_down"}
+                        <div className="inline-flex items-center gap-1.5 font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                          <span className="material-symbols-outlined text-sm text-slate-500">
+                            article
                           </span>
-                          {isPositive ? "+" : ""}
-                          {growth}%
+                          {count.toLocaleString()} bài báo
                         </div>
                       </td>
                     </tr>

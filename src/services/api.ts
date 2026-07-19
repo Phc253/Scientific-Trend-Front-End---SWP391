@@ -18,11 +18,10 @@ export interface NotificationItem {
 
 export interface TrendingItem {
   name: string;
+  paperCount: number;
   type: string;
-  trendScore: number;
-  growthRate: number;
-  recentPaperCount: number;
-  snapshotDate: string;
+  topicId: number | null;
+  keywordId: number | null;
 }
 
 export interface DashboardSummaryResponse {
@@ -522,7 +521,7 @@ export const api = {
   },
 
   async getTrendingTopics(topN: number = 10): Promise<any[]> {
-    return request<any[]>(`/Trends/trending?topN=${topN}`, {
+    return request<any[]>(`/trends/trending?topN=${topN}`, {
       method: "GET",
     });
   },

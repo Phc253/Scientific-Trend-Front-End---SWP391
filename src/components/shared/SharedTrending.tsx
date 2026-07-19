@@ -60,39 +60,43 @@ const SharedTrending: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {trends.map((item, index) => (
-            <div
-              key={index}
-              className={`${theme.lightBg} border ${theme.border} p-5 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow`}
-            >
-              <h4
-                className={`font-black ${theme.primaryText} text-lg mb-3 line-clamp-2 leading-tight`}
-                title={item.name}
+          {trends.map((item, index) => {
+            const isTopic = item.type === "Topic";
+            return (
+              <div
+                key={index}
+                className={`${theme.lightBg} border ${theme.border} p-5 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow`}
               >
-                {item.name}
-              </h4>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-600 mt-auto pt-2 border-t border-black/5">
-                <span
-                  className="flex items-center gap-1"
-                  title="Số lượng bài báo"
-                >
-                  <span className="material-symbols-outlined text-[14px]">
-                    article
+                <div className="mb-4">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider mb-2 ${
+                    isTopic 
+                      ? "bg-indigo-100/60 text-indigo-700 border-indigo-200" 
+                      : "bg-emerald-100/60 text-emerald-700 border-emerald-200"
+                  }`}>
+                    {isTopic ? "Chủ đề" : "Từ khóa"}
                   </span>
-                  {item.recentPaperCount || 0}
-                </span>
-                <span
-                  className="text-green-600 flex items-center gap-0.5 bg-green-100 px-2 py-1 rounded-md"
-                  title="Tỷ lệ tăng trưởng"
-                >
-                  <span className="material-symbols-outlined text-[14px]">
-                    trending_up
+                  <h4
+                    className={`font-black ${theme.primaryText} text-lg line-clamp-2 leading-tight`}
+                    title={item.name}
+                  >
+                    {item.name}
+                  </h4>
+                </div>
+                <div className="flex items-center justify-between text-xs font-bold text-slate-600 mt-auto pt-2 border-t border-black/5">
+                  <span
+                    className="flex items-center gap-1.5"
+                    title="Số lượng bài báo"
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-slate-400">
+                      article
+                    </span>
+                    {(item.paperCount || 0).toLocaleString()} bài báo
                   </span>
-                  +{item.growthRate || 0}%
-                </span>
+                  <span className="text-slate-400 font-extrabold">#{index + 1}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
