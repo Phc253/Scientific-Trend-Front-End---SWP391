@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 
-// Cấu trúc dữ liệu giả định, bạn có thể chỉnh lại cho khớp với API trả về
-interface NotificationItem {
-  id: string | number;
+// 1. Mở rộng Interface để hứng mọi trường hợp tên ID từ Backend
+export interface NotificationItem {
+  id?: string | number;
+  Id?: string | number;
+  notificationId?: string | number;
   title?: string;
   message: string;
   isRead: boolean;
   createdAt?: string;
+  paperId?: string | number;
 }
 
 export const NotificationPage = () => {
@@ -16,17 +19,24 @@ export const NotificationPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const resolvedBasePath =
+    `/${location.pathname.split("/")[1]}` || "/researcher";
 
   useEffect(() => {
     const fetchAllNotifications = async () => {
       try {
         setIsLoading(true);
-        // Lấy 50 thông báo cho trang chi tiết (hoặc phân trang tùy ý)
-        const response = await api.getNotifications(1, 50);
+        const response: any = await api.getNotifications(1, 50);
 
-        // Tùy thuộc vào cấu trúc backend trả về (thường là response.data hoặc chính response)
-        const data = response.data || response || [];
-        setNotifications(data);
+        // 2. Bóc tách dữ liệu an toàn giống hệt NotificationBell
+        const data =
+          response?.data?.items ||
+          response?.items ||
+          response?.data ||
+          response ||
+          [];
+        setNotifications(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Lỗi khi tải trang thông báo:", err);
         setError(
@@ -39,6 +49,37 @@ export const NotificationPage = () => {
 
     fetchAllNotifications();
   }, []);
+
+  // Bổ sung hàm click để đánh dấu đã đọc ngay trong trang danh sách
+  const handleItemClick = async (noti: NotificationItem) => {
+    const targetId = noti.id || noti.Id || noti.notificationId;
+
+    if (!targetId) return;
+
+    try {
+      if (!noti.isRead) {
+        // Cập nhật UI ngay lập tức
+        setNotifications((prev) =>
+          prev.map((n) =>
+            (n.id || n.Id || n.notificationId) === targetId
+              ? { ...n, isRead: true }
+              : n,
+          ),
+        );
+        // Gọi API ngầm
+        await api
+          .markNotificationAsRead(targetId)
+          .catch((err) => console.error(err));
+      }
+
+      // Nếu có paperId thì chuyển hướng đến bài báo
+      if (noti.paperId) {
+        navigate(`${resolvedBasePath}/paper/${noti.paperId}`);
+      }
+    } catch (error) {
+      console.error("Lỗi khi click thông báo:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] py-8 px-4 animate-fadeIn">
@@ -86,39 +127,64 @@ export const NotificationPage = () => {
             </div>
           ) : (
             <div className="divide-y divide-[#ebeef0]">
-              {notifications.map((noti) => (
-                <div
-                  key={noti.id}
-                  className={`p-5 flex gap-4 transition-colors hover:bg-slate-50 ${!noti.isRead ? "bg-[#f0f7ff]" : ""}`}
-                >
+              {notifications.map((noti, index) => {
+                // 3. Xử lý key an toàn tuyệt đối
+                const targetId =
+                  noti.id ||
+                  noti.Id ||
+                  noti.notificationId ||
+                  `fallback-key-${index}`;
+
+                return (
                   <div
-                    className={`mt-1 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${!noti.isRead ? "bg-[#002855] text-white" : "bg-slate-200 text-slate-500"}`}
+                    key={targetId}
+                    onClick={() => handleItemClick(noti)}
+                    className={`p-5 flex gap-4 transition-colors cursor-pointer hover:bg-slate-50 ${
+                      !noti.isRead ? "bg-[#f0f7ff]" : ""
+                    }`}
                   >
-                    <span className="material-symbols-outlined text-xl">
-                      {noti.isRead ? "notifications" : "notifications_active"}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    {noti.title && (
-                      <h3 className="font-semibold text-[#002045] mb-1">
-                        {noti.title}
-                      </h3>
-                    )}
-                    <p className="text-sm text-[#43474e]">{noti.message}</p>
-                    {noti.createdAt && (
-                      <p className="text-xs text-slate-400 mt-2">
-                        {new Date(noti.createdAt).toLocaleString("vi-VN")}
-                      </p>
-                    )}
-                  </div>
-                  {!noti.isRead && (
                     <div
-                      className="w-2.5 h-2.5 bg-blue-600 rounded-full flex-shrink-0 mt-2"
-                      title="Chưa đọc"
-                    ></div>
-                  )}
-                </div>
-              ))}
+                      className={`mt-1 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                        !noti.isRead
+                          ? "bg-[#002855] text-white"
+                          : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-xl">
+                        {noti.isRead ? "notifications" : "notifications_active"}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      {noti.title && (
+                        <h3
+                          className={`mb-1 ${!noti.isRead ? "font-bold text-[#002045]" : "font-semibold text-slate-700"}`}
+                        >
+                          {noti.title}
+                        </h3>
+                      )}
+                      <p
+                        className={`text-sm ${!noti.isRead ? "text-[#43474e]" : "text-slate-500"}`}
+                      >
+                        {noti.message}
+                      </p>
+                      {noti.createdAt && (
+                        <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[14px]">
+                            schedule
+                          </span>
+                          {new Date(noti.createdAt).toLocaleString("vi-VN")}
+                        </p>
+                      )}
+                    </div>
+                    {!noti.isRead && (
+                      <div
+                        className="w-2.5 h-2.5 bg-blue-600 rounded-full flex-shrink-0 mt-2"
+                        title="Chưa đọc"
+                      ></div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
