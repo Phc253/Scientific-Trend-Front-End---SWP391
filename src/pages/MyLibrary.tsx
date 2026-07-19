@@ -19,8 +19,8 @@ const MyLibrary: React.FC = () => {
     setError(null);
     try {
       const [bookmarksRes, followsRes] = await Promise.all([
-        api.getMyBookmarks(),
-        api.getMyFollows(),
+        api.getBookmarks(),
+        api.getFollows(),
       ]);
 
       if (bookmarksRes.success) {
