@@ -200,7 +200,7 @@ export const ResearcherLibrary = () => {
               Không gian nghiên cứu của bạn chưa có tài liệu nào. Hãy sử dụng
               thanh tìm kiếm để thu thập các bài báo khoa học.
             </p>
-            <Link to="/search" className="px-6 py-2 bg-[#002045] text-white rounded-lg font-medium hover:bg-blue-900 transition-colors">
+            <Link to="/researcher/explore" className="px-6 py-2 bg-[#002045] text-white rounded-lg font-medium hover:bg-blue-900 transition-colors">
               Khám phá bài báo mới
             </Link>
           </div>
@@ -235,7 +235,7 @@ export const ResearcherLibrary = () => {
                   </p>
                 )}
                 <div className="flex items-center gap-3 mt-2 pt-4 border-t border-slate-50">
-                  <Link to={`/papers/${paper.targetId}`} className="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                  <Link to={`/researcher/paper/${paper.targetId}`} className="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                     Đọc chi tiết
                   </Link>
                   <button
