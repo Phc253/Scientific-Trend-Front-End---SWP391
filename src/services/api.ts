@@ -79,6 +79,15 @@ export interface FollowItem {
   topicName?: string;
 }
 
+export interface WatchlistItem {
+  id: number;
+  targetId: number;
+  targetType: "Keyword" | "Journal" | "ResearchTopic";
+  name: string;
+  paperCount?: number;
+  createdAt?: string;
+}
+
 export interface PaperFacetItem {
   id: string;
   name: string;
@@ -88,6 +97,28 @@ export interface PaperFacetItem {
 export interface PaperFacetResponse {
   totalCount: number;
   items: PaperFacetItem[];
+}
+
+export interface YearlyMetric {
+  year: number;
+  paperCount: number;
+  citationCount: number;
+}
+
+export interface PublicationTrendData {
+  id: number;
+  name: string;
+  totalPaperCount: number;
+  totalCitationCount: number;
+  growthRate: number;
+  yearlyMetrics: YearlyMetric[];
+}
+
+export interface PublicationTrendReport {
+  reportType: string;
+  title: string;
+  generatedAt: string;
+  data: PublicationTrendData;
 }
 
 export interface UserProfile {
@@ -306,14 +337,14 @@ export const api = {
       searchParams.append("pageSize", params.pageSize.toString());
 
     const queryString = searchParams.toString();
-    const url = `/Papers${queryString ? `?${queryString}` : ""}`;
+    const url = `/papers${queryString ? `?${queryString}` : ""}`;
     return request<{ success: boolean; data: SearchResponse }>(url);
   },
 
   async getPaperDetails(
     id: number | string,
   ): Promise<{ success: boolean; data: Paper }> {
-    return request<{ success: boolean; data: Paper }>(`/Papers/${id}`);
+    return request<{ success: boolean; data: Paper }>(`/papers/${id}`);
   },
 
   async searchAuthors(name: string): Promise<{
@@ -336,7 +367,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/authors?${searchParams.toString()}`,
+      `/papers/facets/authors?${searchParams.toString()}`,
     );
   },
 
@@ -350,7 +381,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/keywords?${searchParams.toString()}`,
+      `/papers/facets/keywords?${searchParams.toString()}`,
     );
   },
 
@@ -364,7 +395,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/topics?${searchParams.toString()}`,
+      `/papers/facets/topics?${searchParams.toString()}`,
     );
   },
 
@@ -378,7 +409,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/journals?${searchParams.toString()}`,
+      `/papers/facets/journals?${searchParams.toString()}`,
     );
   },
 
@@ -429,6 +460,55 @@ export const api = {
   async getFollows(): Promise<{ success: boolean; data: FollowItem[] }> {
     return request<{ success: boolean; data: FollowItem[] }>(
       "/Follows/my-follows",
+    );
+  },
+
+  // ==========================================
+  // Researcher Watchlist (Keyword, Journal, ResearchTopic)
+  // ==========================================
+  async getWatchlist(): Promise<{ success: boolean; data: WatchlistItem[] }> {
+    return request<{ success: boolean; data: WatchlistItem[] }>(
+      "/researcher/watchlist",
+    );
+  },
+
+  async addToWatchlist(
+    targetId: number,
+    targetType: "Keyword" | "Journal" | "ResearchTopic",
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>(
+      "/researcher/watchlist",
+      {
+        method: "POST",
+        body: JSON.stringify({ targetId, targetType }),
+      },
+    );
+  },
+
+  async removeFromWatchlist(
+    targetType: "Keyword" | "Journal" | "ResearchTopic",
+    targetId: number,
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>(
+      `/researcher/watchlist/${targetType}/${targetId}`,
+      { method: "DELETE" },
+    );
+  },
+
+  // ==========================================
+  // Researcher Reports
+  // ==========================================
+  async getPublicationTrend(params: {
+    targetType: string;
+    target: string;
+    years?: number;
+  }): Promise<PublicationTrendReport> {
+    const searchParams = new URLSearchParams();
+    searchParams.append("targetType", params.targetType);
+    searchParams.append("target", params.target);
+    if (params.years) searchParams.append("years", params.years.toString());
+    return request<PublicationTrendReport>(
+      `/researcher/reports/publication-trend?${searchParams.toString()}`,
     );
   },
 
@@ -644,5 +724,17 @@ export const api = {
         items: { id: string; name: string; paperCount: number }[];
       };
     }>(`/papers/facets/topics?${searchParams.toString()}`);
+  },
+
+   async compareKeywords(left: string | number, right: string | number, years: number = 5): Promise<any> {
+    return request<any>(`/researcher/compare/keywords?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`, {
+      method: "GET",
+    });
+  },
+
+  async compareTopics(left: string | number, right: string | number, years: number = 5): Promise<any> {
+    return request<any>(`/researcher/compare/topics?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`, {
+      method: "GET",
+    });
   },
 };

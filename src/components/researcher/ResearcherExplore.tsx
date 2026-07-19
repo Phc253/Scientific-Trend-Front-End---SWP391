@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api, type Paper } from "../../services/api";
 
@@ -7,6 +7,24 @@ export const ResearcherExplore = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    fetchBookmarks();
+  }, []);
+
+  const fetchBookmarks = async () => {
+    try {
+      const res = await api.getBookmarks();
+      const items = res?.data || [];
+      const paperIds = items
+        .filter((item) => item.targetType?.toLowerCase() === "paper")
+        .map((item) => item.targetId);
+      setBookmarkedIds(new Set(paperIds));
+    } catch (err) {
+      console.error("Lỗi tải bookmarks:", err);
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +48,18 @@ export const ResearcherExplore = () => {
   const handleBookmark = async (paperId: number) => {
     try {
       const res = await api.toggleBookmark(paperId, "Paper");
-      alert(res.message || "Đã cập nhật thư viện!");
+      if (res.success) {
+        setBookmarkedIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(paperId)) {
+            next.delete(paperId);
+          } else {
+            next.add(paperId);
+          }
+          return next;
+        });
+        alert(res.message || "Đã cập nhật thư viện!");
+      }
     } catch (error) {
       alert("Lỗi khi lưu bài báo.");
     }
@@ -126,20 +155,32 @@ export const ResearcherExplore = () => {
                 </div>
                 <div className="flex gap-2">
                   <Link
-                    to={`/papers/${paper.paperId}`}
+                    to={`/researcher/paper/${paper.paperId}`}
                     className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100"
                   >
                     Đọc chi tiết
                   </Link>
-                  <button
-                    onClick={() => handleBookmark(paper.paperId)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-bold hover:bg-indigo-100"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      bookmark_add
-                    </span>
-                    Lưu
-                  </button>
+                  {bookmarkedIds.has(paper.paperId) ? (
+                    <button
+                      onClick={() => handleBookmark(paper.paperId)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-sm font-bold hover:bg-amber-100"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        bookmark_remove
+                      </span>
+                      Hủy lưu
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleBookmark(paper.paperId)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-bold hover:bg-indigo-100"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        bookmark_add
+                      </span>
+                      Lưu
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

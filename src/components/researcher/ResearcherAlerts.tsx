@@ -157,7 +157,7 @@ export const ResearcherAlerts = () => {
                     <div className="flex items-center gap-3 ml-auto">
                       {alert.paperId && (
                         <Link
-                          to={`/papers/${alert.paperId}`}
+                          to={`/researcher/paper/${alert.paperId}`}
                           className="text-blue-600 hover:text-blue-800 transition-colors"
                         >
                           Xem bài báo
