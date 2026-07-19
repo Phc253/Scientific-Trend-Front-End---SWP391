@@ -184,15 +184,44 @@ const ResearcherPublicationTrend: React.FC = () => {
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fadeIn">
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .print-area, .print-area * { visibility: visible; }
+          .print-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+          }
+          .no-print { display: none !important; }
+          table { page-break-inside: auto; }
+          tr { page-break-inside: avoid; }
+          @page { margin: 15mm 10mm; size: A4 portrait; }
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#002045] flex items-center gap-2 mb-2">
-          <span className="material-symbols-outlined text-indigo-600">bar_chart</span>
-          Báo cáo Xu hướng Xuất bản
-        </h1>
-        <p className="text-slate-500">
-          Phân tích xu hướng số bài báo theo năm cho từ khóa hoặc chủ đề cụ thể.
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[#002045] flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined text-indigo-600">bar_chart</span>
+            Báo cáo Xu hướng Xuất bản
+          </h1>
+          <p className="text-slate-500">
+            Phân tích xu hướng số bài báo theo năm cho từ khóa hoặc chủ đề cụ thể.
+          </p>
+        </div>
+        {report && (
+          <button
+            onClick={() => window.print()}
+            className="no-print flex items-center gap-2 px-4 py-2 bg-[#002045] text-white rounded-xl text-sm font-bold hover:bg-blue-900 transition-colors shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[18px]">print</span>
+            In báo cáo
+          </button>
+        )}
       </div>
 
       {/* Controls */}
@@ -322,7 +351,7 @@ const ResearcherPublicationTrend: React.FC = () => {
 
       {/* Report */}
       {report && !isLoading && (
-        <div className="space-y-6 animate-fadeIn">
+        <div className="space-y-6 animate-fadeIn print-area">
           {/* Title & generated info */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
             <div className="flex items-start justify-between">
