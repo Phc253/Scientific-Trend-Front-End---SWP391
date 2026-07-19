@@ -16,27 +16,33 @@ const ResearcherLayout: React.FC = () => {
     }
   }, []);
 
-  // Hàm xử lý khi người dùng thực sự bấm nút "Đăng xuất" màu đỏ
   const handleConfirmLogout = () => {
     setShowLogoutConfirm(false);
-    // Thực hiện logic xóa token/dữ liệu ở đây
     localStorage.removeItem("token");
     localStorage.removeItem("userRoles");
     localStorage.removeItem("actorType");
-    // logout(); // Gọi hàm logout context nếu có
-
-    // Điều hướng về trang Login
     navigate("/login");
   };
 
+  // Đã cập nhật: Bổ sung thêm "Thư viện nghiên cứu" vào danh sách điều hướng
   const navItems = [
     { path: "/researcher", icon: "dashboard", label: "Tổng quan" },
+    { path: "/researcher/explore", icon: "search", label: "Khám phá" },
     {
       path: "/researcher/analytics",
       icon: "insights",
       label: "Phân tích xu hướng",
     },
-    { path: "/researcher/network", icon: "hub", label: "Mạng lưới hợp tác" },
+    {
+      path: "/researcher/network",
+      icon: "hub",
+      label: "Mạng lưới học thuật",
+    },
+    {
+      path: "/researcher/library",
+      icon: "library_books",
+      label: "Thư viện nghiên cứu",
+    },
     {
       path: "/researcher/alerts",
       icon: "notifications_active",
@@ -53,6 +59,7 @@ const ResearcherLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-800">
+      {/* Sidebar */}
       <aside className="w-64 bg-[#1e1b4b] text-white flex flex-col shadow-xl z-10">
         <div className="p-6 flex items-center gap-3 border-b border-indigo-900/50 shrink-0">
           <span className="material-symbols-outlined text-3xl text-indigo-400">
@@ -92,6 +99,7 @@ const ResearcherLayout: React.FC = () => {
           })}
         </nav>
 
+        {/* User Profile & Logout */}
         <div className="p-4 border-t border-indigo-900/50 shrink-0 bg-[#16143a]">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold border border-indigo-400 shrink-0 shadow-sm">
@@ -108,7 +116,7 @@ const ResearcherLayout: React.FC = () => {
           </div>
 
           <button
-            onClick={() => setShowLogoutConfirm(true)} // MỞ MODAL XÁC NHẬN
+            onClick={() => setShowLogoutConfirm(true)}
             className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all font-bold w-full cursor-pointer group"
           >
             <span className="material-symbols-outlined transition-transform group-hover:-translate-x-1">
@@ -119,33 +127,30 @@ const ResearcherLayout: React.FC = () => {
         </div>
       </aside>
 
+      {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm shrink-0">
           <h2 className="text-lg font-semibold text-slate-700">
             {activeLabel}
           </h2>
 
-          {/* === GÓC BÊN PHẢI === (Nơi chúng ta sẽ đặt Quả chuông) */}
           <div className="flex items-center gap-5">
-            {/* 1. GẮN QUẢ CHUÔNG VÀO ĐÂY */}
+            {/* Quả chuông thông báo thông minh nhận diện routing động */}
             <NotificationBell basePath="/researcher" />
-            {/* Đường kẻ dọc phân cách cho đẹp (Tùy chọn) */}
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
           </div>
         </header>
 
+        {/* Viewport render nội dung con */}
         <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
           <Outlet />
         </div>
       </main>
-      {/* ========================================================= */}
-      {/* MODAL XÁC NHẬN ĐĂNG XUẤT                                  */}
-      {/* ========================================================= */}
+
+      {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-          {/* Vùng hộp thoại */}
           <div className="bg-white rounded-2xl p-6 sm:p-8 w-[90%] max-w-[400px] shadow-2xl animate-scaleIn">
-            {/* Tiêu đề & Icon */}
             <div className="flex items-center gap-3 mb-4">
               <span className="material-symbols-outlined text-rose-600 text-3xl font-bold">
                 logout
@@ -155,12 +160,10 @@ const ResearcherLayout: React.FC = () => {
               </h3>
             </div>
 
-            {/* Nội dung tin nhắn */}
             <p className="text-slate-500 font-medium mb-8">
               Bạn có chắc chắn muốn đăng xuất không?
             </p>
 
-            {/* Các nút hành động */}
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
@@ -178,7 +181,7 @@ const ResearcherLayout: React.FC = () => {
           </div>
         </div>
       )}
-    </div> // Thẻ đóng </div> cuối cùng của Component Layout
+    </div>
   );
 };
 

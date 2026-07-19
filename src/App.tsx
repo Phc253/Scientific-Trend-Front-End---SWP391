@@ -19,6 +19,8 @@ import ResearcherDashboard from "./components/researcher/ResearcherDashboard";
 import ResearcherAnalytics from "./components/researcher/ResearcherAnalytic";
 import ResearcherNetwork from "./components/researcher/ResearcherNetwork";
 import ResearcherAlerts from "./components/researcher/ResearcherAlerts";
+import ResearcherLibrary from "./components/researcher/ResearcherLibrary";
+import ResearcherExplore from "./components/researcher/ResearcherExplore";
 
 // --- Member ---
 import MemberLayout from "./components/shared/MemberLayout";
@@ -91,6 +93,8 @@ const App: React.FC = () => {
         <Route path="alerts" element={<ResearcherAlerts />} />
         <Route path="paper/:id" element={<PaperDetails />} />
         <Route path="notifications" element={<NotificationPage />} />
+        <Route path="library" element={<ResearcherLibrary />} />
+        <Route path="explore" element={<ResearcherExplore />} />
       </Route>
 
       {/* ==========================================

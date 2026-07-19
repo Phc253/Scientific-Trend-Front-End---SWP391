@@ -232,7 +232,9 @@ async function requestBlob(
 }
 
 export const api = {
+  // ==========================================
   // Authentication
+  // ==========================================
   async login(email: string, password: string): Promise<LoginResponse> {
     return request<LoginResponse>("/Account/login", {
       method: "POST",
@@ -279,7 +281,9 @@ export const api = {
     });
   },
 
+  // ==========================================
   // Papers Search & Detail
+  // ==========================================
   async searchPapers(params: {
     q?: string;
     keyword?: string;
@@ -378,10 +382,12 @@ export const api = {
     );
   },
 
-  // Bookmarks
+  // ==========================================
+  // Bookmarks (Library)
+  // ==========================================
   async toggleBookmark(
     targetId: number | string,
-    targetType: "Paper" | "Keyword",
+    targetType: "Paper" | "Keyword" | string = "Paper",
   ): Promise<{ success: boolean; isBookmarked: boolean; message: string }> {
     return request<{
       success: boolean;
@@ -393,33 +399,42 @@ export const api = {
     });
   },
 
-  async getMyBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
+  async getBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
     return request<{ success: boolean; data: BookmarkItem[] }>(
       "/Bookmarks/my-bookmarks",
     );
   },
 
-  // Follows
+  // ==========================================
+  // Follows (Network)
+  // ==========================================
   async toggleFollow(
     targetId: number | string,
-    targetType: "Author" | "Journal" | "ResearchTopic",
+    targetType: "Author" | "Journal" | "ResearchTopic" | "Topic" | string,
   ): Promise<{ success: boolean; isFollowed: boolean; message: string }> {
+    // Đảm bảo mapping đúng kiểu enum nếu BE chỉ nhận "ResearchTopic" thay vì "Topic"
+    const mappedType = targetType === "Topic" ? "ResearchTopic" : targetType;
     return request<{ success: boolean; isFollowed: boolean; message: string }>(
       "/Follows/toggle",
       {
         method: "POST",
-        body: JSON.stringify({ targetId: Number(targetId), targetType }),
+        body: JSON.stringify({
+          targetId: Number(targetId),
+          targetType: mappedType,
+        }),
       },
     );
   },
 
-  async getMyFollows(): Promise<{ success: boolean; data: FollowItem[] }> {
+  async getFollows(): Promise<{ success: boolean; data: FollowItem[] }> {
     return request<{ success: boolean; data: FollowItem[] }>(
       "/Follows/my-follows",
     );
   },
 
+  // ==========================================
   // Dashboard & Trends
+  // ==========================================
   async getDashboardSummary(): Promise<DashboardSummaryResponse> {
     return request<DashboardSummaryResponse>("/Dashboard/summary", {
       method: "GET",
@@ -438,26 +453,34 @@ export const api = {
     });
   },
 
-  async getBookmarks(): Promise<{ success: boolean; data: BookmarkItem[] }> {
-    return request<{ success: boolean; data: BookmarkItem[] }>(
-      "/Bookmarks/my-bookmarks",
-    );
-  },
-
-  async removeBookmark(
-    targetId: number,
-  ): Promise<{ success: boolean; message: string }> {
-    return request<{ success: boolean; message: string }>("/Bookmarks/toggle", {
-      method: "POST",
-      body: JSON.stringify({ targetId: targetId, targetType: "Paper" }),
-    });
-  },
-
   async getLecturerGroups(): Promise<{ success: boolean; data: any[] }> {
     return Promise.resolve({ success: true, data: [] });
   },
 
+  // ==========================================
+  // Notifications
+  // ==========================================
+  async getNotifications(page = 1, pageSize = 10) {
+    return request<any>(`/Notification?page=${page}&pageSize=${pageSize}`, {
+      method: "GET",
+    });
+  },
+
+  async markNotificationAsRead(id: string | number) {
+    return request<any>(`/Notification/${id}/read`, {
+      method: "PUT",
+    });
+  },
+
+  async markAllAsRead() {
+    return request<any>("/Notification/read-all", {
+      method: "PUT",
+    });
+  },
+
+  // ==========================================
   // Admin APIs
+  // ==========================================
   async getKeywordStats(): Promise<KeywordStatisticItem[]> {
     return request<KeywordStatisticItem[]>("/Report/keyword-stats");
   },
@@ -528,26 +551,29 @@ export const api = {
     const searchParams = new URLSearchParams();
     searchParams.append("page", params.page.toString());
     searchParams.append("pageSize", params.pageSize.toString());
-    
+
     if (params.search) {
       searchParams.append("search", params.search);
     }
-    
-    // Giữ lại logic xử lý year và keywordText từ nhánh main
     if (params.year !== undefined) {
       searchParams.append("year", params.year.toString());
     }
     if (params.keywordText) {
       searchParams.append("keywordText", params.keywordText);
     }
-    
+
     return request<PaperReportResponse>(
-      `/Report/papers?${searchParams.toString()}`
+      `/Report/papers?${searchParams.toString()}`,
     );
   },
 
+  // ==========================================
   // Export APIs
-  async exportPapersCsv(params?: { year?: number; keywordText?: string }): Promise<Blob> {
+  // ==========================================
+  async exportPapersCsv(params?: {
+    year?: number;
+    keywordText?: string;
+  }): Promise<Blob> {
     const searchParams = new URLSearchParams();
     if (params?.year !== undefined) {
       searchParams.append("year", params.year.toString());
@@ -556,10 +582,15 @@ export const api = {
       searchParams.append("keywordText", params.keywordText);
     }
     const queryString = searchParams.toString();
-    return requestBlob(`/Report/export/papers${queryString ? `?${queryString}` : ""}`);
+    return requestBlob(
+      `/Report/export/papers${queryString ? `?${queryString}` : ""}`,
+    );
   },
 
-  async exportPapersPdf(params?: { year?: number; keywordText?: string }): Promise<Blob> {
+  async exportPapersPdf(params?: {
+    year?: number;
+    keywordText?: string;
+  }): Promise<Blob> {
     const searchParams = new URLSearchParams();
     if (params?.year !== undefined) {
       searchParams.append("year", params.year.toString());
@@ -568,7 +599,9 @@ export const api = {
       searchParams.append("keywordText", params.keywordText);
     }
     const queryString = searchParams.toString();
-    return requestBlob(`/Report/export/papers-pdf${queryString ? `?${queryString}` : ""}`);
+    return requestBlob(
+      `/Report/export/papers-pdf${queryString ? `?${queryString}` : ""}`,
+    );
   },
 
   async exportKeywordStatsCsv(): Promise<Blob> {
@@ -611,26 +644,5 @@ export const api = {
         items: { id: string; name: string; paperCount: number }[];
       };
     }>(`/papers/facets/topics?${searchParams.toString()}`);
-  },
-
-  // 1. Lấy danh sách thông báo
-  getNotifications: async (page = 1, pageSize = 10) => {
-    return request<any>(`/Notification?page=${page}&pageSize=${pageSize}`, {
-      method: "GET",
-    });
-  },
-
-  // 2. Đánh dấu 1 thông báo là đã đọc
-  markNotificationAsRead: async (id: string | number) => {
-    return request<any>(`/Notification/${id}/read`, {
-      method: "PUT", // Hoặc POST nếu Backend của bạn yêu cầu POST
-    });
-  },
-
-  // 3. Đánh dấu tất cả là đã đọc (Tùy chọn)
-  markAllAsRead: async () => {
-    return request<any>("/Notification/read-all", {
-      method: "PUT", // Hoặc POST
-    });
   },
 };
