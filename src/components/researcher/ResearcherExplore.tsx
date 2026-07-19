@@ -126,7 +126,7 @@ export const ResearcherExplore = () => {
                 </div>
                 <div className="flex gap-2">
                   <Link
-                    to={`/papers/${paper.paperId}`}
+                    to={`/researcher/paper/${paper.paperId}`}
                     className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100"
                   >
                     Đọc chi tiết

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-// Hãy đảm bảo đường dẫn import api dưới đây đúng với cấu trúc dự án của bạn
 import { api } from "../../services/api";
 import type { Paper } from "../../services/api";
 
@@ -8,7 +7,7 @@ const PersonalizedFeed: React.FC = () => {
   const [recommendedPapers, setRecommendedPapers] = useState<Paper[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [reason, setReason] = useState<string>(
-    "Đang phân tích sở thích của bạn...",
+    "Đang phân tích dữ liệu hệ thống...",
   );
 
   // Nhận diện Role tự động để đổi màu Theme
@@ -18,21 +17,28 @@ const PersonalizedFeed: React.FC = () => {
     "";
   const isLecturer = role.includes("Lecturer");
   const isResearcher = role.includes("Researcher");
+
+  // Xử lý Guest (không có role) thì basePath là trang chủ public hoặc /explore
   const basePath = isLecturer
     ? "/lecturer"
     : isResearcher
       ? "/researcher"
-      : "/student";
+      : role.includes("Student")
+        ? "/student"
+        : "";
+
   const primaryColor = isLecturer
     ? "text-emerald-600"
     : isResearcher
       ? "text-purple-600"
       : "text-blue-600";
+
   const bgBadge = isLecturer
     ? "bg-emerald-100 text-emerald-700"
     : isResearcher
       ? "bg-purple-100 text-purple-700"
       : "bg-blue-100 text-blue-700";
+
   const hoverColor = isLecturer
     ? "group-hover:text-emerald-600"
     : isResearcher
@@ -46,26 +52,41 @@ const PersonalizedFeed: React.FC = () => {
   const fetchPersonalizedPapers = async () => {
     setIsLoading(true);
     try {
-      // Ép kiểu :any để tránh lỗi BookmarkItem[] của TypeScript
-      const bookmarksRes: any = api.getMyBookmarks
-        ? await api.getMyBookmarks()
-        : [];
-      const bookmarks =
-        bookmarksRes?.data?.items ||
-        bookmarksRes?.items ||
-        (Array.isArray(bookmarksRes) ? bookmarksRes : []);
-
+      const token = localStorage.getItem("token");
       let targetKeyword = "";
 
-      // Kiểm tra xem người dùng đã lưu từ khóa nào chưa
-      if (bookmarks.length > 0) {
-        targetKeyword = bookmarks[0].name || bookmarks[0].targetId;
-        setReason(`Dựa trên từ khóa #${targetKeyword} mà bạn đang theo dõi`);
-      } else {
+      // 1. Nếu có đăng nhập, tải thư viện Bookmark để xem người dùng lưu từ khóa nào không
+      if (token) {
+        try {
+          const bookmarksRes: any = await api.getBookmarks();
+          const bData = bookmarksRes?.data || bookmarksRes;
+          const bookmarks = Array.isArray(bData) ? bData : bData?.items || [];
+
+          // Lọc ra các bookmark là "Keyword"
+          const keywordBookmarks = bookmarks.filter(
+            (b: any) => b.targetType?.toLowerCase() === "keyword",
+          );
+
+          if (keywordBookmarks.length > 0) {
+            // Lấy text của từ khóa đầu tiên người dùng đã lưu
+            const firstKw = keywordBookmarks[0];
+            targetKeyword =
+              firstKw.keywordText || firstKw.title || firstKw.name || "";
+            if (targetKeyword) {
+              setReason(`Dựa trên từ khóa #${targetKeyword} bạn đang quan tâm`);
+            }
+          }
+        } catch (err) {
+          console.warn("Lỗi tải bookmark để cá nhân hóa:", err);
+        }
+      }
+
+      // Nếu không có từ khóa nào, hiển thị thông báo chung
+      if (!targetKeyword) {
         setReason("Gợi ý các bài báo khoa học nổi bật mới nhất");
       }
 
-      // Gọi API lấy bài báo và ép kiểu :any
+      // 2. Gọi API searchPapers để lấy bài báo gợi ý
       const papersRes: any = await api.searchPapers({
         q: targetKeyword || undefined,
         page: 1,
@@ -109,7 +130,7 @@ const PersonalizedFeed: React.FC = () => {
           <p className="text-sm text-slate-500 mt-1 font-medium">{reason}</p>
         </div>
         <Link
-          to={`${basePath}/explore`}
+          to={basePath ? `${basePath}/explore` : "/search"}
           className={`text-sm font-bold ${primaryColor} hover:underline`}
         >
           Xem thêm
@@ -118,8 +139,7 @@ const PersonalizedFeed: React.FC = () => {
 
       {recommendedPapers.length === 0 ? (
         <div className="text-center py-10 text-slate-500 text-sm border-2 border-dashed border-slate-200 rounded-xl">
-          Bạn chưa có dữ liệu cá nhân hóa. Hãy vào trang Khám phá để theo dõi
-          thêm các Từ khóa hoặc Tác giả nhé!
+          Hệ thống đang cập nhật dữ liệu. Hãy quay lại sau nhé!
         </div>
       ) : (
         <div className="space-y-4">
@@ -130,7 +150,11 @@ const PersonalizedFeed: React.FC = () => {
             >
               <div className="flex-1 min-w-0">
                 <Link
-                  to={`${basePath}/paper/${paper.paperId}`}
+                  to={
+                    basePath
+                      ? `${basePath}/paper/${paper.paperId}`
+                      : `/paper/${paper.paperId}`
+                  }
                   className={`text-base font-bold text-slate-800 ${hoverColor} transition-colors line-clamp-2`}
                 >
                   {paper.title}

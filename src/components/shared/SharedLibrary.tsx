@@ -30,23 +30,30 @@ const SharedLibrary: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchLibraryData();
+    // Chỉ gọi API nếu đã đăng nhập (có token)
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchLibraryData();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const fetchLibraryData = async () => {
     setLoading(true);
     try {
+      // SỬ DỤNG TÊN HÀM MỚI: getBookmarks() và getFollows()
       const [bookmarksRes, followsRes] = await Promise.all([
-        api.getMyBookmarks(),
-        api.getMyFollows(),
+        api.getBookmarks(),
+        api.getFollows(),
       ]);
 
-      if (bookmarksRes && bookmarksRes.success) {
-        setBookmarks(bookmarksRes.data || []);
-      }
-      if (followsRes && followsRes.success) {
-        setFollows(followsRes.data || []);
-      }
+      // Trích xuất dữ liệu an toàn (phòng trường hợp BE trả về object có chứa mảng items, hoặc trả về trực tiếp mảng)
+      const bData = (bookmarksRes as any)?.data || bookmarksRes;
+      const fData = (followsRes as any)?.data || followsRes;
+
+      setBookmarks(Array.isArray(bData) ? bData : bData?.items || []);
+      setFollows(Array.isArray(fData) ? fData : fData?.items || []);
     } catch (err) {
       console.error("Lỗi lấy dữ liệu thư viện:", err);
     } finally {
@@ -62,7 +69,11 @@ const SharedLibrary: React.FC = () => {
     if (window.confirm("Bạn có chắc muốn bỏ lưu mục này?")) {
       try {
         await api.toggleBookmark(id, type);
-        setBookmarks((prev) => prev.filter((item) => item.targetId !== id));
+        setBookmarks((prev) =>
+          prev.filter(
+            (item) => !(item.targetId === id && item.targetType === type),
+          ),
+        );
       } catch (err) {
         alert("Có lỗi xảy ra khi xóa!");
       }
@@ -77,7 +88,11 @@ const SharedLibrary: React.FC = () => {
     if (window.confirm("Bạn có chắc muốn bỏ theo dõi?")) {
       try {
         await api.toggleFollow(id, type);
-        setFollows((prev) => prev.filter((item) => item.targetId !== id));
+        setFollows((prev) =>
+          prev.filter(
+            (item) => !(item.targetId === id && item.targetType === type),
+          ),
+        );
       } catch (err) {
         alert("Có lỗi xảy ra khi bỏ theo dõi!");
       }

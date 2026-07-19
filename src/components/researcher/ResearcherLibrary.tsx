@@ -124,7 +124,7 @@ export const ResearcherLibrary = () => {
 
               <div className="flex items-center gap-3 mt-2 pt-4 border-t border-slate-50">
                 <Link
-                  to={`/papers/${paper.targetId}`}
+                  to={`/researcher/paper/${paper.targetId}`}
                   className="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
                 >
                   Đọc chi tiết
