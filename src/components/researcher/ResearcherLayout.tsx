@@ -34,10 +34,11 @@ const ResearcherLayout: React.FC = () => {
       label: "Phân tích xu hướng",
     },
     {
-      path: "/researcher/network",
-      icon: "hub",
-      label: "Mạng lưới học thuật",
+      path: "/researcher/compare",
+      icon: "compare_arrows",
+      label: "So sánh xu hướng",
     },
+
     {
       path: "/researcher/library",
       icon: "library_books",
@@ -47,6 +48,11 @@ const ResearcherLayout: React.FC = () => {
       path: "/researcher/alerts",
       icon: "notifications_active",
       label: "Cảnh báo bài báo",
+    },
+    {
+      path: "/researcher/reports/publication-trend",
+      icon: "bar_chart",
+      label: "Báo cáo xu hướng",
     },
   ];
 

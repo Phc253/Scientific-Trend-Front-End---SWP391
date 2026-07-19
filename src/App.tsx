@@ -17,10 +17,11 @@ import AdminLayout from "./components/admin/AdminLayout";
 import ResearcherLayout from "./components/researcher/ResearcherLayout";
 import ResearcherDashboard from "./components/researcher/ResearcherDashboard";
 import ResearcherAnalytics from "./components/researcher/ResearcherAnalytic";
-import ResearcherNetwork from "./components/researcher/ResearcherNetwork";
 import ResearcherAlerts from "./components/researcher/ResearcherAlerts";
 import ResearcherLibrary from "./components/researcher/ResearcherLibrary";
 import ResearcherExplore from "./components/researcher/ResearcherExplore";
+import ResearcherCompare from "./components/researcher/ResearcherCompare";
+import ResearcherPublicationTrend from "./components/researcher/ResearcherPublicationTrend";
 
 // --- Member ---
 import MemberLayout from "./components/shared/MemberLayout";
@@ -89,12 +90,13 @@ const App: React.FC = () => {
       <Route path="/researcher" element={<ResearcherLayout />}>
         <Route index element={<ResearcherDashboard />} />
         <Route path="analytics" element={<ResearcherAnalytics />} />
-        <Route path="network" element={<ResearcherNetwork />} />
+        <Route path="compare" element={<ResearcherCompare />} />
         <Route path="alerts" element={<ResearcherAlerts />} />
         <Route path="paper/:id" element={<PaperDetails />} />
         <Route path="notifications" element={<NotificationPage />} />
         <Route path="library" element={<ResearcherLibrary />} />
         <Route path="explore" element={<ResearcherExplore />} />
+        <Route path="reports/publication-trend" element={<ResearcherPublicationTrend />} />
       </Route>
 
       {/* ==========================================

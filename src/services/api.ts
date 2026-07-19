@@ -18,11 +18,10 @@ export interface NotificationItem {
 
 export interface TrendingItem {
   name: string;
+  paperCount: number;
   type: string;
-  trendScore: number;
-  growthRate: number;
-  recentPaperCount: number;
-  snapshotDate: string;
+  topicId: number | null;
+  keywordId: number | null;
 }
 
 export interface DashboardSummaryResponse {
@@ -79,6 +78,15 @@ export interface FollowItem {
   topicName?: string;
 }
 
+export interface WatchlistItem {
+  id: number;
+  targetId: number;
+  targetType: "Keyword" | "Journal" | "ResearchTopic";
+  name: string;
+  paperCount?: number;
+  createdAt?: string;
+}
+
 export interface PaperFacetItem {
   id: string;
   name: string;
@@ -88,6 +96,28 @@ export interface PaperFacetItem {
 export interface PaperFacetResponse {
   totalCount: number;
   items: PaperFacetItem[];
+}
+
+export interface YearlyMetric {
+  year: number;
+  paperCount: number;
+  citationCount: number;
+}
+
+export interface PublicationTrendData {
+  id: number;
+  name: string;
+  totalPaperCount: number;
+  totalCitationCount: number;
+  growthRate: number;
+  yearlyMetrics: YearlyMetric[];
+}
+
+export interface PublicationTrendReport {
+  reportType: string;
+  title: string;
+  generatedAt: string;
+  data: PublicationTrendData;
 }
 
 export interface UserProfile {
@@ -306,14 +336,14 @@ export const api = {
       searchParams.append("pageSize", params.pageSize.toString());
 
     const queryString = searchParams.toString();
-    const url = `/Papers${queryString ? `?${queryString}` : ""}`;
+    const url = `/papers${queryString ? `?${queryString}` : ""}`;
     return request<{ success: boolean; data: SearchResponse }>(url);
   },
 
   async getPaperDetails(
     id: number | string,
   ): Promise<{ success: boolean; data: Paper }> {
-    return request<{ success: boolean; data: Paper }>(`/Papers/${id}`);
+    return request<{ success: boolean; data: Paper }>(`/papers/${id}`);
   },
 
   async searchAuthors(name: string): Promise<{
@@ -336,7 +366,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/authors?${searchParams.toString()}`,
+      `/papers/facets/authors?${searchParams.toString()}`,
     );
   },
 
@@ -350,7 +380,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/keywords?${searchParams.toString()}`,
+      `/papers/facets/keywords?${searchParams.toString()}`,
     );
   },
 
@@ -364,7 +394,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/topics?${searchParams.toString()}`,
+      `/papers/facets/topics?${searchParams.toString()}`,
     );
   },
 
@@ -378,7 +408,7 @@ export const api = {
     searchParams.append("page", page.toString());
     searchParams.append("pageSize", pageSize.toString());
     return request<PaperFacetResponse>(
-      `/Papers/facets/journals?${searchParams.toString()}`,
+      `/papers/facets/journals?${searchParams.toString()}`,
     );
   },
 
@@ -433,6 +463,55 @@ export const api = {
   },
 
   // ==========================================
+  // Researcher Watchlist (Keyword, Journal, ResearchTopic)
+  // ==========================================
+  async getWatchlist(): Promise<{ success: boolean; data: WatchlistItem[] }> {
+    return request<{ success: boolean; data: WatchlistItem[] }>(
+      "/researcher/watchlist",
+    );
+  },
+
+  async addToWatchlist(
+    targetId: number,
+    targetType: "Keyword" | "Journal" | "ResearchTopic",
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>(
+      "/researcher/watchlist",
+      {
+        method: "POST",
+        body: JSON.stringify({ targetId, targetType }),
+      },
+    );
+  },
+
+  async removeFromWatchlist(
+    targetType: "Keyword" | "Journal" | "ResearchTopic",
+    targetId: number,
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>(
+      `/researcher/watchlist/${targetType}/${targetId}`,
+      { method: "DELETE" },
+    );
+  },
+
+  // ==========================================
+  // Researcher Reports
+  // ==========================================
+  async getPublicationTrend(params: {
+    targetType: string;
+    target: string;
+    years?: number;
+  }): Promise<PublicationTrendReport> {
+    const searchParams = new URLSearchParams();
+    searchParams.append("targetType", params.targetType);
+    searchParams.append("target", params.target);
+    if (params.years) searchParams.append("years", params.years.toString());
+    return request<PublicationTrendReport>(
+      `/researcher/reports/publication-trend?${searchParams.toString()}`,
+    );
+  },
+
+  // ==========================================
   // Dashboard & Trends
   // ==========================================
   async getDashboardSummary(): Promise<DashboardSummaryResponse> {
@@ -442,7 +521,7 @@ export const api = {
   },
 
   async getTrendingTopics(topN: number = 10): Promise<any[]> {
-    return request<any[]>(`/Trends/trending?topN=${topN}`, {
+    return request<any[]>(`/trends/trending?topN=${topN}`, {
       method: "GET",
     });
   },
@@ -461,20 +540,20 @@ export const api = {
   // Notifications
   // ==========================================
   async getNotifications(page = 1, pageSize = 10) {
-    return request<any>(`/notification?page=${page}&pageSize=${pageSize}`, {
+    return request<any>(`/Notification?page=${page}&pageSize=${pageSize}`, {
       method: "GET",
     });
   },
 
   async markNotificationAsRead(id: string | number) {
-    return request<any>(`/notification/${id}/read`, {
-      method: "PATCH", // Thay PUT thành PATCH theo Swagger
+    return request<any>(`/Notification/${id}/read`, {
+      method: "PUT",
     });
   },
 
   async markAllAsRead() {
-    return request<any>("/notification/read-all", {
-      method: "PATCH", // Thay PUT thành PATCH theo Swagger
+    return request<any>("/Notification/read-all", {
+      method: "PUT",
     });
   },
 
@@ -657,6 +736,18 @@ export const api = {
   async deleteNotification(id: string | number) {
     return request<any>(`/notification/${id}`, {
       method: "DELETE", // Thêm API xóa
+    });
+  },
+
+   async compareKeywords(left: string | number, right: string | number, years: number = 5): Promise<any> {
+    return request<any>(`/researcher/compare/keywords?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`, {
+      method: "GET",
+    });
+  },
+
+  async compareTopics(left: string | number, right: string | number, years: number = 5): Promise<any> {
+    return request<any>(`/researcher/compare/topics?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`, {
+      method: "GET",
     });
   },
 };

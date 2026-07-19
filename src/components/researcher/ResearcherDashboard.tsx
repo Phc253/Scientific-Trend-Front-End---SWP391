@@ -223,21 +223,12 @@ export const ResearcherDashboard = () => {
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs font-bold text-indigo-600">
-                            {item.trendScore.toLocaleString()}
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold text-indigo-600 flex items-center justify-end gap-1">
+                            <span className="material-symbols-outlined text-[14px]">article</span>
+                            {(item.paperCount || 0).toLocaleString()}
                           </p>
-                          <p
-                            className={`text-[10px] font-medium flex items-center justify-end gap-0.5
-                            ${(item.growthRate || 0) >= 0 ? "text-emerald-500" : "text-rose-500"}`}
-                          >
-                            <span className="material-symbols-outlined text-[12px]">
-                              {(item.growthRate || 0) >= 0
-                                ? "trending_up"
-                                : "trending_down"}
-                            </span>
-                            {item.growthRate || 0}%
-                          </p>
+                          <p className="text-[10px] text-slate-400 font-medium">bài báo</p>
                         </div>
                       </div>
                     ))}
