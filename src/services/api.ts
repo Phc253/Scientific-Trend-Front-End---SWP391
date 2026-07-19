@@ -461,20 +461,20 @@ export const api = {
   // Notifications
   // ==========================================
   async getNotifications(page = 1, pageSize = 10) {
-    return request<any>(`/Notification?page=${page}&pageSize=${pageSize}`, {
+    return request<any>(`/notification?page=${page}&pageSize=${pageSize}`, {
       method: "GET",
     });
   },
 
   async markNotificationAsRead(id: string | number) {
-    return request<any>(`/Notification/${id}/read`, {
-      method: "PUT",
+    return request<any>(`/notification/${id}/read`, {
+      method: "PATCH", // Thay PUT thành PATCH theo Swagger
     });
   },
 
   async markAllAsRead() {
-    return request<any>("/Notification/read-all", {
-      method: "PUT",
+    return request<any>("/notification/read-all", {
+      method: "PATCH", // Thay PUT thành PATCH theo Swagger
     });
   },
 
@@ -644,5 +644,19 @@ export const api = {
         items: { id: string; name: string; paperCount: number }[];
       };
     }>(`/papers/facets/topics?${searchParams.toString()}`);
+  },
+
+  async getUnreadCount(): Promise<number> {
+    const res = await request<any>("/notification/unread-count", {
+      method: "GET",
+    });
+    // Trích xuất số lượng tùy thuộc vào cấu trúc response của BE (ví dụ: res.data, res.count, hoặc chính nó)
+    return typeof res === "number" ? res : res?.data || res?.count || 0;
+  },
+
+  async deleteNotification(id: string | number) {
+    return request<any>(`/notification/${id}`, {
+      method: "DELETE", // Thêm API xóa
+    });
   },
 };
