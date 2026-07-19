@@ -726,6 +726,20 @@ export const api = {
     }>(`/papers/facets/topics?${searchParams.toString()}`);
   },
 
+  async getUnreadCount(): Promise<number> {
+    const res = await request<any>("/notification/unread-count", {
+      method: "GET",
+    });
+    // Trích xuất số lượng tùy thuộc vào cấu trúc response của BE (ví dụ: res.data, res.count, hoặc chính nó)
+    return typeof res === "number" ? res : res?.data || res?.count || 0;
+  },
+
+  async deleteNotification(id: string | number) {
+    return request<any>(`/notification/${id}`, {
+      method: "DELETE", // Thêm API xóa
+    });
+  },
+
    async compareKeywords(left: string | number, right: string | number, years: number = 5): Promise<any> {
     return request<any>(`/researcher/compare/keywords?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`, {
       method: "GET",

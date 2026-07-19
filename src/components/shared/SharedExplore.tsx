@@ -80,37 +80,46 @@ const SharedExplore: React.FC = () => {
 
   // 2. FETCH BOOKMARKS & FOLLOWS MỚI NHẤT
   const fetchBookmarksAndFollows = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return; // Nếu là Guest (chưa đăng nhập) thì không gọi API này
+
     try {
+      // ĐỔI TÊN HÀM: getBookmarks và getFollows
       const [bookmarksRes, followsRes] = await Promise.all([
-        api.getMyBookmarks(),
-        api.getMyFollows(),
+        api.getBookmarks(),
+        api.getFollows(),
       ]);
 
-      if (bookmarksRes.success && bookmarksRes.data) {
-        const pIds = bookmarksRes.data
-          .filter((b) => b.targetType.toLowerCase() === "paper")
-          .map((b) => b.targetId);
-        const kIds = bookmarksRes.data
-          .filter((b) => b.targetType.toLowerCase() === "keyword")
-          .map((b) => b.targetId);
-        setBookmarkedPaperIds(new Set(pIds));
-        setBookmarkedKeywordIds(new Set(kIds));
-      }
+      // Trích xuất mảng an toàn
+      const bData = (bookmarksRes as any)?.data || bookmarksRes;
+      const bItems = Array.isArray(bData) ? bData : bData?.items || [];
 
-      if (followsRes.success && followsRes.data) {
-        const aIds = followsRes.data
-          .filter((f) => f.targetType.toLowerCase() === "author")
-          .map((f) => f.targetId);
-        const jIds = followsRes.data
-          .filter((f) => f.targetType.toLowerCase() === "journal")
-          .map((f) => f.targetId);
-        const tIds = followsRes.data
-          .filter((f) => f.targetType.toLowerCase() === "researchtopic")
-          .map((f) => f.targetId);
-        setFollowedAuthorIds(new Set(aIds));
-        setFollowedJournalIds(new Set(jIds));
-        setFollowedTopicIds(new Set(tIds));
-      }
+      const pIds = bItems
+        .filter((b: any) => b.targetType.toLowerCase() === "paper")
+        .map((b: any) => b.targetId);
+      const kIds = bItems
+        .filter((b: any) => b.targetType.toLowerCase() === "keyword")
+        .map((b: any) => b.targetId);
+
+      setBookmarkedPaperIds(new Set(pIds));
+      setBookmarkedKeywordIds(new Set(kIds));
+
+      const fData = (followsRes as any)?.data || followsRes;
+      const fItems = Array.isArray(fData) ? fData : fData?.items || [];
+
+      const aIds = fItems
+        .filter((f: any) => f.targetType.toLowerCase() === "author")
+        .map((f: any) => f.targetId);
+      const jIds = fItems
+        .filter((f: any) => f.targetType.toLowerCase() === "journal")
+        .map((f: any) => f.targetId);
+      const tIds = fItems
+        .filter((f: any) => f.targetType.toLowerCase() === "researchtopic")
+        .map((f: any) => f.targetId);
+
+      setFollowedAuthorIds(new Set(aIds));
+      setFollowedJournalIds(new Set(jIds));
+      setFollowedTopicIds(new Set(tIds));
     } catch (err) {
       console.error("Lỗi đồng bộ Bookmarks/Follows:", err);
     }
@@ -141,7 +150,7 @@ const SharedExplore: React.FC = () => {
 
     try {
       if (currentTab === "papers") {
-        const response = await api.searchPapers({
+        const response: any = await api.searchPapers({
           q: query,
           author: paperAuthor.trim() || undefined,
           journal: paperJournal.trim() || undefined,
@@ -150,13 +159,10 @@ const SharedExplore: React.FC = () => {
           pageSize,
         });
 
-        if (response.success && response.data) {
-          setPapers(response.data.items || []);
-          setTotalCount(response.data.totalCount || 0);
-        } else {
-          setPapers([]);
-          setTotalCount(0);
-        }
+        // Xử lý an toàn tránh lỗi crash nếu mất wrapper
+        const actualData = response?.data || response;
+        setPapers(actualData?.items || []);
+        setTotalCount(actualData?.totalCount || 0);
       } else {
         let response: any;
         if (currentTab === "authors")
@@ -168,10 +174,7 @@ const SharedExplore: React.FC = () => {
         else
           response = await api.getKeywordFacets(query, currentPage, pageSize);
 
-        // --- SỬA TẠI ĐÂY ---
-        // Backend bọc dữ liệu trong thuộc tính 'data' (ServiceResult)
-        const actualData = response?.data ? response.data : response;
-
+        const actualData = response?.data || response;
         setFacetItems(actualData?.items || []);
         setTotalCount(actualData?.totalCount || 0);
       }
@@ -211,7 +214,6 @@ const SharedExplore: React.FC = () => {
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Hàm chuyển trang an toàn, tránh lỗi ký tự lạ
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
@@ -220,30 +222,31 @@ const SharedExplore: React.FC = () => {
 
   // 5. CÁC HÀM TOGGLE BOOKMARK & FOLLOW
   const togglePaperBookmark = async (id: number) => {
+    if (!localStorage.getItem("token"))
+      return alert("Vui lòng đăng nhập để sử dụng tính năng này!");
     try {
-      const res = await api.toggleBookmark(id, "Paper");
-      if (res.success) {
-        setBookmarkedPaperIds((prev) => {
-          const next = new Set(prev);
-          res.isBookmarked ? next.add(id) : next.delete(id);
-          return next;
-        });
-      }
+      await api.toggleBookmark(id, "Paper");
+      setBookmarkedPaperIds((prev) => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
     } catch (err) {
       console.error(err);
+      alert("Lỗi thao tác, vui lòng thử lại!");
     }
   };
 
   const toggleKeywordBookmark = async (id: number) => {
+    if (!localStorage.getItem("token"))
+      return alert("Vui lòng đăng nhập để sử dụng tính năng này!");
     try {
-      const res = await api.toggleBookmark(id, "Keyword");
-      if (res.success) {
-        setBookmarkedKeywordIds((prev) => {
-          const next = new Set(prev);
-          res.isBookmarked ? next.add(id) : next.delete(id);
-          return next;
-        });
-      }
+      await api.toggleBookmark(id, "Keyword");
+      setBookmarkedKeywordIds((prev) => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
     } catch (err) {
       console.error(err);
     }
@@ -254,15 +257,15 @@ const SharedExplore: React.FC = () => {
     type: "Author" | "Journal" | "ResearchTopic",
     setIds: React.Dispatch<React.SetStateAction<Set<number>>>,
   ) => {
+    if (!localStorage.getItem("token"))
+      return alert("Vui lòng đăng nhập để sử dụng tính năng này!");
     try {
-      const res = await api.toggleFollow(id, type);
-      if (res.success) {
-        setIds((prev) => {
-          const next = new Set(prev);
-          res.isFollowed ? next.add(id) : next.delete(id);
-          return next;
-        });
-      }
+      await api.toggleFollow(id, type);
+      setIds((prev) => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
     } catch (err) {
       console.error(err);
     }
@@ -553,6 +556,7 @@ const SharedExplore: React.FC = () => {
                 let actionText = "Theo dõi";
                 let handleAction = () => {};
 
+                // 1. ĐÂY LÀ ĐOẠN ĐỌC CÁC BIẾN FOLLOW (Vừa bị thiếu khiến TS báo lỗi):
                 if (activeTab === "authors") {
                   isSubscribed = followedAuthorIds.has(targetId);
                   handleAction = () =>
@@ -585,23 +589,24 @@ const SharedExplore: React.FC = () => {
                     className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex justify-between items-center gap-4"
                   >
                     <div className="min-w-0 flex-1">
+                      {/* 2. ĐÂY LÀ ĐOẠN HIỂN THỊ LINK ĐÃ ĐƯỢC FIX LỖI ĐIỀU HƯỚNG: */}
                       {activeTab === "journals" ? (
                         <Link
-                          to={`/journal/${encodeURIComponent(item.name)}`}
+                          to={`${theme.basePath}/journal/${encodeURIComponent(item.name)}`}
                           className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors line-clamp-2 leading-snug"
                         >
                           {item.name}
                         </Link>
-                      ) : activeTab === "topics" ? ( // 👈 THÊM ĐIỀU KIỆN CHO TAB CHỦ ĐỀ
+                      ) : activeTab === "topics" ? (
                         <Link
-                          to={`/topic/${encodeURIComponent(item.name)}`}
+                          to={`${theme.basePath}/topic/${encodeURIComponent(item.name)}`}
                           className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors line-clamp-2 leading-snug"
                         >
                           {item.name}
                         </Link>
-                      ) : activeTab === "authors" ? ( // 👇 BỔ SUNG LINK CHO TÁC GIẢ TẠI ĐÂY
+                      ) : activeTab === "authors" ? (
                         <Link
-                          to={`/author/${encodeURIComponent(item.name)}`}
+                          to={`${theme.basePath}/author/${encodeURIComponent(item.name)}`}
                           className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors line-clamp-2 leading-snug"
                         >
                           {item.name}
@@ -611,6 +616,7 @@ const SharedExplore: React.FC = () => {
                           {item.name}
                         </p>
                       )}
+
                       <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
                         <span className="material-symbols-outlined text-[14px]">
                           article
@@ -618,6 +624,7 @@ const SharedExplore: React.FC = () => {
                         {item.paperCount} bài báo liên quan
                       </p>
                     </div>
+
                     <button
                       onClick={handleAction}
                       className={`text-xs font-bold py-2 px-3.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer border ${

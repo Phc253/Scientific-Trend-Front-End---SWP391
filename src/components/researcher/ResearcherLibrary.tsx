@@ -197,16 +197,17 @@ export const ResearcherLibrary = () => {
             <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">search_off</span>
             <h3 className="text-xl font-bold text-slate-700 mb-2">Thư viện trống</h3>
             <p className="text-slate-500 max-w-md mb-6">
-              Chưa có bài báo nào được lưu. Hãy khám phá và lưu các bài báo phù hợp.
+              Không gian nghiên cứu của bạn chưa có tài liệu nào. Hãy sử dụng
+              thanh tìm kiếm để thu thập các bài báo khoa học.
             </p>
-            <Link to="/researcher/explore" className="px-6 py-2 bg-[#002045] text-white rounded-lg font-medium hover:bg-blue-900 transition-colors">
-              Khám phá bài báo
+            <Link to="/search" className="px-6 py-2 bg-[#002045] text-white rounded-lg font-medium hover:bg-blue-900 transition-colors">
+              Khám phá bài báo mới
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {bookmarks.map((paper) => (
-              <div key={paper.bookmarkId} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all">
+              <div key={paper.bookmarkId} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all relative group">
                 <h3 className="text-lg font-bold text-[#002045] pr-10 mb-2 leading-tight">
                   {paper.title || "Tài liệu chưa có tiêu đề"}
                 </h3>
@@ -234,10 +235,13 @@ export const ResearcherLibrary = () => {
                   </p>
                 )}
                 <div className="flex items-center gap-3 mt-2 pt-4 border-t border-slate-50">
-                  <Link to={`/researcher/paper/${paper.targetId}`} className="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                  <Link to={`/papers/${paper.targetId}`} className="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                     Đọc chi tiết
                   </Link>
-                  <button onClick={() => handleRemoveBookmark(paper.targetId)} className="px-4 py-1.5 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors ml-auto flex items-center gap-1">
+                  <button
+                    onClick={() => handleRemoveBookmark(paper.targetId)}
+                    className="px-4 py-1.5 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors ml-auto flex items-center gap-1"
+                  >
                     <span className="material-symbols-outlined text-sm">delete</span>
                     Bỏ lưu
                   </button>
@@ -378,7 +382,11 @@ export const ResearcherLibrary = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleRemoveWatchlist(item)} className="shrink-0 w-8 h-8 rounded-full bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors border border-slate-200 hover:border-red-200" title="Bỏ theo dõi">
+                  <button
+                    onClick={() => handleRemoveWatchlist(item)}
+                    className="shrink-0 w-8 h-8 rounded-full bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors border border-slate-200 hover:border-red-200"
+                    title="Bỏ theo dõi"
+                  >
                     <span className="material-symbols-outlined text-[18px]">close</span>
                   </button>
                 </div>

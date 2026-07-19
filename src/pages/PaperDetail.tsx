@@ -15,16 +15,26 @@ const PaperDetail: React.FC = () => {
 
   // Trạng thái yêu thích & theo dõi
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [followedAuthorIds, setFollowedAuthorIds] = useState<Set<number>>(new Set());
-  const [followedJournalIds, setFollowedJournalIds] = useState<Set<number>>(new Set());
-  const [bookmarkedKeywordIds, setBookmarkedKeywordIds] = useState<Set<number>>(new Set());
+  const [followedAuthorIds, setFollowedAuthorIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [followedJournalIds, setFollowedJournalIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [bookmarkedKeywordIds, setBookmarkedKeywordIds] = useState<Set<number>>(
+    new Set(),
+  );
 
   // Mảng bản đồ phân giải tên sang IDs trong CSDL
   const [authorIdsMap, setAuthorIdsMap] = useState<Record<string, number>>({});
   const [journalId, setJournalId] = useState<number | null>(null);
-  const [keywordIdsMap, setKeywordIdsMap] = useState<Record<string, number>>({});
+  const [keywordIdsMap, setKeywordIdsMap] = useState<Record<string, number>>(
+    {},
+  );
 
-  const [isActionLoading, setIsActionLoading] = useState<Record<string, boolean>>({});
+  const [isActionLoading, setIsActionLoading] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     const fetchPaperAndUserData = async () => {
@@ -34,29 +44,40 @@ const PaperDetail: React.FC = () => {
 
       try {
         // 1. Tải thông tin chi tiết bài báo
-        const response = await api.getPaperDetails(id);
-        if (response.success && response.data) {
-          const paperData = response.data;
+        const response: any = await api.getPaperDetails(id);
+        const paperData = response?.data || response; // Xử lý an toàn dữ liệu trả về
+
+        if (paperData && (paperData.paperId || paperData.id)) {
           setPaper(paperData);
 
           // 2. Phân giải IDs tác giả trong hệ thống để thực hiện follow
           const nameToIdMap: Record<string, number> = {};
           if (paperData.authors && paperData.authors.length > 0) {
             await Promise.all(
-              paperData.authors.map(async (authorName) => {
+              paperData.authors.map(async (authorName: string) => {
                 try {
-                  const authorRes = await api.searchAuthors(authorName);
-                  if (authorRes.success && authorRes.data && authorRes.data.length > 0) {
+                  const authorRes: any = await api.searchAuthors(authorName);
+                  const aData = authorRes?.data || authorRes;
+                  const aItems = Array.isArray(aData)
+                    ? aData
+                    : aData?.items || [];
+
+                  if (aItems.length > 0) {
                     const matched =
-                      authorRes.data.find(
-                        (a) => a.authorName.toLowerCase() === authorName.toLowerCase()
-                      ) || authorRes.data[0];
-                    nameToIdMap[authorName] = matched.authorId;
+                      aItems.find(
+                        (a: any) =>
+                          a.authorName?.toLowerCase() ===
+                          authorName.toLowerCase(),
+                      ) || aItems[0];
+                    nameToIdMap[authorName] = matched.authorId || matched.id;
                   }
                 } catch (err) {
-                  console.warn(`Không phân giải được ID cho tác giả: ${authorName}`, err);
+                  console.warn(
+                    `Không phân giải được ID cho tác giả: ${authorName}`,
+                    err,
+                  );
                 }
-              })
+              }),
             );
             setAuthorIdsMap(nameToIdMap);
           }
@@ -64,16 +85,25 @@ const PaperDetail: React.FC = () => {
           // 3. Phân giải ID của Journal trong hệ thống
           if (paperData.journal) {
             try {
-              const journalRes = await api.getJournalFacets(paperData.journal);
-              if (journalRes.items && journalRes.items.length > 0) {
+              const journalRes: any = await api.getJournalFacets(
+                paperData.journal,
+              );
+              const jItems =
+                journalRes?.items || journalRes?.data || journalRes || [];
+              if (jItems.length > 0) {
                 const matchedJournal =
-                  journalRes.items.find(
-                    (j) => j.name.toLowerCase() === paperData.journal?.toLowerCase()
-                  ) || journalRes.items[0];
+                  jItems.find(
+                    (j: any) =>
+                      j.name?.toLowerCase() ===
+                      paperData.journal?.toLowerCase(),
+                  ) || jItems[0];
                 setJournalId(Number(matchedJournal.id));
               }
             } catch (err) {
-              console.warn(`Không phân giải được ID cho tạp chí: ${paperData.journal}`, err);
+              console.warn(
+                `Không phân giải được ID cho tạp chí: ${paperData.journal}`,
+                err,
+              );
             }
           }
 
@@ -81,53 +111,62 @@ const PaperDetail: React.FC = () => {
           const kwToIdMap: Record<string, number> = {};
           if (paperData.keywords && paperData.keywords.length > 0) {
             await Promise.all(
-              paperData.keywords.map(async (kwText) => {
+              paperData.keywords.map(async (kwText: string) => {
                 try {
-                  const kwRes = await api.getKeywordFacets(kwText);
-                  if (kwRes.items && kwRes.items.length > 0) {
+                  const kwRes: any = await api.getKeywordFacets(kwText);
+                  const kItems = kwRes?.items || kwRes?.data || kwRes || [];
+                  if (kItems.length > 0) {
                     const matchedKw =
-                      kwRes.items.find((k) => k.name.toLowerCase() === kwText.toLowerCase()) ||
-                      kwRes.items[0];
+                      kItems.find(
+                        (k: any) =>
+                          k.name?.toLowerCase() === kwText.toLowerCase(),
+                      ) || kItems[0];
                     kwToIdMap[kwText] = Number(matchedKw.id);
                   }
                 } catch (err) {
-                  console.warn(`Không phân giải được ID cho từ khóa: ${kwText}`, err);
+                  console.warn(
+                    `Không phân giải được ID cho từ khóa: ${kwText}`,
+                    err,
+                  );
                 }
-              })
+              }),
             );
             setKeywordIdsMap(kwToIdMap);
           }
 
           // 5. Kiểm tra trạng thái tương tác của người dùng hiện tại
           if (isAuthenticated) {
-            // Tải danh sách bookmarks
-            const bookmarkRes = await api.getMyBookmarks();
-            if (bookmarkRes.success && bookmarkRes.data) {
-              const bookmarked = bookmarkRes.data.some(
-                (b) =>
-                  b.targetType.toLowerCase() === "paper" && b.targetId.toString() === id.toString()
-              );
-              setIsBookmarked(bookmarked);
+            // Tải danh sách bookmarks (SỬ DỤNG HÀM MỚI)
+            const bookmarkRes: any = await api.getBookmarks();
+            const bData = bookmarkRes?.data || bookmarkRes;
+            const bItems = Array.isArray(bData) ? bData : bData?.items || [];
 
-              const kwIds = bookmarkRes.data
-                .filter((b) => b.targetType.toLowerCase() === "keyword")
-                .map((b) => b.targetId);
-              setBookmarkedKeywordIds(new Set(kwIds));
-            }
+            const bookmarked = bItems.some(
+              (b: any) =>
+                b.targetType.toLowerCase() === "paper" &&
+                b.targetId.toString() === id.toString(),
+            );
+            setIsBookmarked(bookmarked);
 
-            // Tải danh sách follows
-            const followRes = await api.getMyFollows();
-            if (followRes.success && followRes.data) {
-              const followedIds = followRes.data
-                .filter((f) => f.targetType.toLowerCase() === "author")
-                .map((f) => f.targetId);
-              setFollowedAuthorIds(new Set(followedIds));
+            const kwIds = bItems
+              .filter((b: any) => b.targetType.toLowerCase() === "keyword")
+              .map((b: any) => b.targetId);
+            setBookmarkedKeywordIds(new Set(kwIds));
 
-              const followedJournals = followRes.data
-                .filter((f) => f.targetType.toLowerCase() === "journal")
-                .map((f) => f.targetId);
-              setFollowedJournalIds(new Set(followedJournals));
-            }
+            // Tải danh sách follows (SỬ DỤNG HÀM MỚI)
+            const followRes: any = await api.getFollows();
+            const fData = followRes?.data || followRes;
+            const fItems = Array.isArray(fData) ? fData : fData?.items || [];
+
+            const followedAuthors = fItems
+              .filter((f: any) => f.targetType.toLowerCase() === "author")
+              .map((f: any) => f.targetId);
+            setFollowedAuthorIds(new Set(followedAuthors));
+
+            const followedJournals = fItems
+              .filter((f: any) => f.targetType.toLowerCase() === "journal")
+              .map((f: any) => f.targetId);
+            setFollowedJournalIds(new Set(followedJournals));
           }
         } else {
           setError("Không tìm thấy thông tin chi tiết bài báo.");
@@ -151,12 +190,12 @@ const PaperDetail: React.FC = () => {
 
     setIsActionLoading((prev) => ({ ...prev, bookmark: true }));
     try {
-      const result = await api.toggleBookmark(paper.paperId, "Paper");
-      if (result.success) {
-        setIsBookmarked(result.isBookmarked);
-      }
+      await api.toggleBookmark(paper.paperId, "Paper");
+      // Đảo ngược trạng thái hiện tại thay vì chờ BE trả về
+      setIsBookmarked(!isBookmarked);
     } catch (err) {
       console.error("Lỗi khi toggle bookmark:", err);
+      alert("Lỗi khi thực hiện thao tác. Vui lòng thử lại!");
     } finally {
       setIsActionLoading((prev) => ({ ...prev, bookmark: false }));
     }
@@ -170,24 +209,24 @@ const PaperDetail: React.FC = () => {
 
     const authorId = authorIdsMap[authorName];
     if (!authorId) {
-      alert(`Không thể xác định thông tin tác giả "${authorName}" trên hệ thống DB để theo dõi.`);
+      alert(
+        `Không thể xác định thông tin tác giả "${authorName}" trên hệ thống DB để theo dõi.`,
+      );
       return;
     }
 
     setIsActionLoading((prev) => ({ ...prev, [authorName]: true }));
     try {
-      const result = await api.toggleFollow(authorId, "Author");
-      if (result.success) {
-        setFollowedAuthorIds((prev) => {
-          const next = new Set(prev);
-          if (result.isFollowed) {
-            next.add(authorId);
-          } else {
-            next.delete(authorId);
-          }
-          return next;
-        });
-      }
+      await api.toggleFollow(authorId, "Author");
+      setFollowedAuthorIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(authorId)) {
+          next.delete(authorId); // Hủy theo dõi
+        } else {
+          next.add(authorId); // Theo dõi
+        }
+        return next;
+      });
     } catch (err) {
       console.error("Lỗi khi toggle follow author:", err);
     } finally {
@@ -207,18 +246,16 @@ const PaperDetail: React.FC = () => {
 
     setIsActionLoading((prev) => ({ ...prev, journal: true }));
     try {
-      const result = await api.toggleFollow(journalId, "Journal");
-      if (result.success) {
-        setFollowedJournalIds((prev) => {
-          const next = new Set(prev);
-          if (result.isFollowed) {
-            next.add(journalId);
-          } else {
-            next.delete(journalId);
-          }
-          return next;
-        });
-      }
+      await api.toggleFollow(journalId, "Journal");
+      setFollowedJournalIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(journalId)) {
+          next.delete(journalId);
+        } else {
+          next.add(journalId);
+        }
+        return next;
+      });
     } catch (err) {
       console.error("Lỗi khi toggle follow journal:", err);
     } finally {
@@ -240,18 +277,16 @@ const PaperDetail: React.FC = () => {
 
     setIsActionLoading((prev) => ({ ...prev, [kwText]: true }));
     try {
-      const result = await api.toggleBookmark(kwId, "Keyword");
-      if (result.success) {
-        setBookmarkedKeywordIds((prev) => {
-          const next = new Set(prev);
-          if (result.isBookmarked) {
-            next.add(kwId);
-          } else {
-            next.delete(kwId);
-          }
-          return next;
-        });
-      }
+      await api.toggleBookmark(kwId, "Keyword");
+      setBookmarkedKeywordIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(kwId)) {
+          next.delete(kwId);
+        } else {
+          next.add(kwId);
+        }
+        return next;
+      });
     } catch (err) {
       console.error("Lỗi khi toggle bookmark keyword:", err);
     } finally {
@@ -263,7 +298,9 @@ const PaperDetail: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-40">
         <div className="w-12 h-12 border-4 border-[#13696a] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm text-[#74777f] mt-4">Đang tải thông tin chi tiết bài báo...</p>
+        <p className="text-sm text-[#74777f] mt-4">
+          Đang tải thông tin chi tiết bài báo...
+        </p>
       </div>
     );
   }
@@ -271,9 +308,13 @@ const PaperDetail: React.FC = () => {
   if (error || !paper) {
     return (
       <div className="max-w-3xl mx-auto py-12 text-center space-y-4">
-        <span className="material-symbols-outlined text-5xl text-red-500">error</span>
+        <span className="material-symbols-outlined text-5xl text-red-500">
+          error
+        </span>
         <h3 className="text-xl font-bold text-[#002045]">Đã xảy ra lỗi</h3>
-        <p className="text-sm text-[#74777f]">{error || "Bài báo không tồn tại."}</p>
+        <p className="text-sm text-[#74777f]">
+          {error || "Bài báo không tồn tại."}
+        </p>
         <Link
           to="/search"
           className="inline-flex items-center gap-2 text-[#13696a] font-bold hover:underline"
@@ -285,18 +326,20 @@ const PaperDetail: React.FC = () => {
     );
   }
 
-  const isJournalFollowed = journalId ? followedJournalIds.has(journalId) : false;
+  const isJournalFollowed = journalId
+    ? followedJournalIds.has(journalId)
+    : false;
 
   return (
     <div className="space-y-6 animate-fadeIn max-w-6xl mx-auto">
       {/* Nút quay lại */}
-      <Link
-        to="/search"
+      <button
+        onClick={() => navigate(-1)} // Sử dụng navigate(-1) để quay lại trang trước đó hợp lý hơn
         className="inline-flex items-center gap-2 text-sm text-[#43474e] hover:text-[#13696a] transition-colors font-medium mb-2"
       >
         <span className="material-symbols-outlined text-sm">arrow_back</span>
-        Quay lại kết quả tìm kiếm
-      </Link>
+        Quay lại
+      </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cột chính: Nội dung bài viết */}
@@ -318,7 +361,9 @@ const PaperDetail: React.FC = () => {
                 </span>
               )}
               <span className="flex items-center gap-1.5 font-medium">
-                <span className="material-symbols-outlined text-base text-[#13696a]">grade</span>
+                <span className="material-symbols-outlined text-base text-[#13696a]">
+                  grade
+                </span>
                 Số lượt trích dẫn: <strong>{paper.citationCount ?? 0}</strong>
               </span>
             </div>
@@ -329,7 +374,8 @@ const PaperDetail: React.FC = () => {
                 Tóm tắt nội dung (Abstract)
               </h3>
               <p className="text-sm text-[#43474e] leading-relaxed text-justify bg-[#f8fafc] p-5 rounded-lg border border-[#ebeef0] italic">
-                {paper.abstract || "Bài báo này hiện chưa cập nhật phần tóm tắt nội dung."}
+                {paper.abstract ||
+                  "Bài báo này hiện chưa cập nhật phần tóm tắt nội dung."}
               </p>
             </div>
 
@@ -342,7 +388,9 @@ const PaperDetail: React.FC = () => {
                 <div className="flex flex-wrap gap-2.5">
                   {paper.keywords.map((kwText, index) => {
                     const kwId = keywordIdsMap[kwText];
-                    const isKwBookmarked = kwId ? bookmarkedKeywordIds.has(kwId) : false;
+                    const isKwBookmarked = kwId
+                      ? bookmarkedKeywordIds.has(kwId)
+                      : false;
                     const loading = isActionLoading[kwText] || false;
 
                     return (
@@ -357,11 +405,17 @@ const PaperDetail: React.FC = () => {
                           className={`p-0.5 rounded-full hover:bg-[#b2dfdb] transition-colors flex items-center justify-center cursor-pointer ${
                             isKwBookmarked ? "text-[#13696a]" : "text-[#74777f]"
                           }`}
-                          title={isKwBookmarked ? "Bỏ lưu từ khóa" : "Lưu từ khóa"}
+                          title={
+                            isKwBookmarked ? "Bỏ lưu từ khóa" : "Lưu từ khóa"
+                          }
                         >
                           <span
                             className="material-symbols-outlined text-sm"
-                            style={{ fontVariationSettings: isKwBookmarked ? "'FILL' 1" : "" }}
+                            style={{
+                              fontVariationSettings: isKwBookmarked
+                                ? "'FILL' 1"
+                                : "",
+                            }}
                           >
                             bookmark
                           </span>
@@ -394,11 +448,15 @@ const PaperDetail: React.FC = () => {
             >
               <span
                 className="material-symbols-outlined text-sm"
-                style={{ fontVariationSettings: isBookmarked ? "'FILL' 1" : "" }}
+                style={{
+                  fontVariationSettings: isBookmarked ? "'FILL' 1" : "",
+                }}
               >
                 bookmark
               </span>
-              {isBookmarked ? "Đã lưu vào Thư viện" : "Lưu vào Thư viện của tôi"}
+              {isBookmarked
+                ? "Đã lưu vào Thư viện"
+                : "Lưu vào Thư viện của tôi"}
             </button>
           </div>
 
@@ -412,7 +470,9 @@ const PaperDetail: React.FC = () => {
               {paper.authors && paper.authors.length > 0 ? (
                 paper.authors.map((authorName, index) => {
                   const authorId = authorIdsMap[authorName];
-                  const isFollowing = authorId ? followedAuthorIds.has(authorId) : false;
+                  const isFollowing = authorId
+                    ? followedAuthorIds.has(authorId)
+                    : false;
                   const loading = isActionLoading[authorName] || false;
 
                   return (
@@ -421,7 +481,9 @@ const PaperDetail: React.FC = () => {
                       className="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-[#181c1e] truncate">{authorName}</p>
+                        <p className="text-sm font-bold text-[#181c1e] truncate">
+                          {authorName}
+                        </p>
                         <p className="text-xs text-[#74777f]">Co-author</p>
                       </div>
 
@@ -474,7 +536,9 @@ const PaperDetail: React.FC = () => {
                 </button>
               </div>
               <div>
-                <p className="text-sm font-bold text-[#181c1e] leading-snug">{paper.journal}</p>
+                <p className="text-sm font-bold text-[#181c1e] leading-snug">
+                  {paper.journal}
+                </p>
                 <p className="text-xs text-[#74777f] mt-1">
                   Đã được chỉ mục hóa trong hệ thống
                 </p>
