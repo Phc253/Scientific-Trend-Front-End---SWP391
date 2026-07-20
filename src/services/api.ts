@@ -549,13 +549,13 @@ export const api = {
 
   async markNotificationAsRead(id: string | number) {
     return request<any>(`/Notification/${id}/read`, {
-      method: "PUT",
+      method: "PATCH",
     });
   },
 
   async markAllAsRead() {
     return request<any>("/Notification/read-all", {
-      method: "PUT",
+      method: "PATCH",
     });
   },
 
@@ -741,15 +741,29 @@ export const api = {
     });
   },
 
-   async compareKeywords(left: string | number, right: string | number, years: number = 5): Promise<any> {
-    return request<any>(`/researcher/compare/keywords?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`, {
-      method: "GET",
-    });
+  async compareKeywords(
+    left: string | number,
+    right: string | number,
+    years: number = 5,
+  ): Promise<any> {
+    return request<any>(
+      `/researcher/compare/keywords?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`,
+      {
+        method: "GET",
+      },
+    );
   },
 
-  async compareTopics(left: string | number, right: string | number, years: number = 5): Promise<any> {
-    return request<any>(`/researcher/compare/topics?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`, {
-      method: "GET",
-    });
+  async compareTopics(
+    left: string | number,
+    right: string | number,
+    years: number = 5,
+  ): Promise<any> {
+    return request<any>(
+      `/researcher/compare/topics?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}&years=${years}`,
+      {
+        method: "GET",
+      },
+    );
   },
 };
