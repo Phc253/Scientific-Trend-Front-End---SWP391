@@ -139,9 +139,14 @@ const Home: React.FC = () => {
               <span
                 key={index}
                 className="px-4 py-2 bg-[#a2eded] text-[#1a6d6e] text-sm font-semibold rounded-full cursor-pointer hover:bg-[#13696a] hover:text-white transition-colors flex items-center gap-1 shadow-sm"
-                title={`${item.paperCount?.toLocaleString() ?? 0} bài báo`}
+                title={`Điểm xu hướng: ${(item.paperCount ?? 0).toLocaleString()} bài báo`}
               >
                 #{item.name}
+                {(item.paperCount ?? 0) > 0 && (
+                  <span className="material-symbols-outlined text-[14px]">
+                    trending_up
+                  </span>
+                )}
               </span>
             ))
           ) : (

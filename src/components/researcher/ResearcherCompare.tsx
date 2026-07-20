@@ -345,9 +345,9 @@ const ResearcherCompare: React.FC = () => {
     : (finalLeftPapers > 0 ? (finalRightPapers / finalLeftPapers).toFixed(1) : finalRightPapers);
 
   // Dynamic advice
-  const recommendText = finalLeftPapers === finalRightPapers
-    ? "Cả hai hướng nghiên cứu có mức độ phổ biến tương đương nhau trong thời gian này."
-    : `Hướng nghiên cứu về "${moreProductive}" đang chiếm ưu thế về số lượng công bố (nhiều gấp ${ratioProductivity} lần so với "${lessProductive}"). Do đó, nếu bạn cần hướng đi có tài nguyên tham khảo dồi dào, hãy chọn "${moreProductive}". Tuy nhiên, nếu bạn muốn khám phá thị trường ngách ít cạnh tranh hơn, "${lessProductive}" có thể là cơ hội tốt.`;
+  void moreProductive;
+  void lessProductive;
+  void ratioProductivity;
 
   return (
     <div className="animate-fadeIn space-y-6">
