@@ -44,6 +44,30 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // 3. LẮNG NGHE TÍN HIỆU TỪ TRANG CHI TIẾT (Đồng bộ 2 chiều)
+  useEffect(() => {
+    const handleSyncAll = () => {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    };
+    const handleSyncSingle = (e: any) => {
+      const readId = e.detail;
+      setNotifications((prev) =>
+        prev.map((n: any) =>
+          (n.id || n.Id || n.notificationId) === readId
+            ? { ...n, isRead: true }
+            : n,
+        ),
+      );
+    };
+
+    window.addEventListener("syncReadAll", handleSyncAll);
+    window.addEventListener("syncReadSingle", handleSyncSingle);
+    return () => {
+      window.removeEventListener("syncReadAll", handleSyncAll);
+      window.removeEventListener("syncReadSingle", handleSyncSingle);
+    };
+  }, []);
+
   const fetchNotifications = async (isBackground = false) => {
     try {
       if (!isBackground) setIsLoading(true);
@@ -65,7 +89,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
     }
   };
 
-  // ĐÁNH DẤU 1 ITEM ĐÃ ĐỌC (Tối ưu Optimistic UI)
+  // ĐÁNH DẤU 1 ITEM ĐÃ ĐỌC (Tối ưu Optimistic UI + Phát tín hiệu)
   const handleItemClick = async (alert: any) => {
     try {
       const targetId = alert.id || alert.Id || alert.notificationId;
@@ -76,12 +100,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
       }
 
       if (!alert.isRead) {
-        // 1. Gọi API ngầm
-        await api
-          .markNotificationAsRead(targetId)
-          .catch((err) => console.error(err));
-
-        // 2. Cập nhật UI ngay lập tức (Làm mất chấm tròn xanh)
+        // 1. Cập nhật UI ngay lập tức
         setNotifications((prev) =>
           prev.map((n: any) =>
             (n.id || n.Id || n.notificationId) === targetId
@@ -89,11 +108,20 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
               : n,
           ),
         );
+
+        // 2. Gọi API ngầm
+        await api
+          .markNotificationAsRead(targetId)
+          .catch((err) => console.error(err));
+
+        // 3. PHÁT TÍN HIỆU CHO TRANG CHI TIẾT BIẾT
+        window.dispatchEvent(
+          new CustomEvent("syncReadSingle", { detail: targetId }),
+        );
       }
 
-      // 3. LOGIC CHUYỂN HƯỚNG VÀ ĐÓNG MENU
+      // LOGIC CHUYỂN HƯỚNG VÀ ĐÓNG MENU
       if (alert.paperId) {
-        // Chỉ đóng dropdown khi thực sự cần chuyển trang đi nơi khác
         setIsOpen(false);
         navigate(`${resolvedBasePath}/paper/${alert.paperId}`);
       }
@@ -102,13 +130,17 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
     }
   };
 
-  // ĐÁNH DẤU TẤT CẢ ĐÃ ĐỌC (Tối ưu Optimistic UI)
+  // ĐÁNH DẤU TẤT CẢ ĐÃ ĐỌC (Tối ưu Optimistic UI + Phát tín hiệu)
   const handleMarkAllAsRead = async () => {
     try {
       // 1. Chuyển toàn bộ danh sách thành màu trắng NGAY LẬP TỨC
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
       // 2. Gọi API ngầm
       await api.markAllAsRead().catch((err) => console.error(err));
+
+      // 3. PHÁT TÍN HIỆU CHO TRANG CHI TIẾT BIẾT
+      window.dispatchEvent(new Event("syncReadAll"));
     } catch (error) {
       console.error("Lỗi khi đánh dấu đọc tất cả:", error);
     }
@@ -219,7 +251,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
             ) : (
               <div className="divide-y divide-slate-100">
                 {notifications.map((alert, index) => {
-                  // Ép kiểu ID an toàn chống lỗi màn hình vàng
                   const targetId =
                     alert.id ||
                     (alert as any).Id ||
@@ -282,7 +313,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
                         </p>
                       </div>
 
-                      {/* KHÔI PHỤC: Chấm tròn xanh báo chưa đọc */}
+                      {/* Chấm tròn xanh báo chưa đọc */}
                       {!alert.isRead && (
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center group-hover:opacity-0 transition-opacity">
                           <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm"></span>
@@ -292,7 +323,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ basePath }) => {
                       {/* Nút Xóa (Chỉ hiện khi hover) */}
                       <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={(e) => handleDelete(e, alert)} // Sửa lỗi gọi hàm Delete
+                          onClick={(e) => handleDelete(e, alert)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                           title="Xóa thông báo"
                         >

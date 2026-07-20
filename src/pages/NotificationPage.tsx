@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 
-// 1. Mở rộng Interface để hứng mọi trường hợp tên ID từ Backend
 export interface NotificationItem {
   id?: string | number;
   Id?: string | number;
@@ -23,13 +22,15 @@ export const NotificationPage = () => {
   const resolvedBasePath =
     `/${location.pathname.split("/")[1]}` || "/researcher";
 
+  const hasUnread = notifications.some((n) => !n.isRead);
+
+  // 1. FETCH DATA
   useEffect(() => {
     const fetchAllNotifications = async () => {
       try {
         setIsLoading(true);
         const response: any = await api.getNotifications(1, 50);
 
-        // 2. Bóc tách dữ liệu an toàn giống hệt NotificationBell
         const data =
           response?.data?.items ||
           response?.items ||
@@ -50,15 +51,41 @@ export const NotificationPage = () => {
     fetchAllNotifications();
   }, []);
 
-  // Bổ sung hàm click để đánh dấu đã đọc ngay trong trang danh sách
+  // 2. LẮNG NGHE TÍN HIỆU TỪ QUẢ CHUÔNG (ĐỒNG BỘ 2 CHIỀU)
+  useEffect(() => {
+    const handleSyncAll = () => {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    };
+
+    const handleSyncSingle = (e: any) => {
+      const readId = e.detail;
+      setNotifications((prev) =>
+        prev.map((n) =>
+          (n.id || n.Id || n.notificationId) === readId
+            ? { ...n, isRead: true }
+            : n,
+        ),
+      );
+    };
+
+    // Tần số này đã khớp hoàn toàn với Quả chuông
+    window.addEventListener("syncReadAll", handleSyncAll);
+    window.addEventListener("syncReadSingle", handleSyncSingle);
+
+    return () => {
+      window.removeEventListener("syncReadAll", handleSyncAll);
+      window.removeEventListener("syncReadSingle", handleSyncSingle);
+    };
+  }, []);
+
+  // 3. XỬ LÝ CLICK 1 ITEM & PHÁT TÍN HIỆU CHO QUẢ CHUÔNG
   const handleItemClick = async (noti: NotificationItem) => {
     const targetId = noti.id || noti.Id || noti.notificationId;
-
     if (!targetId) return;
 
     try {
       if (!noti.isRead) {
-        // Cập nhật UI ngay lập tức
+        // Cập nhật UI
         setNotifications((prev) =>
           prev.map((n) =>
             (n.id || n.Id || n.notificationId) === targetId
@@ -66,13 +93,17 @@ export const NotificationPage = () => {
               : n,
           ),
         );
-        // Gọi API ngầm
+        // Gọi API
         await api
           .markNotificationAsRead(targetId)
           .catch((err) => console.error(err));
+
+        // Phát tín hiệu giảm số đếm ở quả chuông
+        window.dispatchEvent(
+          new CustomEvent("syncReadSingle", { detail: targetId }),
+        );
       }
 
-      // Nếu có paperId thì chuyển hướng đến bài báo
       if (noti.paperId) {
         navigate(`${resolvedBasePath}/paper/${noti.paperId}`);
       }
@@ -81,10 +112,22 @@ export const NotificationPage = () => {
     }
   };
 
+  // 4. XỬ LÝ ĐÁNH DẤU TẤT CẢ & PHÁT TÍN HIỆU CHO QUẢ CHUÔNG
+  const handleMarkAllAsRead = async () => {
+    try {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      await api.markAllAsRead().catch((err) => console.error(err));
+
+      // Phát tín hiệu tắt chấm đỏ ở quả chuông
+      window.dispatchEvent(new Event("syncReadAll"));
+    } catch (error) {
+      console.error("Lỗi khi đánh dấu đọc tất cả:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] py-8 px-4 animate-fadeIn">
       <div className="max-w-3xl mx-auto">
-        {/* Header của trang */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button
@@ -98,9 +141,20 @@ export const NotificationPage = () => {
               Tất cả thông báo
             </h1>
           </div>
+
+          {hasUnread && (
+            <button
+              onClick={handleMarkAllAsRead}
+              className="text-sm font-semibold text-[#13696a] hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                done_all
+              </span>
+              Đánh dấu đã đọc tất cả
+            </button>
+          )}
         </div>
 
-        {/* Nội dung chính */}
         <div className="bg-white border border-[#ebeef0] rounded-lg shadow-sm overflow-hidden">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
@@ -128,7 +182,6 @@ export const NotificationPage = () => {
           ) : (
             <div className="divide-y divide-[#ebeef0]">
               {notifications.map((noti, index) => {
-                // 3. Xử lý key an toàn tuyệt đối
                 const targetId =
                   noti.id ||
                   noti.Id ||
@@ -157,13 +210,19 @@ export const NotificationPage = () => {
                     <div className="flex-1">
                       {noti.title && (
                         <h3
-                          className={`mb-1 ${!noti.isRead ? "font-bold text-[#002045]" : "font-semibold text-slate-700"}`}
+                          className={`mb-1 ${
+                            !noti.isRead
+                              ? "font-bold text-[#002045]"
+                              : "font-semibold text-slate-700"
+                          }`}
                         >
                           {noti.title}
                         </h3>
                       )}
                       <p
-                        className={`text-sm ${!noti.isRead ? "text-[#43474e]" : "text-slate-500"}`}
+                        className={`text-sm ${
+                          !noti.isRead ? "text-[#43474e]" : "text-slate-500"
+                        }`}
                       >
                         {noti.message}
                       </p>
@@ -172,7 +231,13 @@ export const NotificationPage = () => {
                           <span className="material-symbols-outlined text-[14px]">
                             schedule
                           </span>
-                          {new Date(noti.createdAt).toLocaleString("vi-VN")}
+                          {new Date(noti.createdAt).toLocaleString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
                         </p>
                       )}
                     </div>
