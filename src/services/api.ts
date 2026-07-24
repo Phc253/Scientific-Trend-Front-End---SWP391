@@ -195,13 +195,21 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
 
     if (!response.ok) {
       let errorMessage = "Có lỗi xảy ra khi gửi yêu cầu.";
+      let errorData: any = null;
       try {
-        const errorData = await response.json();
+        errorData = await response.json();
         errorMessage = errorData.message || errorData.error || errorMessage;
       } catch {
         errorMessage = response.statusText || errorMessage;
       }
-      throw new Error(errorMessage);
+
+      const apiError = new Error(errorMessage) as Error & {
+        status?: number;
+        details?: unknown;
+      };
+      apiError.status = response.status;
+      apiError.details = errorData;
+      throw apiError;
     }
 
     const text = await response.text();
@@ -216,9 +224,14 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     }
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error(
+      const networkError = new Error(
         "Không thể kết nối tới backend. Hãy đảm bảo BE đang chạy trên http://localhost:5225 và thử lại.",
-      );
+      ) as Error & {
+        status?: number;
+        details?: unknown;
+      };
+      networkError.status = 0;
+      throw networkError;
     }
     throw error;
   }

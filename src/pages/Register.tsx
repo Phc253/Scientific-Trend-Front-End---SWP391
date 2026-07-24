@@ -18,8 +18,36 @@ export const Register = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [registrationState, setRegistrationState] = useState<
-    "idle" | "pending"
+    "idle" | "pending" | "error"
   >("idle");
+
+  const getRegistrationFeedback = (err: unknown) => {
+    const message = err instanceof Error ? err.message : "";
+    const status = (err as Error & { status?: number })?.status;
+    const details = (err as Error & { details?: unknown })?.details as
+      | { message?: string; error?: string }
+      | undefined;
+    const combinedMessage = [message, details?.message, details?.error]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const lowerCombined = combinedMessage.toLowerCase();
+
+    const isDuplicateAccountError =
+      status === 409 ||
+      /already exists|already registered|email.*(used|exists|registered)|duplicate|đã tồn tại|đã được sử dụng|trùng/i.test(
+        lowerCombined,
+      );
+    const isMailRelatedError =
+      !isDuplicateAccountError &&
+      /mail|smtp|email|verify|send/i.test(lowerCombined);
+
+    return {
+      isDuplicateAccountError,
+      isMailRelatedError,
+      message: combinedMessage || message || "Đăng ký chưa hoàn tất.",
+    };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,53 +83,81 @@ export const Register = () => {
         result.message ||
           "Đăng ký đã được ghi nhận. Vui lòng mở email và nhấn liên kết xác thực để kích hoạt tài khoản.",
       );
-    } catch (err: any) {
-      const isMailRelatedError = /mail|smtp|email|verify/i.test(
-        err?.message?.toLowerCase() || "",
-      );
+    } catch (err: unknown) {
+      const feedback = getRegistrationFeedback(err);
 
-      setRegistrationState("pending");
-      setSuccessMessage(
-        isMailRelatedError
-          ? "Tài khoản của bạn có thể đã được tạo trong hệ thống, nhưng email xác thực chưa được gửi đi. Vui lòng kiểm tra hộp thư rác hoặc liên hệ quản trị viên để được hỗ trợ."
-          : "Đăng ký chưa hoàn tất. Vui lòng kiểm tra lại thông tin hoặc thử lại sau.",
-      );
+      if (feedback.isDuplicateAccountError) {
+        setRegistrationState("error");
+        setSuccessMessage(
+          "Email này đã được sử dụng hoặc tài khoản đã tồn tại. Vui lòng đăng nhập hoặc chọn một email khác.",
+        );
+      } else if (feedback.isMailRelatedError) {
+        setRegistrationState("pending");
+        setSuccessMessage(
+          "Tài khoản của bạn có thể đã được tạo trong hệ thống, nhưng email xác thực chưa được gửi đi. Vui lòng kiểm tra hộp thư rác hoặc liên hệ quản trị viên để được hỗ trợ.",
+        );
+      } else {
+        setRegistrationState("error");
+        setSuccessMessage(
+          feedback.message || "Đăng ký chưa hoàn tất. Vui lòng kiểm tra lại thông tin hoặc thử lại sau.",
+        );
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   if (successMessage) {
+    const isPending = registrationState === "pending";
+    const isError = registrationState === "error";
+    const title = isPending
+      ? "Đăng ký đang chờ xác thực"
+      : isError
+        ? "Đăng ký không thành công"
+        : "Đăng ký thành công!";
+    const icon = isPending ? "hourglass_top" : isError ? "error" : "mail";
+    const iconClassName = isPending
+      ? "bg-amber-50 text-amber-700 border-amber-200"
+      : isError
+        ? "bg-red-50 text-red-700 border-red-200"
+        : "bg-[#e1f5fe] text-[#002855] border-[#b2ebf2]";
+
     return (
       <div className="min-h-[80vh] flex items-center justify-center animate-fadeIn py-6">
         <div className="bg-white p-8 rounded-lg border border-[#ebeef0] shadow-md w-full max-w-md space-y-6 text-center">
           <div
-            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${registrationState === "pending" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-[#e1f5fe] text-[#002855] border-[#b2ebf2]"}`}
+            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${iconClassName}`}
           >
-            <span className="material-symbols-outlined text-3xl">
-              {registrationState === "pending" ? "hourglass_top" : "mail"}
-            </span>
+            <span className="material-symbols-outlined text-3xl">{icon}</span>
           </div>
-          <h2 className="text-2xl font-bold text-[#002045]">
-            {registrationState === "pending"
-              ? "Đăng ký đang chờ xác thực"
-              : "Đăng ký thành công!"}
-          </h2>
+          <h2 className="text-2xl font-bold text-[#002045]">{title}</h2>
           <p className="text-sm text-[#43474e] leading-relaxed whitespace-pre-wrap">
             {successMessage}
           </p>
           <div className="pt-4 border-t border-[#ebeef0] flex flex-col gap-3">
             <p className="text-sm text-[#43474e]">
-              Vui lòng mở hộp thư email và bấm liên kết xác thực để kích hoạt
-              tài khoản.
+              {isError
+                ? "Bạn có thể quay lại đăng nhập hoặc thử lại với một email khác."
+                : "Vui lòng mở hộp thư email và bấm liên kết xác thực để kích hoạt tài khoản."}
             </p>
-            <Link
-              to="/"
-              className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center justify-center gap-2 text-sm"
-            >
-              <span className="material-symbols-outlined text-sm">home</span>
-              Quay về trang chủ
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/"
+                className="bg-[#002855] hover:opacity-95 text-white font-semibold py-2.5 px-6 rounded transition-opacity inline-flex items-center justify-center gap-2 text-sm"
+              >
+                <span className="material-symbols-outlined text-sm">home</span>
+                Quay về trang chủ
+              </Link>
+              {isError && (
+                <Link
+                  to="/login"
+                  className="border border-[#002855] text-[#002855] font-semibold py-2.5 px-6 rounded transition-colors inline-flex items-center justify-center gap-2 text-sm hover:bg-[#f8fafc]"
+                >
+                  <span className="material-symbols-outlined text-sm">login</span>
+                  Đăng nhập ngay
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
