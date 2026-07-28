@@ -5,6 +5,7 @@ import type {
   PaperReportResponse,
   KeywordStatisticItem,
   SyncJobResult,
+  SyncJobsResponse,
 } from "../types/admin";
 
 export interface NotificationItem {
@@ -777,6 +778,15 @@ export const api = {
       {
         method: "GET",
       },
+    );
+  },
+
+  async getSyncJobs(
+    page: number = 1,
+    pageSize: number = 20,
+  ): Promise<SyncJobsResponse> {
+    return request<SyncJobsResponse>(
+      `/admin/sync-jobs?page=${page}&pageSize=${pageSize}`,
     );
   },
 };

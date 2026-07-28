@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../../services/api";
-import type { SystemLog, SchedulerConfig } from "../../types/admin";
+import type { SchedulerConfig } from "../../types/admin";
 
-interface AdminOpenAlexConfigProps {
-  addLog: (type: SystemLog["type"], message: string) => void;
-}
-
-export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog }) => {
+export const AdminOpenAlexConfig: React.FC = () => {
   const [enabled, setEnabled] = useState<boolean>(false);
   const [keyword, setKeyword] = useState<string>("Computer Science");
   const [maxResults, setMaxResults] = useState<number>(20);
@@ -17,8 +13,6 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("");
-
-  const mountLogged = React.useRef(false);
 
   // Fetch configuration on component mount
   useEffect(() => {
@@ -35,10 +29,6 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
           setIntervalHours(data.intervalHours || 24);
           setFetchNewWorksEnabled(data.fetchNewWorksEnabled !== false);
           setRefreshExistingWorksEnabled(data.refreshExistingWorksEnabled !== false);
-          if (!mountLogged.current) {
-            addLog("INFO", "Tải cấu hình scheduler OpenAlex thành công.");
-            mountLogged.current = true;
-          }
         }
       } catch (err: any) {
         console.error("Error fetching scheduler config:", err);
@@ -47,10 +37,6 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
           "Không thể kết nối đến API để lấy cấu hình.";
         
         setErrorMsg(`Không thể tải cấu hình hiện tại: ${errMsg}`);
-        if (!mountLogged.current) {
-          addLog("WARNING", `Không thể tải cấu hình scheduler OpenAlex: ${errMsg}. Sử dụng các giá trị mặc định.`);
-          mountLogged.current = true;
-        }
       } finally {
         setIsLoading(false);
       }
@@ -74,8 +60,6 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
       refreshExistingWorksEnabled,
     };
 
-    addLog("INFO", `Đang lưu cấu hình scheduler OpenAlex: Chế độ ${enabled ? "Auto" : "Manual"}, Từ khóa: "${payload.keyword}"`);
-
     try {
       // 1. Update config parameters
       await api.updateSchedulerConfig(payload);
@@ -83,14 +67,11 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
       // 2. Enable or disable the scheduler based on the selection
       if (enabled) {
         await api.enableScheduler();
-        addLog("INFO", "Đã kích hoạt tự động quét scheduler (Auto Mode).");
       } else {
         await api.disableScheduler();
-        addLog("INFO", "Đã hủy kích hoạt tự động quét scheduler (Manual Mode).");
       }
 
       setSuccessMsg("Cấu hình scheduler đã được cập nhật thành công!");
-      addLog("SUCCESS", `Cập nhật cấu hình scheduler thành công. Chế độ: ${enabled ? "Tự động" : "Thủ công"}`);
       
       // Auto clear success message after 4s
       setTimeout(() => {
@@ -103,7 +84,6 @@ export const AdminOpenAlexConfig: React.FC<AdminOpenAlexConfigProps> = ({ addLog
         "Lỗi không xác định khi lưu cấu hình.";
       
       setErrorMsg(`Lưu cấu hình thất bại: ${errMsg}`);
-      addLog("ERROR", `Lưu cấu hình scheduler OpenAlex thất bại: ${errMsg}`);
     } finally {
       setIsSaving(false);
     }

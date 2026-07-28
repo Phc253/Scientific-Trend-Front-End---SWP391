@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { api } from "../../services/api";
-import type { SystemLog, KeywordStatisticItem } from "../../types/admin";
+import type { KeywordStatisticItem } from "../../types/admin";
 
 const getPaginationRange = (current: number, total: number) => {
   const range: (number | string)[] = [];
@@ -26,11 +26,7 @@ const getPaginationRange = (current: number, total: number) => {
   return range;
 };
 
-interface AdminKeywordStatsProps {
-  addLog: (type: SystemLog["type"], message: string) => void;
-}
-
-export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) => {
+export const AdminKeywordStats: React.FC = () => {
   const [keywordSearch, setKeywordSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [keywordSort, setKeywordSort] = useState<"papers-desc" | "papers-asc" | "alpha-asc" | "alpha-desc">("papers-desc");
@@ -49,8 +45,6 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
 
-  const mountLogged = React.useRef(false);
-
   const [isExporting, setIsExporting] = useState(false);
 
   // Debounce search input
@@ -64,7 +58,6 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
 
   const handleExportCSV = async () => {
     setIsExporting(true);
-    addLog("INFO", "Bắt đầu xuất thống kê từ khóa ra file CSV...");
     try {
       const blob = await api.exportKeywordStatsCsv();
       const url = window.URL.createObjectURL(blob);
@@ -75,11 +68,9 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      addLog("SUCCESS", "Xuất file CSV thống kê từ khóa thành công.");
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Lỗi khi xuất file CSV");
-      addLog("ERROR", `Xuất file CSV thất bại: ${err.message}`);
     } finally {
       setIsExporting(false);
     }
@@ -87,7 +78,6 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
 
   const handleExportPDF = async () => {
     setIsExporting(true);
-    addLog("INFO", "Bắt đầu xuất thống kê từ khóa ra file PDF...");
     try {
       const blob = await api.exportKeywordStatsPdf();
       const url = window.URL.createObjectURL(blob);
@@ -98,11 +88,9 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      addLog("SUCCESS", "Xuất file PDF thống kê từ khóa thành công.");
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Lỗi khi xuất file PDF");
-      addLog("ERROR", `Xuất file PDF thất bại: ${err.message}`);
     } finally {
       setIsExporting(false);
     }
@@ -128,10 +116,6 @@ export const AdminKeywordStats: React.FC<AdminKeywordStatsProps> = ({ addLog }) 
       }
     };
     fetchKeywords();
-    if (!mountLogged.current) {
-      addLog("INFO", "Quản trị viên đã truy cập Thống kê từ khóa khoa học.");
-      mountLogged.current = true;
-    }
   }, []);
 
   // Tính toán chỉ số tổng quan

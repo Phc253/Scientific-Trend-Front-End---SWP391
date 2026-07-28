@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../../services/api";
-import type { SystemLog, PaperReportItem } from "../../types/admin";
+import type { PaperReportItem } from "../../types/admin";
 
 const getPaginationRange = (current: number, total: number) => {
   const range: (number | string)[] = [];
@@ -26,11 +26,7 @@ const getPaginationRange = (current: number, total: number) => {
   return range;
 };
 
-interface AdminPaperReportsProps {
-  addLog: (type: SystemLog["type"], message: string) => void;
-}
-
-export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) => {
+export const AdminPaperReports: React.FC = () => {
   const [paperSearch, setPaperSearch] = useState("");
   const [selectedYear, setSelectedYear] = useState<number | "">("");
   const [selectedKeywordText, setSelectedKeywordText] = useState<string>("");
@@ -57,8 +53,6 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
       topPaperCitations: 0,
     };
   });
-
-  const mountLogged = React.useRef(false);
 
   // 1. Tải số liệu thống kê tổng hợp (tải tối đa 300 bản ghi trên mount để tính aggregate và lưu cache)
   React.useEffect(() => {
@@ -96,10 +90,6 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
       }
     };
     fetchStats();
-    if (!mountLogged.current) {
-      addLog("INFO", "Quản trị viên đã truy cập Thống kê Báo cáo bài báo khoa học.");
-      mountLogged.current = true;
-    }
   }, []);
 
   // 2. Tải dữ liệu phân trang & tìm kiếm theo thời gian thực (có debounce)
@@ -145,7 +135,6 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
 
   const handleExportCSV = async () => {
     setIsExporting(true);
-    addLog("INFO", "Bắt đầu xuất dữ liệu bài báo ra file CSV...");
     try {
       const blob = await api.exportPapersCsv({
         year: selectedYear !== "" ? Number(selectedYear) : undefined,
@@ -159,11 +148,9 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      addLog("SUCCESS", "Xuất file CSV báo cáo bài báo thành công.");
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Lỗi khi xuất file CSV");
-      addLog("ERROR", `Xuất file CSV thất bại: ${err.message}`);
     } finally {
       setIsExporting(false);
     }
@@ -171,7 +158,6 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
 
   const handleExportPDF = async () => {
     setIsExporting(true);
-    addLog("INFO", "Bắt đầu xuất báo cáo bài báo ra file PDF...");
     try {
       const blob = await api.exportPapersPdf({
         year: selectedYear !== "" ? Number(selectedYear) : undefined,
@@ -185,11 +171,9 @@ export const AdminPaperReports: React.FC<AdminPaperReportsProps> = ({ addLog }) 
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      addLog("SUCCESS", "Xuất file PDF báo cáo bài báo thành công.");
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Lỗi khi xuất file PDF");
-      addLog("ERROR", `Xuất file PDF thất bại: ${err.message}`);
     } finally {
       setIsExporting(false);
     }

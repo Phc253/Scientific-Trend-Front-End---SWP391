@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../../services/api";
-import type { User, SystemLog } from "../../types/admin";
+import type { User } from "../../types/admin";
 
-interface AdminUsersProps {
-  addLog: (type: SystemLog["type"], message: string) => void;
-}
-
-export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
+export const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [errorUsers, setErrorUsers] = useState("");
@@ -83,15 +79,8 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
       setUsers((prevUsers) =>
         prevUsers.map((u) => (u.id === id ? { ...u, status: nextStatus } : u))
       );
-
-      addLog(
-        isActive ? "WARNING" : "SUCCESS",
-        `Thay đổi trạng thái người dùng ${userToUpdate.name} sang ${nextStatus} thành công.`
-      );
     } catch (err: any) {
       console.error(`Lỗi thay đổi trạng thái user ${id}:`, err);
-      const errMsg = err.message || "Lỗi không xác định.";
-      addLog("ERROR", `Không thể thay đổi trạng thái user ${userToUpdate.name}: ${errMsg}`);
     }
   };
 
@@ -110,7 +99,6 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ addLog }) => {
     };
 
     setUsers([...users, newUser]);
-    addLog("SUCCESS", `Tạo mới thành công người dùng: ${newUserName} (${newUserRole}).`);
     setNewUserName("");
     setNewUserEmail("");
     setShowAddUserModal(false);
