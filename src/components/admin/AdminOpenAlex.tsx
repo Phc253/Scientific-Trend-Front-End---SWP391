@@ -1,12 +1,8 @@
 import React, { useState } from "react";
 import { api } from "../../services/api";
-import type { SystemLog, SyncJobResult, GlobalSyncResponse } from "../../types/admin";
+import type { SyncJobResult, GlobalSyncResponse } from "../../types/admin";
 
-interface AdminOpenAlexProps {
-  addLog: (type: SystemLog["type"], message: string) => void;
-}
-
-export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
+export const AdminOpenAlex: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<"fetch" | "sync">("fetch");
 
   // Keyword Fetch Tab State
@@ -30,7 +26,6 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
     setIsLoading(true);
     setErrorMsg("");
     setSyncResult(null);
-    addLog("INFO", `Bắt đầu đồng bộ OpenAlex cho từ khóa "${keyword}" (maxResults: ${maxResults}, useCheckpoint: ${useCheckpoint})`);
 
     try {
       const data = await api.syncOpenAlex({
@@ -43,17 +38,9 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
       if (data.status === "Completed") {
         sessionStorage.removeItem("scitrend_admin_paper_stats");
         sessionStorage.removeItem("scitrend_admin_keyword_stats");
-        addLog(
-          "SUCCESS",
-          `Đồng bộ hoàn tất: Đã lấy ${data.recordsFetched} bản ghi cho từ khóa "${data.keyword}".`
-        );
       } else {
         const errorDetail = data.errorMessage || "Không rõ nguyên nhân";
         setErrorMsg(errorDetail);
-        addLog(
-          "ERROR",
-          `Đồng bộ hoàn tất với lỗi: ${errorDetail}`
-        );
       }
     } catch (err: any) {
       console.error(err);
@@ -61,7 +48,6 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
         err.message ||
         "Lỗi không xác định khi kết nối với máy chủ.";
       setErrorMsg(message);
-      addLog("ERROR", `Đồng bộ thất bại: ${message}`);
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +58,6 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
     setIsLoadingGlobal(true);
     setErrorMsgGlobal("");
     setSyncResultGlobal(null);
-    addLog("INFO", `Yêu cầu đồng bộ OpenAlex toàn cục bắt đầu (maxResults: ${maxResultsGlobal})`);
 
     try {
       const data = await api.syncOpenAlexData(maxResultsGlobal);
@@ -81,22 +66,14 @@ export const AdminOpenAlex: React.FC<AdminOpenAlexProps> = ({ addLog }) => {
       sessionStorage.removeItem("scitrend_admin_paper_stats");
       sessionStorage.removeItem("scitrend_admin_keyword_stats");
 
-      if (data.status === "Completed" || (data.updatedPapers && Array.isArray(data.updatedPapers))) {
-        const count = data.updatedPapers ? data.updatedPapers.length : (data.recordsFetched || 0);
-        addLog(
-          "SUCCESS",
-          `Đồng bộ OpenAlex hoàn tất: Đã lấy và cập nhật thông tin trích dẫn của ${count} bài báo.`
-        );
-      } else {
+      if (data.status !== "Completed" && (!data.updatedPapers || !Array.isArray(data.updatedPapers))) {
         const errorDetail = data.errorMessage || "Không rõ nguyên nhân";
         setErrorMsgGlobal(errorDetail);
-        addLog("ERROR", `Đồng bộ OpenAlex hoàn tất với lỗi: ${errorDetail}`);
       }
     } catch (err: any) {
       console.error(err);
       const message = err.message || "Lỗi không xác định khi kết nối với máy chủ.";
       setErrorMsgGlobal(message);
-      addLog("ERROR", `Đồng bộ OpenAlex toàn cục thất bại: ${message}`);
     } finally {
       setIsLoadingGlobal(false);
     }

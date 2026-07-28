@@ -7,12 +7,6 @@ export interface User {
   joinedDate: string;
 }
 
-export interface SystemLog {
-  time: string;
-  type: "INFO" | "SUCCESS" | "WARNING" | "ERROR";
-  message: string;
-}
-
 export interface SchedulerConfig {
   enabled: boolean;
   keyword: string;
@@ -89,4 +83,19 @@ export interface GlobalSyncResponse {
   updatedPapers: UpdatedPaperItem[];
 }
 
+export interface SyncJobItem {
+  syncJobId: number;
+  sourceName: string;
+  startTime: string;
+  endTime: string | null;
+  status: string;
+  recordsFetched: number;
+  errorMessage: string | null;
+}
 
+export interface SyncJobsResponse {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  items: SyncJobItem[];
+}

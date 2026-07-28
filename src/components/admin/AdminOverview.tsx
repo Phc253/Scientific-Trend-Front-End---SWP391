@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../../services/api";
-import type { SystemLog } from "../../types/admin";
+import type { SyncJobItem } from "../../types/admin";
 
 interface AdminOverviewProps {
-  logs: SystemLog[];
+  logs?: any[];
 }
 
-export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
+export const AdminOverview: React.FC<AdminOverviewProps> = () => {
   // User Stats States
   const [totalUsers, setTotalUsers] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
@@ -23,7 +23,36 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
   // Topic Facets Data State
   const [topicFacets, setTopicFacets] = useState<{ id: string; name: string; paperCount: number }[]>([]);
 
+  // Sync Jobs State
+  const [syncJobs, setSyncJobs] = useState<SyncJobItem[]>([]);
+  const [syncJobsPage, setSyncJobsPage] = useState(1);
+  const [syncJobsPageSize] = useState(10);
+  const [syncJobsTotalCount, setSyncJobsTotalCount] = useState(0);
+  const [isLoadingSyncJobs, setIsLoadingSyncJobs] = useState(false);
+  const [syncJobsError, setSyncJobsError] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
+
+  const fetchSyncJobs = async (page = 1) => {
+    setIsLoadingSyncJobs(true);
+    setSyncJobsError(null);
+    try {
+      const res = await api.getSyncJobs(page, syncJobsPageSize);
+      if (res && Array.isArray(res.items)) {
+        setSyncJobs(res.items);
+        setSyncJobsPage(res.page || page);
+        setSyncJobsTotalCount(res.totalCount || 0);
+      } else if (Array.isArray(res)) {
+        setSyncJobs(res as any);
+        setSyncJobsTotalCount((res as any).length);
+      }
+    } catch (err: any) {
+      console.error("Error fetching sync jobs:", err);
+      setSyncJobsError(err.message || "Không thể tải danh sách công việc đồng bộ.");
+    } finally {
+      setIsLoadingSyncJobs(false);
+    }
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -80,7 +109,26 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
       }
     };
     fetchStats();
+    fetchSyncJobs(1);
   }, []);
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "—";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   const totalRoles = studentCount + lecturerCount + researcherCount;
   const pStudent = totalRoles > 0 ? (studentCount / totalRoles) * 100 : 0;
@@ -95,258 +143,221 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* 4 Thẻ KPI Metric ở đầu trang */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3 Thẻ KPI Metric ở đầu trang (Cân đối 3 cột) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* KPI 1: Tổng số bài báo */}
-        <div className="bg-white p-5 rounded-lg border border-[#ebeef0] shadow-sm flex items-center justify-between relative overflow-hidden">
+        <div className="bg-white p-5 rounded-xl border border-[#ebeef0] shadow-sm flex items-center justify-between relative overflow-hidden hover:shadow-md transition duration-200">
           {isLoading && (
             <div className="absolute inset-0 bg-white/40 backdrop-blur-xs z-10 flex items-center justify-center">
               <span className="text-[10px] text-slate-400">⏳</span>
             </div>
           )}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-[#74777f] uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-[#74777f] uppercase tracking-wider block">
               Tổng số bài báo
             </span>
             <h3 className="text-2xl font-extrabold text-[#002045] font-mono">
               {totalPapers.toLocaleString("vi-VN")}
             </h3>
-            <span className="text-[10px] text-[#74777f] font-semibold block">Lưu trữ hệ thống</span>
+            <span className="text-[11px] text-[#74777f] font-semibold block">Lưu trữ hệ thống</span>
           </div>
-          <div className="w-10 h-10 rounded-full bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined">description</span>
+          <div className="w-12 h-12 rounded-full bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0 shadow-xs">
+            <span className="material-symbols-outlined text-2xl">description</span>
           </div>
         </div>
 
         {/* KPI 2: Tổng số từ khóa */}
-        <div className="bg-white p-5 rounded-lg border border-[#ebeef0] shadow-sm flex items-center justify-between relative overflow-hidden">
+        <div className="bg-white p-5 rounded-xl border border-[#ebeef0] shadow-sm flex items-center justify-between relative overflow-hidden hover:shadow-md transition duration-200">
           {isLoading && (
             <div className="absolute inset-0 bg-white/40 backdrop-blur-xs z-10 flex items-center justify-center">
               <span className="text-[10px] text-slate-400">⏳</span>
             </div>
           )}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-[#74777f] uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-[#74777f] uppercase tracking-wider block">
               Từ khóa theo dõi
             </span>
             <h3 className="text-2xl font-extrabold text-[#002045] font-mono">
               {totalKeywords.toLocaleString("vi-VN")}
             </h3>
-            <span className="text-[10px] text-[#74777f] font-semibold block">Chỉ số xu hướng</span>
+            <span className="text-[11px] text-[#74777f] font-semibold block">Chỉ số xu hướng</span>
           </div>
-          <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined">sell</span>
-          </div>
-        </div>
-
-        {/* KPI 3: Lượt gọi API OpenAlex */}
-        <div className="bg-white p-5 rounded-lg border border-[#ebeef0] shadow-sm flex items-center justify-between relative overflow-hidden">
-          <div className="space-y-1 flex-1 mr-2">
-            <span className="text-[10px] font-bold text-[#74777f] uppercase tracking-wider block">
-              Yêu cầu OpenAlex API
-            </span>
-            <div className="flex items-baseline gap-1.5">
-              <h3 className="text-2xl font-extrabold text-[#002045] font-mono">0</h3>
-              <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-1 py-0.5 rounded">0%</span>
-            </div>
-            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
-              <div className="bg-blue-500 h-full" style={{ width: "1.48%" }}></div>
-            </div>
-            <span className="text-[9px] text-[#74777f] block pt-0.5">Hạn mức 1k </span>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined">api</span>
+          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-xs">
+            <span className="material-symbols-outlined text-2xl">sell</span>
           </div>
         </div>
 
-        {/* KPI 4: Trạng thái Scheduler */}
-        <div className="bg-white p-5 rounded-lg border border-[#ebeef0] shadow-sm flex items-center justify-between relative overflow-hidden">
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/40 backdrop-blur-xs z-10 flex items-center justify-center">
-              <span className="text-[10px] text-slate-400">⏳</span>
-            </div>
-          )}
+        {/* KPI 3: Trạng thái Scheduler */}
+        <div className="bg-white p-5 rounded-xl border border-[#ebeef0] shadow-sm flex items-center justify-between relative overflow-hidden hover:shadow-md transition duration-200">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-[#74777f] uppercase tracking-wider block">
-              Tự động Scheduler
+            <span className="text-[11px] font-bold text-[#74777f] uppercase tracking-wider block">
+              Scheduler Tự Động
             </span>
-            <h3 className="text-xl font-extrabold text-[#002045] flex items-center gap-1.5 mt-0.5">
-              {schedulerEnabled === null ? (
-                <span className="text-slate-400">Chưa rõ</span>
-              ) : schedulerEnabled ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Đang chạy
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                  Đang tắt
-                </>
-              )}
-            </h3>
-            <span className="text-[10px] text-[#74777f] font-semibold block">Quét bài báo định kỳ</span>
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${
+                  schedulerEnabled === true
+                    ? "bg-emerald-500 animate-pulse"
+                    : schedulerEnabled === false
+                    ? "bg-slate-400"
+                    : "bg-amber-400"
+                }`}
+              ></span>
+              <h3 className="text-xl font-extrabold text-[#002045]">
+                {schedulerEnabled === true
+                  ? "Bật (Active)"
+                  : schedulerEnabled === false
+                  ? "Tắt (Off)"
+                  : "Chưa rõ"}
+              </h3>
+            </div>
+            <span className="text-[11px] text-[#74777f] font-semibold block">Đồng bộ định kỳ</span>
           </div>
-          <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined">schedule</span>
+          <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
+            <span className="material-symbols-outlined text-2xl">schedule</span>
           </div>
         </div>
       </div>
 
-      {/* Hàng 2: Biểu đồ vai trò người dùng (1/3) & Biểu đồ cột Lĩnh vực (2/3) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Khối Biểu đồ tròn - Phân bố người dùng (Chiếm 1/3) */}
-        <div className="bg-white p-6 rounded-lg border border-[#ebeef0] shadow-sm flex flex-col justify-between relative min-h-[350px]">
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-xs flex items-center justify-center z-10 rounded-lg">
-              <span className="animate-spin text-[#13696a] text-sm">⏳</span>
-            </div>
-          )}
-
+      {/* Hàng 2: Thống kê Người Dùng & Phân Tích Lĩnh Vực */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Khối bên trái: Thống kê người dùng (6 cols) */}
+        <div className="lg:col-span-6 bg-white p-6 rounded-lg border border-[#ebeef0] shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-base text-[#002045] flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[#13696a]">pie_chart</span>
-              Phân bố vai trò người dùng
-            </h3>
-            <span className="material-symbols-outlined text-slate-400 text-lg cursor-pointer hover:text-slate-600 transition-colors">
-              more_vert
+            <div>
+              <h3 className="font-bold text-[#002045] flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[#13696a]">group</span>
+                Phân bố người dùng theo vai trò
+              </h3>
+              <p className="text-xs text-[#74777f] mt-0.5">
+                Tổng cộng <span className="font-mono font-bold text-[#002045]">{totalUsers.toLocaleString("vi-VN")}</span> tài khoản hệ thống
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-[#13696a] bg-[#e0f7f7] px-2 py-0.5 rounded">
+              Hệ thống
             </span>
           </div>
 
-          <div className="flex flex-col items-center flex-1 justify-center">
-            {/* SVG Donut/Pie Chart */}
-            <div className="relative w-[130px] h-[130px] my-3">
+          <div className="flex flex-col sm:flex-row items-center gap-6 my-auto py-2">
+            {/* Biểu đồ Donut Chart */}
+            <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                {/* Background Circle */}
                 <circle
                   cx="50"
                   cy="50"
                   r="35"
                   stroke="#f1f4f6"
-                  strokeWidth="8"
+                  strokeWidth="12"
                   fill="transparent"
                 />
-
-                {totalRoles === 0 ? (
-                  // Default gray circle when empty
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="35"
-                    stroke="#cbd5e1"
-                    strokeWidth="8"
-                    fill="transparent"
-                  />
-                ) : (
+                {totalRoles > 0 ? (
                   <>
-                    {/* Student Slice */}
-                    {lenStudent > 0 && (
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="#38bdf8"
-                        strokeWidth="8"
-                        fill="transparent"
-                        strokeDasharray={`${lenStudent} ${C}`}
-                        strokeDashoffset="0"
-                        strokeLinecap={lenStudent === C ? "butt" : "round"}
-                        className="transition-all duration-500 ease-out"
-                      />
-                    )}
-
-                    {/* Lecturer Slice */}
-                    {lenLecturer > 0 && (
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="#4ade80"
-                        strokeWidth="8"
-                        fill="transparent"
-                        strokeDasharray={`${lenLecturer} ${C}`}
-                        strokeDashoffset={-lenStudent}
-                        strokeLinecap={lenLecturer === C ? "butt" : "round"}
-                        className="transition-all duration-500 ease-out"
-                      />
-                    )}
-
-                    {/* Researcher Slice */}
-                    {lenResearcher > 0 && (
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="#ec4899"
-                        strokeWidth="8"
-                        fill="transparent"
-                        strokeDasharray={`${lenResearcher} ${C}`}
-                        strokeDashoffset={-(lenStudent + lenLecturer)}
-                        strokeLinecap={lenResearcher === C ? "butt" : "round"}
-                        className="transition-all duration-500 ease-out"
-                      />
-                    )}
+                    {/* Sinh viên */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="35"
+                      stroke="#13696a"
+                      strokeWidth="12"
+                      fill="transparent"
+                      strokeDasharray={`${lenStudent} ${C - lenStudent}`}
+                      strokeDashoffset="0"
+                      className="transition-all duration-1000 ease-out"
+                    />
+                    {/* Giảng viên */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="35"
+                      stroke="#1cb5b7"
+                      strokeWidth="12"
+                      fill="transparent"
+                      strokeDasharray={`${lenLecturer} ${C - lenLecturer}`}
+                      strokeDashoffset={`-${lenStudent}`}
+                      className="transition-all duration-1000 ease-out"
+                    />
+                    {/* Nghiên cứu viên */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="35"
+                      stroke="#86a0cd"
+                      strokeWidth="12"
+                      fill="transparent"
+                      strokeDasharray={`${lenResearcher} ${C - lenResearcher}`}
+                      strokeDashoffset={`-${lenStudent + lenLecturer}`}
+                      className="transition-all duration-1000 ease-out"
+                    />
                   </>
-                )}
+                ) : null}
               </svg>
-
-              {/* Center labels */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-extrabold text-[#002045] leading-none">
-                  {totalUsers}
-                </span>
-                <span className="text-[9px] text-[#74777f] uppercase font-bold tracking-wider mt-1">
-                  Thành viên
-                </span>
+              <div className="absolute flex flex-col items-center justify-center text-center">
+                <span className="text-xl font-extrabold text-[#002045] font-mono leading-none">{totalUsers}</span>
+                <span className="text-[9px] text-[#74777f] font-bold uppercase tracking-wider mt-1">Tài khoản</span>
               </div>
             </div>
 
-            {/* Chi tiết thống kê - nằm bên dưới biểu đồ */}
-            <div className="w-full mt-4 space-y-3 text-xs">
-              <div className="flex items-center justify-between border-b border-[#f1f4f6] pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full border-2 border-[#38bdf8] bg-transparent"></span>
-                  <span className="font-semibold text-slate-600">Sinh viên</span>
+            {/* Chi tiết chú thích dạng thẻ mini */}
+            <div className="flex-1 space-y-2.5 w-full">
+              {/* Sinh viên */}
+              <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition">
+                <div className="flex justify-between items-center text-xs font-semibold mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#13696a]"></span>
+                    <span className="text-slate-700">Sinh viên</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-[#002045] font-bold">{studentCount}</span>
+                    <span className="text-[10px] text-slate-400 font-normal">({pStudent.toFixed(1)}%)</span>
+                  </div>
                 </div>
-                <span className="font-bold text-[#002045] font-mono">
-                  {studentCount} ({pStudent.toFixed(1)}%)
-                </span>
+                <div className="w-full bg-slate-200/60 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#13696a] h-full rounded-full transition-all duration-500" style={{ width: `${pStudent}%` }}></div>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between border-b border-[#f1f4f6] pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full border-2 border-[#4ade80] bg-transparent"></span>
-                  <span className="font-semibold text-slate-600">Giảng viên</span>
+              {/* Giảng viên */}
+              <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition">
+                <div className="flex justify-between items-center text-xs font-semibold mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#1cb5b7]"></span>
+                    <span className="text-slate-700">Giảng viên</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-[#002045] font-bold">{lecturerCount}</span>
+                    <span className="text-[10px] text-slate-400 font-normal">({pLecturer.toFixed(1)}%)</span>
+                  </div>
                 </div>
-                <span className="font-bold text-[#002045] font-mono">
-                  {lecturerCount} ({pLecturer.toFixed(1)}%)
-                </span>
+                <div className="w-full bg-slate-200/60 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#1cb5b7] h-full rounded-full transition-all duration-500" style={{ width: `${pLecturer}%` }}></div>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between border-b border-[#f1f4f6] pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full border-2 border-[#ec4899] bg-transparent"></span>
-                  <span className="font-semibold text-slate-600">Nghiên cứu Viên</span>
+              {/* Nghiên cứu viên */}
+              <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition">
+                <div className="flex justify-between items-center text-xs font-semibold mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#86a0cd]"></span>
+                    <span className="text-slate-700">Nghiên cứu viên</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-[#002045] font-bold">{researcherCount}</span>
+                    <span className="text-[10px] text-slate-400 font-normal">({pResearcher.toFixed(1)}%)</span>
+                  </div>
                 </div>
-                <span className="font-bold text-[#002045] font-mono">
-                  {researcherCount} ({pResearcher.toFixed(1)}%)
-                </span>
+                <div className="w-full bg-slate-200/60 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#86a0cd] h-full rounded-full transition-all duration-500" style={{ width: `${pResearcher}%` }}></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Khối Biểu đồ cột nằm ngang - Top 5 Lĩnh vực nghiên cứu (Chiếm 2/3) */}
-        <div className="bg-white p-6 rounded-lg border border-[#ebeef0] shadow-sm lg:col-span-2 flex flex-col justify-between relative min-h-[350px]">
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-xs flex items-center justify-center z-10 rounded-lg">
-              <span className="animate-spin text-[#13696a] text-sm">⏳</span>
-            </div>
-          )}
-
+        {/* Khối bên phải: Lĩnh vực nghiên cứu hàng đầu (6 cols) */}
+        <div className="lg:col-span-6 bg-white p-6 rounded-lg border border-[#ebeef0] shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-base text-[#002045] flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[#13696a]">bar_chart</span>
+            <h3 className="font-bold text-[#002045] flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[#13696a]">category</span>
               Chủ đề các lĩnh vực nghiên cứu trong hệ thống
             </h3>
             <span className="text-[10px] font-bold text-[#13696a] bg-[#e0f7f7] px-2 py-0.5 rounded">
@@ -354,7 +365,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
             </span>
           </div>
 
-          <div className="space-y-4.5 flex-1 flex flex-col justify-center mt-2">
+          <div className="space-y-4 flex-1 flex flex-col justify-center my-auto py-2">
             {topicFacets.length === 0 ? (
               <div className="text-center py-12 text-slate-400 italic text-xs">
                 Chưa có dữ liệu phân tích lĩnh vực.
@@ -384,44 +395,145 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ logs }) => {
         </div>
       </div>
 
-      {/* Hàng 3: Nhật ký hoạt động (Full width) */}
-      <div className="bg-white p-6 rounded-lg border border-[#ebeef0] shadow-sm flex flex-col justify-between min-h-[300px]">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-[#002045] flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[#13696a]">assignment</span>
-            Nhật ký hoạt động hệ thống
-          </h3>
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
+      {/* Hàng 3: Danh sách công việc đồng bộ (Sync Jobs - Full width) */}
+      <div className="bg-white p-6 rounded-lg border border-[#ebeef0] shadow-sm flex flex-col justify-between min-h-[350px]">
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#13696a]">sync</span>
+            <h3 className="font-bold text-[#002045]">
+              Lịch sử tải và đồng bộ dữ liệu
+            </h3>
+            {syncJobsTotalCount > 0 && (
+              <span className="text-xs font-semibold text-[#13696a] bg-[#e0f7f7] px-2 py-0.5 rounded-full">
+                {syncJobsTotalCount} công việc
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => fetchSyncJobs(syncJobsPage)}
+            disabled={isLoadingSyncJobs}
+            className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-[#13696a] bg-slate-100 hover:bg-cyan-50 px-2.5 py-1.5 rounded transition cursor-pointer disabled:opacity-50"
+            title="Làm mới dữ liệu"
+          >
+            <span className={`material-symbols-outlined text-sm ${isLoadingSyncJobs ? "animate-spin" : ""}`}>
+              refresh
+            </span>
+            Làm mới
+          </button>
         </div>
 
-        <div className="flex-1 space-y-3.5 overflow-y-auto max-h-[300px] pr-1 custom-scrollbar text-xs">
-          {logs.map((log, i) => {
-            let badgeColor = "bg-[#f1f4f6] text-[#43474e]";
-            if (log.type === "SUCCESS") badgeColor = "bg-[#dcfce7] text-[#16a34a]";
-            if (log.type === "WARNING") badgeColor = "bg-[#fef9c3] text-[#ca8a04]";
-            if (log.type === "ERROR") badgeColor = "bg-[#fef2f2] text-[#ef4444]";
+        {isLoadingSyncJobs ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-400">
+            <span className="material-symbols-outlined animate-spin text-3xl mb-2 text-[#13696a]">sync</span>
+            <p className="text-xs font-medium">Đang tải lịch sử đồng bộ...</p>
+          </div>
+        ) : syncJobsError ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-8 text-rose-500 bg-rose-50/50 rounded-lg border border-rose-100 p-4">
+            <span className="material-symbols-outlined text-2xl mb-1">error</span>
+            <p className="text-xs font-semibold">{syncJobsError}</p>
+            <button
+              onClick={() => fetchSyncJobs(syncJobsPage)}
+              className="mt-3 text-xs bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-700 font-medium cursor-pointer"
+            >
+              Thử lại
+            </button>
+          </div>
+        ) : syncJobs.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-400 italic text-xs">
+            <span className="material-symbols-outlined text-3xl mb-2 text-slate-300">inbox</span>
+            Chưa có công việc đồng bộ nào được ghi nhận.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/70 text-[#74777f]">
+                  <th className="py-2.5 px-3 font-bold">ID</th>
+                  <th className="py-2.5 px-3 font-bold">Nguồn</th>
+                  <th className="py-2.5 px-3 font-bold">Thời gian bắt đầu</th>
+                  <th className="py-2.5 px-3 font-bold">Thời gian kết thúc</th>
+                  <th className="py-2.5 px-3 font-bold text-center">Bản ghi</th>
+                  <th className="py-2.5 px-3 font-bold text-center">Trạng thái</th>
+                  <th className="py-2.5 px-3 font-bold">Thông tin thêm</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {syncJobs.map((job) => {
+                  let statusBadge = "bg-slate-100 text-slate-600 border-slate-200";
+                  if (job.status === "Completed") {
+                    statusBadge = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                  } else if (job.status === "Failed") {
+                    statusBadge = "bg-rose-50 text-rose-700 border-rose-200";
+                  } else if (job.status === "In Progress" || job.status === "Running") {
+                    statusBadge = "bg-blue-50 text-blue-700 border-blue-200 animate-pulse";
+                  }
 
-            return (
-              <div
-                key={i}
-                className="flex gap-2.5 items-start border-b border-[#f7fafc] pb-2.5 last:border-0 last:pb-0"
+                  return (
+                    <tr key={job.syncJobId} className="hover:bg-slate-50/60 transition">
+                      <td className="py-3 px-3 font-mono font-semibold text-[#002045]">
+                        #{job.syncJobId}
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-700">
+                        {job.sourceName || "OpenAlex"}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-slate-600 text-[11px]">
+                        {formatDate(job.startTime)}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-slate-600 text-[11px]">
+                        {formatDate(job.endTime)}
+                      </td>
+                      <td className="py-3 px-3 text-center font-mono font-semibold text-slate-800">
+                        {job.recordsFetched ?? 0}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded-full font-bold text-[10px] border ${statusBadge}`}>
+                          {job.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 max-w-[220px]">
+                        {job.errorMessage ? (
+                          <span className="text-rose-600 text-[11px] block truncate" title={job.errorMessage}>
+                            ⚠️ {job.errorMessage}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-[11px] italic">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Phân trang */}
+        {syncJobsTotalCount > syncJobsPageSize && (
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 text-xs">
+            <span className="text-slate-500 font-medium">
+              Hiển thị {((syncJobsPage - 1) * syncJobsPageSize) + 1} - {Math.min(syncJobsPage * syncJobsPageSize, syncJobsTotalCount)} / {syncJobsTotalCount} công việc
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => fetchSyncJobs(syncJobsPage - 1)}
+                disabled={syncJobsPage <= 1 || isLoadingSyncJobs}
+                className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                <span className="font-mono text-[#74777f] font-semibold">{log.time}</span>
-                <div className="flex-1">
-                  <span
-                    className={`px-1.5 py-0.5 rounded font-bold text-[9px] mr-1.5 ${badgeColor}`}
-                  >
-                    {log.type}
-                  </span>
-                  <span className="text-[#43474e] font-medium">{log.message}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                Trước
+              </button>
+              <span className="px-2 py-1 font-mono font-semibold text-slate-600">
+                {syncJobsPage} / {Math.ceil(syncJobsTotalCount / syncJobsPageSize)}
+              </span>
+              <button
+                onClick={() => fetchSyncJobs(syncJobsPage + 1)}
+                disabled={syncJobsPage >= Math.ceil(syncJobsTotalCount / syncJobsPageSize) || isLoadingSyncJobs}
+                className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
