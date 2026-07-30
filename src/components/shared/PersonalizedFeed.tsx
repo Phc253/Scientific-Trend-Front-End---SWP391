@@ -53,48 +53,92 @@ const PersonalizedFeed: React.FC = () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      let targetKeyword = "";
 
-      // 1. Nếu có đăng nhập, tải thư viện Bookmark để xem người dùng lưu từ khóa nào không
+      // Khởi tạo các tham số tìm kiếm mặc định
+      let searchParams: any = { page: 1, pageSize: 5 };
+      let displayReason = "Gợi ý các bài báo khoa học nổi bật mới nhất";
+
+      // 1. Nếu có đăng nhập, lấy cả Bookmarks (từ khóa) và Follows (tác giả, tạp chí)
       if (token) {
         try {
-          const bookmarksRes: any = await api.getBookmarks();
-          const bData = bookmarksRes?.data || bookmarksRes;
+          const [bookmarksRes, followsRes] = await Promise.all([
+            api.getBookmarks().catch(() => null),
+            api.getFollows().catch(() => null),
+          ]);
+
+          const bData = (bookmarksRes as any)?.data || bookmarksRes;
           const bookmarks = Array.isArray(bData) ? bData : bData?.items || [];
 
-          // Lọc ra các bookmark là "Keyword"
-          const keywordBookmarks = bookmarks.filter(
+          const fData = (followsRes as any)?.data || followsRes;
+          const follows = Array.isArray(fData) ? fData : fData?.items || [];
+
+          // Phân loại các mục người dùng đã quan tâm
+          const savedKeywords = bookmarks.filter(
             (b: any) => b.targetType?.toLowerCase() === "keyword",
           );
+          const followedAuthors = follows.filter(
+            (f: any) => f.targetType?.toLowerCase() === "author",
+          );
+          const followedJournals = follows.filter(
+            (f: any) => f.targetType?.toLowerCase() === "journal",
+          );
 
-          if (keywordBookmarks.length > 0) {
-            // Lấy text của từ khóa đầu tiên người dùng đã lưu
-            const firstKw = keywordBookmarks[0];
-            targetKeyword =
-              firstKw.keywordText || firstKw.title || firstKw.name || "";
-            if (targetKeyword) {
-              setReason(`Dựa trên từ khóa #${targetKeyword} bạn đang quan tâm`);
+          // Xây dựng danh sách các lựa chọn để gợi ý (chỉ thêm vào nếu có dữ liệu)
+          const suggestionPool = [];
+          if (savedKeywords.length > 0) suggestionPool.push("keyword");
+          if (followedAuthors.length > 0) suggestionPool.push("author");
+          if (followedJournals.length > 0) suggestionPool.push("journal");
+
+          // NẾU CÓ DỮ LIỆU QUAN TÂM -> Chọn ngẫu nhiên 1 loại để bảng tin luôn mới mẻ
+          if (suggestionPool.length > 0) {
+            const randomChoice =
+              suggestionPool[Math.floor(Math.random() * suggestionPool.length)];
+
+            if (randomChoice === "keyword") {
+              const kwItem =
+                savedKeywords[Math.floor(Math.random() * savedKeywords.length)];
+              const kwName =
+                kwItem.keywordText || kwItem.title || kwItem.name || "";
+              searchParams.q = kwName; // Tìm theo từ khóa
+              displayReason = `Dựa trên từ khóa #${kwName} bạn đang quan tâm`;
+            } else if (randomChoice === "author") {
+              const authorItem =
+                followedAuthors[
+                  Math.floor(Math.random() * followedAuthors.length)
+                ];
+              const authorName =
+                authorItem.authorName ||
+                authorItem.title ||
+                authorItem.name ||
+                "";
+              searchParams.author = authorName; // Tìm theo tác giả
+              displayReason = `Dựa trên tác giả ${authorName} bạn đang theo dõi`;
+            } else if (randomChoice === "journal") {
+              const journalItem =
+                followedJournals[
+                  Math.floor(Math.random() * followedJournals.length)
+                ];
+              const journalName =
+                journalItem.journalName ||
+                journalItem.title ||
+                journalItem.name ||
+                "";
+              searchParams.journal = journalName; // Tìm theo tạp chí
+              displayReason = `Dựa trên tạp chí ${journalName} bạn đang theo dõi`;
             }
           }
         } catch (err) {
-          console.warn("Lỗi tải bookmark để cá nhân hóa:", err);
+          console.warn("Lỗi tải dữ liệu cá nhân hóa:", err);
         }
       }
 
-      // Nếu không có từ khóa nào, hiển thị thông báo chung
-      if (!targetKeyword) {
-        setReason("Gợi ý các bài báo khoa học nổi bật mới nhất");
-      }
+      setReason(displayReason);
 
-      // 2. Gọi API searchPapers để lấy bài báo gợi ý
-      const papersRes: any = await api.searchPapers({
-        q: targetKeyword || undefined,
-        page: 1,
-        pageSize: 5,
-      });
-
+      // 2. Gọi API searchPapers với tham số đã được cá nhân hóa
+      const papersRes: any = await api.searchPapers(searchParams);
       const actualPapers =
         papersRes?.data?.items || papersRes?.items || papersRes || [];
+
       setRecommendedPapers(actualPapers);
     } catch (error) {
       console.error("Lỗi khi tải bảng tin cá nhân hóa:", error);
