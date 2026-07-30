@@ -1,26 +1,42 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { api, type DashboardSummaryResponse } from "../../services/api";
+import {
+  api,
+  type DashboardSummaryResponse,
+  type TrendingItem,
+} from "../../services/api";
 
 export const ResearcherDashboard = () => {
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
+  // Thêm state riêng để hứng dữ liệu từ khóa y hệt trang Analytic
+  const [trendingKeywords, setTrendingKeywords] = useState<TrendingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSummary = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const res: any = await api.getDashboardSummary();
-        // Xử lý an toàn phòng trường hợp Backend bọc dữ liệu trong thuộc tính 'data'
-        const data = res?.data || res;
-        setSummary(data);
+
+        // Gọi song song 2 API: Lấy Summary và Lấy Top 5 Trending
+        const [summaryRes, trendingRes] = await Promise.all([
+          api.getDashboardSummary().catch(() => null),
+          api.getTrendingTopics(5).catch(() => null),
+        ]);
+
+        // Cập nhật dữ liệu Summary
+        const summaryData = (summaryRes as any)?.data || summaryRes;
+        setSummary(summaryData);
+
+        // Cập nhật dữ liệu Trending có chứa paperCount
+        const trendingData = (trendingRes as any)?.data || trendingRes || [];
+        setTrendingKeywords(Array.isArray(trendingData) ? trendingData : []);
       } catch (error) {
         console.error("Lỗi tải thông tin tổng quan:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchSummary();
+    fetchData();
   }, []);
 
   const stats = [
@@ -182,8 +198,8 @@ export const ResearcherDashboard = () => {
               </div>
 
               <div className="flex-1 p-0 overflow-y-auto max-h-[250px]">
-                {!summary?.trendingKeywords ||
-                summary.trendingKeywords.length === 0 ? (
+                {/* SỬ DỤNG BIẾN trendingKeywords MỚI Ở ĐÂY */}
+                {trendingKeywords.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full p-6 text-slate-400">
                     <span className="material-symbols-outlined text-3xl mb-2">
                       trending_flat
@@ -194,44 +210,53 @@ export const ResearcherDashboard = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
-                    {summary.trendingKeywords.slice(0, 5).map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full 
-                            ${
-                              idx === 0
-                                ? "bg-amber-100 text-amber-600"
-                                : idx === 1
-                                  ? "bg-slate-200 text-slate-600"
-                                  : idx === 2
-                                    ? "bg-orange-100 text-orange-600"
-                                    : "text-slate-400"
-                            }`}
-                          >
-                            {idx + 1}
-                          </span>
-                          <div>
-                            <p className="text-sm font-bold text-slate-700">
-                              {item.name}
+                    {trendingKeywords.map((item, idx) => {
+                      // Đã có thể đọc paperCount tự tin giống trang Analytic
+                      const count = item.paperCount || 0;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full 
+                              ${
+                                idx === 0
+                                  ? "bg-amber-100 text-amber-600"
+                                  : idx === 1
+                                    ? "bg-slate-200 text-slate-600"
+                                    : idx === 2
+                                      ? "bg-orange-100 text-orange-600"
+                                      : "text-slate-400"
+                              }`}
+                            >
+                              {idx + 1}
+                            </span>
+                            <div>
+                              <p className="text-sm font-bold text-slate-700">
+                                {item.name}
+                              </p>
+                              <p className="text-[10px] text-slate-500 uppercase">
+                                {item.type === "Keyword" ? "Từ khóa" : "Chủ đề"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-bold text-indigo-600 flex items-center justify-end gap-1">
+                              <span className="material-symbols-outlined text-[14px]">
+                                article
+                              </span>
+                              {count.toLocaleString()}
                             </p>
-                            <p className="text-[10px] text-slate-500 uppercase">
-                              {item.type === "Keyword" ? "Từ khóa" : "Chủ đề"}
+                            <p className="text-[10px] text-slate-400 font-medium">
+                              bài báo
                             </p>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-indigo-600 flex items-center justify-end gap-1">
-                            <span className="material-symbols-outlined text-[14px]">article</span>
-                            {(item.paperCount || 0).toLocaleString()}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">bài báo</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
