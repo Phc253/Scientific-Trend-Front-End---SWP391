@@ -490,8 +490,7 @@ export const AdminOpenAlex: React.FC = () => {
                   <thead className="bg-[#f8fafc] text-[#43474e] uppercase font-bold text-[10px]">
                     <tr>
                       <th className="px-6 py-3.5">Mã số</th>
-                      <th className="px-6 py-3.5 w-1/3">Tiêu đề bài báo</th>
-                      <th className="px-6 py-3.5">Lĩnh vực</th>
+                      <th className="px-6 py-3.5 w-1/2">Tiêu đề bài báo</th>
                       <th className="px-6 py-3.5 text-center">Trích dẫn cũ</th>
                       <th className="px-6 py-3.5 text-center">Trích dẫn mới</th>
                       <th className="px-6 py-3.5 text-center">Biến động</th>
@@ -499,29 +498,38 @@ export const AdminOpenAlex: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#ebeef0] text-[#181c1e] font-medium bg-white">
-                    {syncResultGlobal.updatedPapers.map((paper) => (
-                      <tr key={paper.paperId} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 font-mono text-[#74777f]">#{paper.paperId}</td>
-                        <td className="px-6 py-4 font-bold text-slate-800">
-                          <div className="line-clamp-2" title={paper.title}>{paper.title}</div>
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 font-semibold">{paper.topicName || "—"}</td>
-                        <td className="px-6 py-4 text-center text-slate-400 font-mono">{paper.oldCitationCount}</td>
-                        <td className="px-6 py-4 text-center text-[#002045] font-extrabold font-mono">{paper.newCitationCount}</td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`px-2 py-0.5 rounded font-extrabold font-mono text-[10px] ${
-                            paper.citationDelta > 0 
-                              ? "bg-emerald-50 text-emerald-700" 
-                              : "bg-slate-100 text-slate-500"
-                          }`}>
-                            {paper.citationDelta > 0 ? `+${paper.citationDelta}` : paper.citationDelta}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right font-mono text-[#74777f]">
-                          {formatDate(paper.updatedAt)}
-                        </td>
-                      </tr>
-                    ))}
+                    {syncResultGlobal.updatedPapers.map((paper) => {
+                      const oldCit = paper.oldCitationCount ?? 0;
+                      const newCit = paper.newCitationCount ?? 0;
+                      const delta = paper.citationDelta ?? (newCit - oldCit);
+
+                      return (
+                        <tr key={paper.paperId} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 font-mono text-[#74777f]">#{paper.paperId}</td>
+                          <td className="px-6 py-4 font-bold text-slate-800">
+                            <div className="line-clamp-2" title={paper.title}>{paper.title}</div>
+                          </td>
+                          <td className="px-6 py-4 text-center text-slate-400 font-mono">{oldCit}</td>
+                          <td className="px-6 py-4 text-center text-[#002045] font-extrabold font-mono">{newCit}</td>
+                          <td className="px-6 py-4 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded font-extrabold font-mono text-[10px] ${
+                                delta > 0
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : delta < 0
+                                  ? "bg-rose-50 text-rose-700"
+                                  : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              {delta > 0 ? `+${delta}` : delta}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right font-mono text-[#74777f]">
+                            {formatDate(paper.updatedAt)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
