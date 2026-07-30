@@ -85,6 +85,21 @@ const App: React.FC = () => {
       </Route>
 
       {/* ==========================================
+          KHU VỰC DÀNH CHO SINH VIÊN
+      ========================================== */}
+      <Route path="/lecturer" element={<MemberLayout />}>
+        <Route index element={<SharedDashboard />} />
+        <Route path="explore" element={<SharedExplore />} />
+        <Route path="library" element={<SharedLibrary />} />
+        <Route path="trending" element={<SharedTrending />} />
+        <Route path="paper/:id" element={<PaperDetails />} />
+        <Route path="journal/:journalName" element={<JournalDetail />} />
+        <Route path="topic/:topicName" element={<TopicDetail />} />
+        <Route path="author/:authorName" element={<AuthorDetail />} />
+        <Route path="notifications" element={<NotificationPage />} />
+      </Route>
+
+      {/* ==========================================
           KHU VỰC DÀNH CHO NHÀ NGHIÊN CỨU
       ========================================== */}
       <Route path="/researcher" element={<ResearcherLayout />}>
@@ -96,7 +111,10 @@ const App: React.FC = () => {
         <Route path="notifications" element={<NotificationPage />} />
         <Route path="library" element={<ResearcherLibrary />} />
         <Route path="explore" element={<ResearcherExplore />} />
-        <Route path="reports/publication-trend" element={<ResearcherPublicationTrend />} />
+        <Route
+          path="reports/publication-trend"
+          element={<ResearcherPublicationTrend />}
+        />
       </Route>
 
       {/* ==========================================

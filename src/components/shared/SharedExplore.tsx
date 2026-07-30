@@ -7,11 +7,21 @@ type SearchTab = "papers" | "authors" | "journals" | "topics" | "keywords";
 
 const SharedExplore: React.FC = () => {
   // Nhận diện Role và cấu hình Theme
-  const role =
+  const rawRole = (
     localStorage.getItem("userRoles") ||
     localStorage.getItem("actorType") ||
-    "";
-  const isLecturer = role.includes("Lecturer");
+    ""
+  ).toLowerCase();
+
+  let currentRole = "student"; // Mặc định fallback
+  if (rawRole.includes("lecturer")) {
+    currentRole = "lecturer";
+  } else if (rawRole.includes("researcher")) {
+    currentRole = "researcher";
+  }
+
+  const isLecturer = currentRole === "lecturer";
+
   const theme = {
     primaryBg: isLecturer ? "bg-emerald-600" : "bg-blue-600",
     primaryHover: isLecturer ? "hover:bg-emerald-700" : "hover:bg-blue-700",
@@ -19,7 +29,8 @@ const SharedExplore: React.FC = () => {
     primaryBorder: isLecturer ? "border-emerald-600" : "border-blue-600",
     lightBg: isLecturer ? "bg-emerald-50" : "bg-blue-50",
     ring: isLecturer ? "ring-emerald-200" : "ring-blue-200",
-    basePath: isLecturer ? "/lecturer" : "/student",
+    // TỰ ĐỘNG LẤY BASE PATH THEO ROLE (vd: /lecturer, /student, /researcher)
+    basePath: `/${currentRole}`,
   };
 
   // State: Tab & Search Query
