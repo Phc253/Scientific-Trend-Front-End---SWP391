@@ -1,38 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../services/api";
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
   const [message, setMessage] = useState("Đang xác thực tài khoản...");
+
+  // Dùng useRef để giữ giá trị cờ hiệu qua các lần render của Strict Mode
+  const hasCalledAPI = useRef(false);
 
   useEffect(() => {
     const token = searchParams.get("token");
 
     if (!token) {
       setStatus("error");
-      setMessage("Liên kết xác thực không hợp lệ. Vui lòng kiểm tra lại đường dẫn.");
+      setMessage(
+        "Liên kết xác thực không hợp lệ. Vui lòng kiểm tra lại đường dẫn.",
+      );
       return;
     }
 
-    let isMounted = true;
+    // CHỐT CHẶN: Nếu đã gọi API rồi thì return luôn, không gọi lại lần 2
+    if (hasCalledAPI.current) return;
+
+    // Đánh dấu là đã gọi API
+    hasCalledAPI.current = true;
 
     const verifyAccount = async () => {
       try {
         const response = await api.verifyEmail(token);
-        if (!isMounted) {
-          return;
-        }
 
         setStatus("success");
-        const successMessage = response?.message || "Tài khoản đã được xác thực và kích hoạt thành công.";
+        const successMessage =
+          response?.message ||
+          "Tài khoản đã được xác thực và kích hoạt thành công.";
         setMessage(successMessage);
       } catch (err: unknown) {
-        if (!isMounted) {
-          return;
-        }
-
         setStatus("error");
         setMessage(
           err instanceof Error
@@ -42,11 +48,10 @@ const VerifyEmail: React.FC = () => {
       }
     };
 
-    void verifyAccount();
+    verifyAccount();
 
-    return () => {
-      isMounted = false;
-    };
+    // Không cần hàm cleanup (isMounted = false) ở đây nữa
+    // vì chúng ta đã chặn ngay từ trước khi gọi API rồi.
   }, [searchParams]);
 
   return (
@@ -54,7 +59,11 @@ const VerifyEmail: React.FC = () => {
       <div className="w-full max-w-md rounded-2xl border border-[#ebeef0] bg-white p-8 shadow-sm text-center">
         <div className="mb-4 flex justify-center">
           <span className="material-symbols-outlined text-5xl text-[#13696a]">
-            {status === "success" ? "check_circle" : status === "error" ? "error" : "hourglass_top"}
+            {status === "success"
+              ? "check_circle"
+              : status === "error"
+                ? "error"
+                : "hourglass_top"}
           </span>
         </div>
 
